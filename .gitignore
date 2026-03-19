@@ -1,2 +1,3 @@
 *.sql
-h.py
+*.csv
+*.png
