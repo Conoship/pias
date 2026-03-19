@@ -3,27 +3,29 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 # Load the clean csv
-df = pd.read_csv('clean_data/ship4_stability_baseline_clean.csv')
+df = pd.read_csv('C:/Users/student01/Desktop/data/ship4_stability_baseline_clean.csv')
 
-# Correlation Matrix
-plt.figure(figsize=(12, 8))
-sns.heatmap(df.corr(), annot=True, cmap='coolwarm', fmt='.2f')
-plt.title('Feature Correlation Matrix')
-plt.savefig('data_visualization/plots/correlation_heatmap_ship4_baseline.png', dpi=300, bbox_inches='tight')
-plt.show()
+# Correlation between core hydrostatics and the stability margin
+plt.figure(figsize=(10, 8))
+cols = ['draft', 'vcg', 'displacement', 'total_compartments', 'target_margin']
+sns.heatmap(df[cols].corr(), annot=True, cmap='coolwarm', fmt='.2f')
+plt.title('Correlation Matrix: Hydrostatics vs Stability Margin')
+plt.savefig('C:/Users/student01/Desktop/data/plots/ship4_correlation.png', dpi=300, bbox_inches='tight')
+plt.close()
+print("Figure was saved!")
 
-# Permeability vs Target Margin
+# Pairplot of core hydrostatics colored by loading condition
+pair_plot = sns.pairplot(df, vars=['draft', 'vcg', 'displacement', 'target_margin'], hue='condition_code')
+pair_plot.fig.suptitle('Pairwise Relationships Grouped By Loading Condition', y=1.02)
+plt.savefig('C:/Users/student01/Desktop/data/plots/ship4_pairplot.png', dpi=300, bbox_inches='tight')
+plt.close()
+print("Figure was saved!")
+
+# Distribution of the target margin relative to the safety limit
 plt.figure(figsize=(10, 6))
-sns.regplot(data=df, x='avg_permeability', y='target_margin', scatter_kws={'alpha':0.5, 'color': 'blue'}, line_kws={'color':'red'})
-plt.title('Impact of Average Permeability on Stability Margin')
-plt.grid(True, linestyle='--', alpha=0.6)
-plt.savefig('data_visualization/plots/permeability_impact_ship4_baseline.png', dpi=300, bbox_inches='tight')
-plt.show()
-
-# Condition Code Boxplot
-plt.figure(figsize=(10, 6))
-sns.boxplot(data=df, x='condition_code', y='target_margin', palette='Set2')
-plt.xticks([0, 1, 2], ['Light', 'Partial', 'Deepest'])
-plt.title('Stability Margin by Loading Condition')
-plt.savefig('data_visualization/plots/condition_comparison_ship4_baseline.png', dpi=300, bbox_inches='tight')
-plt.show()
+sns.histplot(df['target_margin'], kde=True)
+plt.axvline(0, color='red', linestyle='--')
+plt.title('Distribution of Target Stability Margins (Safety Threshold at 0)')
+plt.savefig('C:/Users/student01/Desktop/data/plots/ship4_margin_dist.png', dpi=300, bbox_inches='tight')
+plt.close()
+print("Figure was saved!")
