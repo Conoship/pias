@@ -1,3 +1,5 @@
 *.sql
 *.csv
 *.png
+h.py
+a.py

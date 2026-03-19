@@ -29,3 +29,13 @@ plt.title('Distribution of Target Stability Margins (Safety Threshold at 0)')
 plt.savefig('C:/Users/student01/Desktop/data/plots/ship4_margin_dist.png', dpi=300, bbox_inches='tight')
 plt.close()
 print("Figure was saved!")
+
+# Feature Importance
+plt.figure(figsize=(10, 6))
+importance = df[cols].corr()['target_margin'].abs().sort_values(ascending=False).drop('target_margin')
+sns.barplot(x=importance.values, y=importance.index, palette='magma')
+plt.title('Statistical Importance: Variables Driving Stability Margin')
+plt.savefig('C:/Users/student01/Desktop/data/plots/ship4_statistical_importance.png')
+plt.close()
+print("Figure was saved!")
+print("All figures are saved!")
