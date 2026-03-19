@@ -12,6 +12,6 @@ importance = df[loading_cols].corr()['target_margin'].abs().sort_values(ascendin
 plt.figure(figsize=(10, 6))
 sns.barplot(x=importance.values, y=importance.index, palette='viridis')
 plt.title('Importance: How Loading Conditions Drive Stability')
-plt.savefig('C:/Users/student01/Desktop/data/plots/ship4_loading_features_importance.png')
+plt.savefig('C:/Users/student01/Desktop/data/plots/ship4/ship4_loading_features_importance.png')
 plt.close()
 print("File saved!")
