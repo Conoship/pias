@@ -37,7 +37,7 @@ geom AS (
 
 SELECT
     t.ship_version_id,
-    sv.ship_id
+    sv.ship_id,
     t.draft,
     t.trim,
     t.mg,
