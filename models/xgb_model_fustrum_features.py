@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split
 df = pd.read_csv('C:/Users/student02/data/all_light_v2.csv')
 
 df_ship = df.copy()
+print(df_ship[df_ship['target_attained_index']<0.1])
 #print(df_ship['target_attained_index'].describe())
 df_ship = df_ship[df_ship['target_attained_index']>0.1].copy()
 print("rows", len(df_ship))
