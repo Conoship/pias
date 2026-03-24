@@ -37,7 +37,6 @@ geom AS (
 
 SELECT
     t.ship_version_id,
-    sv.ship_id
     t.draft,
     t.trim,
     t.mg,
@@ -71,11 +70,11 @@ SELECT
     (t.attained_index - t.required_index)       AS target_margin
 
 FROM public.trim_gm t
-JOIN public.ship_version sv ON sv.id = t.ship_version_id
 LEFT JOIN comp_data     ON comp_data.ship_version_id = t.ship_version_id
 LEFT JOIN geom          ON geom.ship_version_id      = t.ship_version_id
 
 WHERE comp_data.avg_permeability   IS NOT NULL
   AND comp_data.total_compartments IS NOT NULL
   AND t.attained_index             IS NOT NULL
+    AND LOWER(t.condition_name) = 'light'
 ORDER BY t.ship_version_id, condition_code;

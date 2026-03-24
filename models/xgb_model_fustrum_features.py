@@ -3,15 +3,13 @@ from xgboost import XGBRegressor
 from sklearn.metrics import r2_score, mean_absolute_error
 from sklearn.model_selection import train_test_split
 
-df = pd.read_csv('C:/Users/student02/data/all_light_v2.csv')
+df = pd.read_csv('C:/Users/student02/data/all_loads_all_features.csv')
 
 df_ship = df.copy()
-print(df_ship[df_ship['target_attained_index']<0.1])
-#print(df_ship['target_attained_index'].describe())
 df_ship = df_ship[df_ship['target_attained_index']>0.1].copy()
-print("rows", len(df_ship))
-features = [
- 'openings_per_compartment', 'subdivision_length', 'avg_permeability'
+
+features = ['draft','trim','mg','displacement','vcg',
+ 'openings_per_compartment', 'avg_permeability',
 
     'n_cargo','n_ballast','n_cargohold_hatch', 'n_potable_water','n_gas_oil','n_void','n_fuel_oil',
 
@@ -20,7 +18,6 @@ features = [
 
 # Only keep features in the CSV
 features = [f for f in features if f in df.columns]
-print("Features used:", features)
 
 X = df_ship[features]
 y = df_ship['target_attained_index']
