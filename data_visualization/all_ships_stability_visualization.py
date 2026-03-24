@@ -21,20 +21,6 @@ plt.savefig('C:/Users/student02/data/plots/all_ships_correlation.png', dpi=300, 
 plt.close()
 print("Figure was saved!")
 
-# Pairplot of core hydrostatics colored by loading condition
-pair_plot = sns.pairplot(df, vars= ['target_attained_index',
- 'openings_per_compartment',
-    'total_compartments', 'subdivision_length', 'avg_permeability',
-
-    'n_cargo','n_ballast','n_cargohold_hatch', 'n_potable_water','n_gas_oil','n_void','n_fuel_oil',
-
-    'total_layout_length','max_layout_breadth','max_layout_height','avg_cross_section','sum_bh_sections','std_breadth','std_height','n_frustum_points','std_breadth'
-], hue='condition_code')
-pair_plot.fig.suptitle('Pairwise Relationships Grouped By Loading Condition', y=1.02)
-plt.savefig('C:/Users/student02/data/plots/all_ships_pairplot.png', dpi=300, bbox_inches='tight')
-plt.close()
-print("Figure was saved!")
-
 # Distribution of the target margin relative to the safety limit
 plt.figure(figsize=(10, 6))
 sns.histplot(df['target_attained_index'], kde=True)
