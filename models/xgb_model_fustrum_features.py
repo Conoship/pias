@@ -10,8 +10,7 @@ df_ship = df.copy()
 df_ship = df_ship[df_ship['target_attained_index']>0.1].copy()
 print("rows", len(df_ship))
 features = [
- 'openings_per_compartment',
-    'total_compartments', 'subdivision_length', 'avg_permeability'
+ 'openings_per_compartment', 'subdivision_length', 'avg_permeability'
 
     'n_cargo','n_ballast','n_cargohold_hatch', 'n_potable_water','n_gas_oil','n_void','n_fuel_oil',
 

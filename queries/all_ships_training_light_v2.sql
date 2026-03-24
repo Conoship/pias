@@ -3,7 +3,7 @@ WITH comp_data AS (
         comp.ship_version_id,
         COUNT(DISTINCT comp.id)                                             AS total_compartments,
         AVG(sub.permeability_for_damage_stability)                          AS avg_permeability,
-        COUNT(DISTINCT op.id) * 1.0 / NULLIF(COUNT(DISTINCT comp.id), 0)   AS openings_per_compartment
+        COUNT(DISTINCT op.id) * 1.0 / NULLIF(COUNT(DISTINCT comp.id), 0)   AS openings_per_compartment,
 
         COUNT(DISTINCT comp.id) FILTER (WHERE comp.design_content_id_number = 1) AS n_cargo,
         COUNT(DISTINCT comp.id) FILTER (WHERE comp.design_content_id_number = 2) AS n_fuel_oil,
