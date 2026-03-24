@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Load the data
-df = pd.read_csv('C:/Users/student02/data/allships.csv')
+df = pd.read_csv('C:/Users/student02/data/all_light_v2.csv')
 
 # 1. How many rows per ship version? (should be 3)
 print("Total rows:", len(df))
@@ -20,14 +20,19 @@ print(df.groupby('ship_version_id')['target_margin'].std().describe())
 
 # 4. Correlation of each feature with the target
 features = [
-    'draft', 'trim', 'mg', 'displacement', 'vcg',
-    'condition_code', 'openings_per_compartment',
+ 'openings_per_compartment',
     'total_compartments', 'subdivision_length', 'avg_permeability'
+
+    'n_cargo','n_ballast','n_cargohold_hatch', 'n_potable_water','n_gas_oil','n_void','n_fuel_oil',
+
+    'total_layout_length','max_layout_breadth','max_layout_height','avg_cross_section','sum_bh_sections','std_breadth,std_height','n_frustum_points','std_breadth'
 ]
 features = [f for f in features if f in df.columns]
 
 correlations = df[features + ['target_margin']].corr()['target_margin'].drop('target_margin')
 correlations = correlations.abs().sort_values(ascending=False)
+
+print(df.groupby('ship_version_id')['target_margin'].agg(['min','max','mean']))
 
 print("\nCorrelation of each feature with target:")
 print(correlations)
