@@ -2,6 +2,7 @@ import psycopg
 from pathlib import Path
 import pdfplumber
 
+
 def get_conn():
     return psycopg.connect(
         dbname="pias_damage",
@@ -11,6 +12,7 @@ def get_conn():
         port=5432,
     )
 
+
 def parse_filename(path):
     name = Path(path).name
     stem = Path(name).stem
@@ -19,7 +21,7 @@ def parse_filename(path):
     if stem.lower().endswith("_openings"):
         stem = stem[: -len("_openings")]
 
-    parts = stem.split('_')
+    parts = stem.split("_")
 
     ship = parts[0] if len(parts) > 0 else "unknownship"
     design = parts[1] if len(parts) > 1 else "unknowndesign"
@@ -28,6 +30,7 @@ def parse_filename(path):
 
     return ship.strip(), design.strip(), version.strip(), subversion.strip()
 
+
 def parse_float(text):
     if text is None:
         return None
@@ -35,6 +38,7 @@ def parse_float(text):
         return float(text.strip())
     except ValueError:
         return None
+
 
 def get_ship(conn, ship_name):
     with conn.cursor() as cur:
@@ -46,6 +50,7 @@ def get_ship(conn, ship_name):
         ship_id = cur.fetchone()[0]
     conn.commit()
     return ship_id
+
 
 def get_version(conn, ship_id, design_name, version, subversion):
     with conn.cursor() as cur:
@@ -74,6 +79,7 @@ def get_version(conn, ship_id, design_name, version, subversion):
         ship_version_id = cur.fetchone()[0]
     conn.commit()
     return ship_version_id
+
 
 def import_openings(pdf_path):
     pdf_path = Path(pdf_path)
@@ -149,8 +155,10 @@ def import_openings(pdf_path):
     finally:
         conn.close()
 
+
 if __name__ == "__main__":
     import sys
+
     if len(sys.argv) != 2:
         print("Usage: python parseOpenings.py <pdf_path>")
         sys.exit(1)

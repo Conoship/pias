@@ -6,6 +6,7 @@ import psycopg
 
 # ---------- DB CONNECTION ----------
 
+
 def get_conn():
     return psycopg.connect(
         dbname="pias_damage",
@@ -17,6 +18,7 @@ def get_conn():
 
 
 # ---------- FILENAME PARSING ----------
+
 
 def parse_filename(path: str):
     """
@@ -54,6 +56,7 @@ def parse_float(text):
 
 
 # ---------- SHIP / VERSION HELPERS ----------
+
 
 def get_ship(conn, ship_name: str) -> int:
     with conn.cursor() as cur:
@@ -107,6 +110,7 @@ def get_version(conn, ship_id, design_name, version, subversion, ship_run):
 
 # ---------- TEXT PARSING HELPERS ----------
 
+
 def detect_side(text: str):
     """
     Look for 'Damage at PS.' or 'Damage at SB.' etc and return 'PS', 'SB', ...
@@ -121,6 +125,7 @@ def _find_float(pattern: str, text: str):
 
 
 # ---------- PROBDAM CASES / TOTAL ----------
+
 
 def parse_damage_row(row, ship_version_id, side, cur):
     """
@@ -259,6 +264,7 @@ def parse_total_line(line: str, ship_version_id, side, cur):
 
 # ---------- TRIM & GM BLOCKS ----------
 
+
 def slice_trim_block(text: str, block_title: str) -> str:
     """
     Strict slicing of one of the three blocks:
@@ -347,6 +353,7 @@ def parse_trim_gm_block(text, block_title, condition_name, ship_version_id, cur)
 
 # ---------- CONCLUSION ----------
 
+
 def parse_conclusion(text, ship_version_id, cur):
     m_len = re.search(r"Subdivision length\s*=\s*([-\d\.]+)\s*m", text)
     m_r = re.search(r"Required subdivision index R\s*=\s*([-\d\.]+)", text)
@@ -376,6 +383,7 @@ def parse_conclusion(text, ship_version_id, cur):
 
 # ---------- RTF → TEXT ----------
 
+
 def rtf_to_text(raw: str) -> str:
     """
     Very small RTF → text converter tailored to your PIAS output.
@@ -404,7 +412,15 @@ def rtf_to_text(raw: str) -> str:
 
 # ---------- MAIN IMPORT ----------
 
-def import_probdam_rtf(rtf_path, ship_name=None, design_name=None, version=None, subversion=None, ship_run = ""):
+
+def import_probdam_rtf(
+    rtf_path,
+    ship_name=None,
+    design_name=None,
+    version=None,
+    subversion=None,
+    ship_run="",
+):
     """
     Read one ProbDam .rtf output and fill:
 
@@ -421,7 +437,9 @@ def import_probdam_rtf(rtf_path, ship_name=None, design_name=None, version=None,
     conn = get_conn()
     try:
         ship_id = get_ship(conn, ship_name)
-        ship_version_id = get_version(conn, ship_id, design_name, version, subversion, ship_run)
+        ship_version_id = get_version(
+            conn, ship_id, design_name, version, subversion, ship_run
+        )
 
         with open(rtf_path, "r", encoding="latin-1", errors="ignore") as f:
             raw = f.read()
@@ -448,9 +466,15 @@ def import_probdam_rtf(rtf_path, ship_name=None, design_name=None, version=None,
                 parse_damage_line(line, ship_version_id, side, cur)
 
             # --- trim & GM, three conditions ---
-            parse_trim_gm_block(text, "Light service draft", "light",   ship_version_id, cur)
-            parse_trim_gm_block(text, "Partial subdivision draft", "partial", ship_version_id, cur)
-            parse_trim_gm_block(text, "Deepest subdivision draft", "deepest", ship_version_id, cur)
+            parse_trim_gm_block(
+                text, "Light service draft", "light", ship_version_id, cur
+            )
+            parse_trim_gm_block(
+                text, "Partial subdivision draft", "partial", ship_version_id, cur
+            )
+            parse_trim_gm_block(
+                text, "Deepest subdivision draft", "deepest", ship_version_id, cur
+            )
 
             # --- final conclusion ---
             parse_conclusion(text, ship_version_id, cur)

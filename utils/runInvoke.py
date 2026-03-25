@@ -21,13 +21,15 @@ VERSION_REGEX = re.compile(
     re.IGNORECASE,
 )
 
-def to_windows_path(path:str) -> str:
+
+def to_windows_path(path: str) -> str:
     if path.startswith("/mnt/") and len(path) > 6:
         drive_letter = path[5].upper()
         rest = path[7:]
         rest_windows = rest.replace("/", "\\")
-        return f"{drive_letter}:\\"+rest_windows
+        return f"{drive_letter}:\\" + rest_windows
     return path
+
 
 def get_version_token(folder_name: str) -> Optional[str]:
     m = VERSION_REGEX.match(folder_name.strip())
@@ -43,10 +45,12 @@ def get_version_token(folder_name: str) -> Optional[str]:
         return m.group("num")
     return None
 
+
 # normalize names and add _ for spaces/special chars
 def normalize_name(name: str) -> str:
     name = name.strip()
     return re.sub(r"[^\w\-]+", "_", name)
+
 
 # regulates version number format
 def numeric_version_from_token(token: Optional[str]) -> str:
@@ -70,12 +74,13 @@ def numeric_version_from_token(token: Optional[str]) -> str:
         return "1"
     return t
 
+
 # Find process / ship / base-version / subversion (run index)
 def find_info(
     path: str,
     design_process: List[str],
 ) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[int]]:
-    
+
     parts = path.split(os.sep)
     process: Optional[str] = None
     folder_ship: Optional[str] = None
@@ -128,7 +133,8 @@ def find_info(
             version_folder = parts[version_folder_idx]
             try:
                 children = sorted(
-                    d for d in os.listdir(ship_dir)
+                    d
+                    for d in os.listdir(ship_dir)
                     if os.path.isdir(os.path.join(ship_dir, d))
                 )
                 if version_folder in children:
@@ -156,7 +162,8 @@ def find_info(
             version_dir = os.path.dirname(version_dir)
         try:
             siblings = sorted(
-                d for d in os.listdir(version_dir)
+                d
+                for d in os.listdir(version_dir)
                 if os.path.isdir(os.path.join(version_dir, d))
             )
             if run_folder_name in siblings:
@@ -168,8 +175,7 @@ def find_info(
         parent_dir = rtf_dir
         try:
             rtf_siblings = sorted(
-                f for f in os.listdir(parent_dir)
-                if f.lower().endswith(".rtf")
+                f for f in os.listdir(parent_dir) if f.lower().endswith(".rtf")
             )
             if filename in rtf_siblings:
                 sub_index = rtf_siblings.index(filename) + 1
@@ -177,6 +183,7 @@ def find_info(
             sub_index = None
 
     return process, folder_ship, version_token, sub_index
+
 
 # RTF parsing
 def extract_ship_rtf(path: str) -> Optional[str]:
@@ -210,11 +217,20 @@ def extract_ship_rtf(path: str) -> Optional[str]:
 
     start = last_bs + 1
     end = start
-    while end < len(chunk) and chunk[end] not in ("\\", "{", "}", " ", "\t", "\r", "\n"):
+    while end < len(chunk) and chunk[end] not in (
+        "\\",
+        "{",
+        "}",
+        " ",
+        "\t",
+        "\r",
+        "\n",
+    ):
         end += 1
 
     ship = chunk[start:end].strip()
     return ship or None
+
 
 # dumpcomps.xml template
 DUMPCOMPS_TEMPLATE = """
@@ -237,6 +253,7 @@ PROCESS_SHORT = {
     "final design": "final",
 }
 
+
 # Final pattern: ship_design_version(_if_duplicate)_subversion_piasShip.fromLayout
 def make_output_filename(
     process: Optional[str],
@@ -245,10 +262,12 @@ def make_output_filename(
     sub_index: Optional[int],
     pias_ship: Optional[str],
 ) -> str:
-    
+
     ship_token = normalize_name(ship or "UnknownShip")
     proc_key = (process or "").strip().lower()
-    design_token = PROCESS_SHORT.get(proc_key, normalize_name(process or "UnknownProcess"))
+    design_token = PROCESS_SHORT.get(
+        proc_key, normalize_name(process or "UnknownProcess")
+    )
 
     # ensure we always have a numeric version string
     version_str = version_numeric or "1"
@@ -265,6 +284,7 @@ def make_output_filename(
 
     return base + ".fromLayout"
 
+
 def write_dumpcomps(xml_dir: str, xml_output_filename: str) -> None:
     os.makedirs(xml_dir, exist_ok=True)
     xml_content = DUMPCOMPS_TEMPLATE.format(output_filename=xml_output_filename)
@@ -274,16 +294,22 @@ def write_dumpcomps(xml_dir: str, xml_output_filename: str) -> None:
 
 
 # invoke.bat handling
-def create_invoke(invoke_template: str, run_dir: str, pias_ship: Optional[str], bat_name:str) -> Optional[str]:
+def create_invoke(
+    invoke_template: str, run_dir: str, pias_ship: Optional[str], bat_name: str
+) -> Optional[str]:
     if not pias_ship:
-        logger.info("[warning] No PIAS ship name found in RTF for %s, skipping", run_dir)
+        logger.info(
+            "[warning] No PIAS ship name found in RTF for %s, skipping", run_dir
+        )
         return None
 
     replacement = f"set piasname={pias_ship}"
     if "set piasname=ship" in invoke_template:
         bat_text = invoke_template.replace("set piasname=ship", replacement)
     else:
-        logger.info("[warning] Could not find 'set piasname=ship' in template; using as-is.")
+        logger.info(
+            "[warning] Could not find 'set piasname=ship' in template; using as-is."
+        )
         bat_text = invoke_template
 
     os.makedirs(run_dir, exist_ok=True)
@@ -291,6 +317,7 @@ def create_invoke(invoke_template: str, run_dir: str, pias_ship: Optional[str], 
     with open(bat_path, "w", encoding="utf-8") as f:
         f.write(bat_text)
     return bat_path
+
 
 def run(
     invoke_template: str,
@@ -306,7 +333,7 @@ def run(
     run_numint: bool,
     skip_numint_exists: bool,
 ) -> int:
-    
+
     os.makedirs(out_dir, exist_ok=True)
 
     print("\n[run] starting")
@@ -319,7 +346,9 @@ def run(
     print(f"       sub_index: {sub_index}")
     print(f"       pias_ship: {pias_ship}")
 
-    xml_out = make_output_filename(process, ship_folder, version_numeric, sub_index, pias_ship)
+    xml_out = make_output_filename(
+        process, ship_folder, version_numeric, sub_index, pias_ship
+    )
     xml_output_path = os.path.join(out_dir, xml_out)
 
     xml_output_pias = to_windows_path(xml_output_path)
@@ -329,11 +358,11 @@ def run(
     write_dumpcomps(run_dir, xml_output_pias)
     print(f"       dumpcomps.xml written in {run_dir}")
 
-    bat_path = create_invoke(invoke_template, run_dir, pias_ship, "invoke_run.bat")	
+    bat_path = create_invoke(invoke_template, run_dir, pias_ship, "invoke_run.bat")
     if not bat_path:
         print("[warning] no bat_path (no pias_ship), skipping rtf")
         return 1
-    
+
     bat_windows = to_windows_path(bat_path)
     print(f"       bat_path (WSL): {bat_path}")
     print(f"       bat_path (Windows): {bat_windows}")
@@ -346,7 +375,7 @@ def run(
             stderr=subprocess.PIPE,
             text=True,
             shell=False,
-            timeout=300
+            timeout=300,
         )
     except subprocess.TimeoutExpired:
         logger.error("invoke_run.bat timed out for RTF: %s", rtf_path)
@@ -377,13 +406,22 @@ def run(
     if result.returncode == 0:
         ship_token = normalize_name(ship_folder or "UnknownShip")
         proc_key = (process or "").strip().lower()
-        design_token = PROCESS_SHORT.get(proc_key, normalize_name(process or "UnknownProcess"))
+        design_token = PROCESS_SHORT.get(
+            proc_key, normalize_name(process or "UnknownProcess")
+        )
         sub = sub_index if sub_index is not None else 1
         ship_run = normalize_name(pias_ship) if pias_ship else ""
 
         try:
             logger.info("Importing Probdam data into SQL...")
-            import_probdam_rtf(rtf_path, ship_name=ship_token, design_name = design_token, version=version_numeric, subversion=str(sub), ship_run=ship_run)
+            import_probdam_rtf(
+                rtf_path,
+                ship_name=ship_token,
+                design_name=design_token,
+                version=version_numeric,
+                subversion=str(sub),
+                ship_run=ship_run,
+            )
             print("         -> Probdam data imported into SQL")
         except Exception as e:
             logger.error("         Probdam import failed: %s", e)
@@ -392,15 +430,22 @@ def run(
         if not numint_template:
             logger.error("numint_invoke.bat template not provided, cannot run numint.")
             return result.returncode
-        
+
         numint_rtf = os.path.join(run_dir, "outputNumInt.rtf")
 
         if skip_numint_exists and os.path.isfile(numint_rtf):
-            logger.info("Skipping numint_invoke.bat as outputNumInt.rtf already exists: %s", numint_rtf)
+            logger.info(
+                "Skipping numint_invoke.bat as outputNumInt.rtf already exists: %s",
+                numint_rtf,
+            )
         else:
-            numint_bat_path = create_invoke(numint_template, run_dir, pias_ship, "numint_invoke.bat")
+            numint_bat_path = create_invoke(
+                numint_template, run_dir, pias_ship, "numint_invoke.bat"
+            )
             if not numint_bat_path:
-                logger.error("Could not create numint_invoke.bat (no pias_ship), skipping numint.")
+                logger.error(
+                    "Could not create numint_invoke.bat (no pias_ship), skipping numint."
+                )
                 return result.returncode
 
             numint_bat_windows = to_windows_path(numint_bat_path)
@@ -413,10 +458,12 @@ def run(
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True,
-                    shell=False
+                    shell=False,
                 )
             except Exception as e:
-                logger.error("failed to start cmd.exe for numint RTF: %s, error: %s", rtf_path, e)
+                logger.error(
+                    "failed to start cmd.exe for numint RTF: %s, error: %s", rtf_path, e
+                )
                 return result.returncode
 
             if numint_result.stdout.strip():
@@ -425,31 +472,74 @@ def run(
                 logger.info("[numint] stderr:", numint_result.stderr.strip())
 
             if numint_result.returncode != 0:
-                logger.error("[numint] numint_invoke.bat failed for RTF: %s | %s", rtf_path, numint_result.returncode)
+                logger.error(
+                    "[numint] numint_invoke.bat failed for RTF: %s | %s",
+                    rtf_path,
+                    numint_result.returncode,
+                )
             else:
                 if os.path.exists(numint_rtf):
                     try:
                         logger.info("Importing NumInt data into SQL...")
-                        import_numint_rtf(numint_rtf, ship_name=ship_token, design_name=design_token, version=version_numeric, subversion=str(sub), ship_run=ship_run)
+                        import_numint_rtf(
+                            numint_rtf,
+                            ship_name=ship_token,
+                            design_name=design_token,
+                            version=version_numeric,
+                            subversion=str(sub),
+                            ship_run=ship_run,
+                        )
                         print("         -> NumInt data imported into SQL")
                     except Exception as e:
                         logger.error("         NumInt import failed: %s", e)
                 else:
-                    logger.error("NumInt run succeeded but outputNumInt.rtf not found: %s", run_dir)
+                    logger.error(
+                        "NumInt run succeeded but outputNumInt.rtf not found: %s",
+                        run_dir,
+                    )
     return result.returncode
 
-def main():
-    parser = argparse.ArgumentParser(description="Run or preview invoke.bat on a folder tree.")
-    parser.add_argument("--root", required=True, help="Root folder of project tree.")
-    parser.add_argument("--out", required=True, help="Output folder for invoke results.")
-    parser.add_argument("--invoke", required=True, help="Path to invoke.bat template ('ship' as placeholder)")
-    parser.add_argument("--numint-invoke", default=None, help="Path to numint_invoke.bat template (different).")
-    parser.add_argument("--run-numint", action="store_true", help="Also run numint_invoke.bat after invoke.bat for each RTF (outputNumInt.rtf).")
-    parser.add_argument("--skip-numInt-exists", action="store_true", help="Skip running numint_invoke.bat if outputNumInt.rtf already exists.")
-    parser.add_argument("--design-process", nargs="+", default=["Basic Design", "Concept Design", "Final Design"], help="Process folder names to detect match.")
-    parser.add_argument("--execute", action="store_true", help="Actually run invoke.bat, otherwise just preview.")
-    args = parser.parse_args()
 
+def main():
+    parser = argparse.ArgumentParser(
+        description="Run or preview invoke.bat on a folder tree."
+    )
+    parser.add_argument("--root", required=True, help="Root folder of project tree.")
+    parser.add_argument(
+        "--out", required=True, help="Output folder for invoke results."
+    )
+    parser.add_argument(
+        "--invoke",
+        required=True,
+        help="Path to invoke.bat template ('ship' as placeholder)",
+    )
+    parser.add_argument(
+        "--numint-invoke",
+        default=None,
+        help="Path to numint_invoke.bat template (different).",
+    )
+    parser.add_argument(
+        "--run-numint",
+        action="store_true",
+        help="Also run numint_invoke.bat after invoke.bat for each RTF (outputNumInt.rtf).",
+    )
+    parser.add_argument(
+        "--skip-numInt-exists",
+        action="store_true",
+        help="Skip running numint_invoke.bat if outputNumInt.rtf already exists.",
+    )
+    parser.add_argument(
+        "--design-process",
+        nargs="+",
+        default=["Basic Design", "Concept Design", "Final Design"],
+        help="Process folder names to detect match.",
+    )
+    parser.add_argument(
+        "--execute",
+        action="store_true",
+        help="Actually run invoke.bat, otherwise just preview.",
+    )
+    args = parser.parse_args()
 
     ROOT = os.path.abspath(args.root)
     OUTPUT_DIR = os.path.abspath(args.out)
@@ -463,8 +553,8 @@ def main():
         format="%(asctime)s [%(levelname)s] %(message)s",
         handlers=[
             logging.FileHandler(log_path, mode="w", encoding="utf-8"),
-            logging.StreamHandler(sys.stdout)
-        ]
+            logging.StreamHandler(sys.stdout),
+        ],
     )
 
     logger.info("-- runInvoke start --")
@@ -514,18 +604,17 @@ def main():
 
         ship_dir = None
         if ship_idx is not None:
-            ship_dir = os.path.join(*parts[:ship_idx + 1])
+            ship_dir = os.path.join(*parts[: ship_idx + 1])
 
-        is_under_ship = (
-            ship_idx is not None and len(parts) > ship_idx + 1
-        )
+        is_under_ship = ship_idx is not None and len(parts) > ship_idx + 1
 
         if is_under_ship:
             all_ship_subdirs.add(dirpath)
 
         # all real RTFs in THIS folder
         rtf_files = [
-            f for f in filenames
+            f
+            for f in filenames
             if f.lower().endswith(".rtf") and not f.startswith("~$")
         ]
 
@@ -545,7 +634,10 @@ def main():
             )
 
             if not process or not ship_folder or ship_dir is None:
-                logger.info("[skip] Could not detect process/ship/ship_dir for RTF: %s, skipping", rtf_path)
+                logger.info(
+                    "[skip] Could not detect process/ship/ship_dir for RTF: %s, skipping",
+                    rtf_path,
+                )
                 continue
 
             # base numeric version (no 'run', no 'v', no `0`, only digits/decimals)
@@ -556,7 +648,9 @@ def main():
 
             # prepare key for duplicate detection
             ship_token = normalize_name(ship_folder)
-            proc_key = PROCESS_SHORT.get(process.strip().lower(), normalize_name(process))
+            proc_key = PROCESS_SHORT.get(
+                process.strip().lower(), normalize_name(process)
+            )
             pias_key = normalize_name(pias_ship) if pias_ship else "none"
             key = (ship_token, proc_key, base_version, sub, pias_key)
 
@@ -584,7 +678,14 @@ def main():
                     "process=%r, ship_folder=%r, version_token=%r, "
                     "base_version=%r, version_numeric=%r, subversion=%r, "
                     "pias_ship=%r, count=%d",
-                    process, ship_folder, version_token, base_version, version_numeric, sub, pias_ship, count	
+                    process,
+                    ship_folder,
+                    version_token,
+                    base_version,
+                    version_numeric,
+                    sub,
+                    pias_ship,
+                    count,
                 )
                 logger.info("output_dir=%s", out_dir)
                 logger.info("xml_output_filename=%s", xml_out)
@@ -601,7 +702,7 @@ def main():
                     pias_ship,
                     numint_template,
                     args.run_numint,
-                    args.skip_numInt_exists
+                    args.skip_numInt_exists,
                 )
 
     # find deepest subdirs under ships with NO RTF anywhere in their subtree
@@ -609,8 +710,7 @@ def main():
     for d in all_ship_subdirs:
         # does this directory or any directory below it have RTFs?
         has_rtf_in_subtree = any(
-            r == d or r.startswith(d + os.sep)
-            for r in dirs_with_rtf
+            r == d or r.startswith(d + os.sep) for r in dirs_with_rtf
         )
         if not has_rtf_in_subtree:
             candidate_missing.add(d)
@@ -618,8 +718,7 @@ def main():
     deepest_missing = []
     for d in candidate_missing:
         is_parent_of_other = any(
-            other != d and other.startswith(d + os.sep)
-            for other in candidate_missing
+            other != d and other.startswith(d + os.sep) for other in candidate_missing
         )
         if not is_parent_of_other:
             deepest_missing.append(d)
@@ -627,6 +726,7 @@ def main():
     deepest_missing.sort()
     for d in deepest_missing:
         logger.warning("[SKIP] No RTF files found in subtree under: %s", d)
+
 
 if __name__ == "__main__":
     main()
