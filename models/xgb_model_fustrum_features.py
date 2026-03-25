@@ -1,9 +1,10 @@
+import yaml
+import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from xgboost import XGBRegressor
 from sklearn.metrics import r2_score, mean_absolute_error
 from sklearn.model_selection import train_test_split, learning_curve
-import matplotlib.pyplot as plt
-import numpy as np
 
 df = pd.read_csv(
     "C:/Users/student01/Desktop/data/all_ships_multiple_features_light_v3.csv"
@@ -47,8 +48,14 @@ X_Train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42
 )
 
+# Load the hyperparameters configuration.
+config = {}
+with open("config.yaml", "r") as f:
+    config = yaml.safe_load(f)
+
 # Initialize and Train the Model
-model = XGBRegressor(n_estimators=100, learning_rate=0.1, max_depth=6, random_state=42)
+xgb_params = config["XGBRegressorBaseline"]
+model = XGBRegressor(**xgb_params)
 model.fit(X_Train, y_train)
 
 # Predictions and Errors

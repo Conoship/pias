@@ -1,9 +1,10 @@
-import pandas as pd
-from xgboost import XGBRegressor
-from sklearn.metrics import r2_score, mean_absolute_error
-from sklearn.model_selection import learning_curve
-import matplotlib.pyplot as plt
+import yaml
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from xgboost import XGBRegressor
+from sklearn.model_selection import learning_curve
+from sklearn.metrics import r2_score, mean_absolute_error
 
 df = pd.read_csv(
     "C:/Users/student01/Desktop/data/all_ships_multiple_features_light_v3.csv"
@@ -45,11 +46,17 @@ ships = df["ship_id"].unique()
 print(ships)
 results = []
 
+# Load the hyperparameters configuration.
+config = {}
+with open("config.yaml", "r") as f:
+    config = yaml.safe_load(f)
+
 # Initialize variables to avoid PyLance Errors.
 y_test = pd.Series(dtype=float)
 preds = pd.Series(dtype=float)
 model: XGBRegressor | None = None
 errors = pd.Series(dtype=float)
+xgb_params = config["XGBRegressorLeaveOneOut"]
 
 for test_ship in ships:
     train_mask = df["ship_id"] != test_ship
@@ -60,9 +67,7 @@ for test_ship in ships:
     X_test = X[test_mask]
     y_test = y[test_mask]
 
-    model = XGBRegressor(
-        n_estimators=100, learning_rate=0.1, max_depth=3, random_state=42
-    )
+    model = XGBRegressor(**xgb_params)
     model.fit(X_train, y_train)
 
     preds = model.predict(X_test)

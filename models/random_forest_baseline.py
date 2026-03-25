@@ -1,9 +1,10 @@
+import yaml
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import train_test_split, learning_curve
 from sklearn.metrics import r2_score, mean_absolute_error
-import numpy as np
+from sklearn.model_selection import train_test_split, learning_curve
 
 # Load Data and Initial Clean
 df = pd.read_csv(
@@ -19,8 +20,14 @@ cols_to_drop = [
 X = df.select_dtypes(include=["number"]).drop(columns=cols_to_drop, errors="ignore")
 y = df["target_attained_index"]
 
+# Load the hyperparameters configuration.
+config = {}
+with open("config.yaml", "r") as f:
+    config = yaml.safe_load(f)
+
 # Filter Low-Impact Variables
-temp_rf = RandomForestRegressor(n_estimators=100, random_state=42).fit(X, y)
+low_impact_random_forest_params = config["LowImpactRandomForestRegressor"]
+temp_rf = RandomForestRegressor(**low_impact_random_forest_params).fit(X, y)
 important_cols = X.columns[temp_rf.feature_importances_ > 0.01]
 X = X[important_cols]
 
@@ -30,7 +37,8 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 # Model Training
-model = RandomForestRegressor(n_estimators=200, random_state=42)
+random_forest_params = config["RandomForestRegressor"]
+model = RandomForestRegressor(**random_forest_params)
 model.fit(X_train, y_train)
 
 # Predictions and Errors

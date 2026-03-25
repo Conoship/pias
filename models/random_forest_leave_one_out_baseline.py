@@ -1,9 +1,10 @@
+import yaml
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import learning_curve
 from sklearn.metrics import r2_score, mean_absolute_error
-import numpy as np
 
 # Load Data and Initial Clean
 df = pd.read_csv(
@@ -19,8 +20,14 @@ cols_to_drop = [
 X = df.select_dtypes(include=["number"]).drop(columns=cols_to_drop, errors="ignore")
 y = df["target_attained_index"]
 
+# Load the hyperparameters configuration.
+config = {}
+with open("config.yaml", "r") as f:
+    config = yaml.safe_load(f)
+
 # Filter Low-Impact Variables
-temp_rf = RandomForestRegressor(n_estimators=100, random_state=42).fit(X, y)
+low_impact_random_forest_params = config["LowImpactRandomForestRegressor"]
+temp_rf = RandomForestRegressor(**low_impact_random_forest_params).fit(X, y)
 important_cols = X.columns[temp_rf.feature_importances_ > 0.01]
 X = X[important_cols]
 
@@ -44,7 +51,7 @@ for test_ship in ships:
     X_test = X[test_mask]
     y_test = y[test_mask]
 
-    model = RandomForestRegressor(n_estimators=100, random_state=42)
+    model = RandomForestRegressor(**low_impact_random_forest_params)
     model.fit(X_train, y_train)
 
     preds = model.predict(X_test)
