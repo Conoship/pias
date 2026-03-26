@@ -18,7 +18,6 @@ CREATE TABLE IF NOT EXISTS ship_version (
 );
 
 /* MAIN DIMENSIONS */
-
 CREATE TABLE IF NOT EXISTS main_dimensions (
 	id SERIAL PRIMARY KEY,
 	ship_version_id INTEGER NOT NULL,
