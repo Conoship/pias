@@ -1,5 +1,4 @@
-SELECT 
-	t.ship_version_id,
+SELECT t.ship_version_id,
 	t.draft,
 	t.trim,
 	t.mg,
@@ -17,19 +16,13 @@ SELECT
 	comp_data.avg_permeability,
 	(c.attained_index - c.required_index) AS target_margin
 FROM public.trim_gm t
-JOIN public.probdam_conclusion c
-	ON c.ship_version_id = t.ship_version_id
-
-LEFT JOIN (
-	SELECT
-		comp.ship_version_id,
-		COUNT(DISTINCT comp.id) AS total_compartments,
-AVG(sub.permeability_for_damage_stability) as avg_permeability
-	FROM public.compartment comp
-	JOIN public.subcompartment sub ON sub.compartment_id = comp.id
-	GROUP BY comp.ship_version_id
-) comp_data
-	ON comp_data.ship_version_id = t.ship_version_id
-
+	JOIN public.probdam_conclusion c ON c.ship_version_id = t.ship_version_id
+	LEFT JOIN (
+		SELECT comp.ship_version_id,
+			COUNT(DISTINCT comp.id) AS total_compartments,
+			AVG(sub.permeability_for_damage_stability) as avg_permeability
+		FROM public.compartment comp
+			JOIN public.subcompartment sub ON sub.compartment_id = comp.id
+		GROUP BY comp.ship_version_id
+	) comp_data ON comp_data.ship_version_id = t.ship_version_id
 WHERE t.ship_version_id BETWEEN 499 AND 538
-
