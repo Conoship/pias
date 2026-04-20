@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QLineEdit" name="mainDimLineEdit">
+   <widget class="QLineEdit" name="mainDimsLineEdit">
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -30,7 +30,7 @@
      <string>Main Dimensions PDF</string>
     </property>
     <property name="clearButtonEnabled">
-     <bool>true</bool>
+     <bool>false</bool>
     </property>
    </widget>
    <widget class="QLineEdit" name="internalSubdivLineEdit">
@@ -49,7 +49,7 @@
      <string>Internal Subdivision XML</string>
     </property>
     <property name="clearButtonEnabled">
-     <bool>true</bool>
+     <bool>false</bool>
     </property>
    </widget>
    <widget class="QLineEdit" name="openingsLineEdit">
@@ -68,7 +68,7 @@
      <string>Openings PDF</string>
     </property>
     <property name="clearButtonEnabled">
-     <bool>true</bool>
+     <bool>false</bool>
     </property>
    </widget>
    <widget class="QLineEdit" name="damageStabLineEdit">
@@ -87,10 +87,10 @@
      <string>Damage Stability PDF/RTF</string>
     </property>
     <property name="clearButtonEnabled">
-     <bool>true</bool>
+     <bool>false</bool>
     </property>
    </widget>
-   <widget class="QPushButton" name="maindDimBtn">
+   <widget class="QPushButton" name="mainDimsBtn">
     <property name="geometry">
      <rect>
       <x>500</x>
@@ -100,7 +100,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Select Main Dimensions PDF</string>
+     <string>Browse Main Dimensions PDF</string>
     </property>
    </widget>
    <widget class="QPushButton" name="openingsBtn">
@@ -113,7 +113,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Select Openings PDF</string>
+     <string>Browse Openings PDF</string>
     </property>
    </widget>
    <widget class="QPushButton" name="internalSubdivBtn">
@@ -126,7 +126,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Select Internal Subdivision XML</string>
+     <string>Browse Internal Subdivision XML</string>
     </property>
    </widget>
    <widget class="QPushButton" name="damageStabBtn">
@@ -139,7 +139,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Select Damage Stability PDF/RTF</string>
+     <string>Browse Damage Stability PDF/RTF</string>
     </property>
    </widget>
    <widget class="QFrame" name="resultsFrame">
