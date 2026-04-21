@@ -101,7 +101,7 @@ plt.savefig(
 )
 
 # R2 Learning Curve
-train_sizes, train_scores, test_scores, _, _ = learning_curve(
+train_sizes, train_scores, test_scores = learning_curve(
     model, X, y, cv=5, scoring="r2", train_sizes=np.linspace(0.1, 1.0, 5)
 )
 plt.figure(figsize=(8, 6))

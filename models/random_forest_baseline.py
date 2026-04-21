@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split, learning_curve
 
 # Load Data and Initial Clean
 df = pd.read_csv(
-    "C:/Users/student01/Desktop/data/all_ships_multiple_features_light_v3.csv"
+    "C:/Users/student01/Desktop/data/all_ships_all_conditions_v4.csv"
 )
 cols_to_drop = [
     "target_margin",
@@ -68,7 +68,7 @@ plt.savefig(
 )
 
 # R2 Learning Curve
-train_sizes, train_scores, test_scores, _, _ = learning_curve(
+train_sizes, train_scores, test_scores = learning_curve(
     model, X, y, cv=5, scoring="r2", train_sizes=np.linspace(0.1, 1.0, 5)
 )
 plt.figure(figsize=(8, 6))
