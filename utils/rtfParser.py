@@ -7,17 +7,8 @@ class MainDimensionsParser(object):
     def __init__(self):
         self.cols = [
             "Length between perpendiculars",
-            "Waterline length",
-            "Length overall",
             "Moulded breadth",
-            "Design draft",
             "Moulded depth",
-            "Appendage coefficient",
-            "Mean shell plate thickness",
-            "Keel plate thickness",
-            "Subdivision length",
-            "Light service draft",
-            "Subdivision draft",
         ]
         self.output_df = pd.DataFrame(columns=self.cols)
 
@@ -45,16 +36,13 @@ class MainDimensionsParser(object):
                     if idx > self.FRAME_SPACING_DEFS_START:
                         break
                     if self.cols[column_searching] in line:
-                        # Get all occureneces of  the character '{'.
+                        # Get all occureneces of  the character '{', then remove the last indices because they were used in "{m}".
                         opening_curly_brace_indices = self.find_all_occurrences(line, '{')
+                        opening_curly_brace_indices.pop()
 
-                        # Get all occureneces of  the character '}'.
+                        # Get all occureneces of  the character '}', then remove the last indices because they were used in "{m}".
                         closing_curly_brace_indices = self.find_all_occurrences(line, '}')
-
-                        # If we are not checking for Appendage coefficient, then remove the last indices because they were used in "{m}"
-                        if self.cols[column_searching] != "Appendage coefficient":
-                            opening_curly_brace_indices.pop()
-                            closing_curly_brace_indices.pop()
+                        closing_curly_brace_indices.pop()
                             
                         # The last occurence of the character '{' is right before the value of the feature we are searching for.
                         # To get the full value we will search from one position after the start of '{' untill we encounter '}'.

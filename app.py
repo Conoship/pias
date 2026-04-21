@@ -1,7 +1,9 @@
 # Import standard library packages.
 import sys
+import pickle
 
 # Import third party packages.
+import pandas as pd
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import QFile
 from PySide6.QtUiTools import QUiLoader
@@ -62,6 +64,34 @@ def connect_file_browse_button(
         )
 
 
+def run_agent_pipeline():
+    # Step 1: Parse the files to make CSVs (RTF Parser or RTF -> PDF).
+
+    # Step 2: Collect User Defined Value from the UI.
+
+    # Step 3: Put the data in a single CSV.
+    df = pd.read_csv(
+        "C:/Users/student02/data/all_ships_all_conditions_v4.csv"
+    )
+    cols_to_drop = [
+        "target_margin",
+        "target_attained_index",
+        "ship_version_id",
+        "condition_code",
+    ]
+
+    # Step 4: Load the model.
+    with open("models/model.pkl", "rb") as file:
+        model = pickle.load(file)
+
+    # Step 5: Feed the data to the model.
+    X = df.select_dtypes(include=["number"]).drop(columns=cols_to_drop, errors="ignore")
+    predictions = model.predict(X)
+
+    # Step 6: Display the output.
+    print(predictions)
+
+
 def main():
     # Create the App and load the UI.
     app = QApplication(sys.argv)
@@ -109,6 +139,11 @@ def main():
         file_type="PDF Files (*.pdf);;RTF Files (*.rtf)",
         line_edit_name="damageStabLineEdit",
     )
+
+    # Connect the Run AI Agent pipeline.
+    run_btn: QPushButton | None = window.findChild(QPushButton, "runBtn")
+    if run_btn is not None:
+        run_btn.clicked.connect(run_agent_pipeline)
 
     # Close the file and run the app.
     file.close()

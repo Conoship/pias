@@ -6,3 +6,4 @@ env/
 *pyc
 utils/report.pdf
 config.yaml
+*.pkl
