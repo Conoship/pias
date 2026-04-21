@@ -2,7 +2,7 @@ import pandas as pd
 
 class MainDimensionsParser(object):
     GENERAL_PARTICULARS_START = 31
-    FRAME_SPACING_DEFS_START = 50
+    FRAME_SPACING_DEFS_START = 47
     # Subdivision Length
     # Light Service draft
     # Subdivision draft
@@ -45,25 +45,33 @@ class MainDimensionsParser(object):
                 for idx, line in enumerate(file):
                     if idx < self.GENERAL_PARTICULARS_START:
                         continue
-                    elif idx > self.FRAME_SPACING_DEFS_START:
+                    if idx > self.FRAME_SPACING_DEFS_START:
                         break
-                    else:
-                        if self.cols[column_searching] in line:
-                            # Get all occureneces of  the character '{' and remove the last one, since it is used at "{m}".
-                            opening_curly_brace_indices = self.find_all_occurrences(line, '{')
+                    if column_searching >= len(self.cols):
+                        break
+                    if self.cols[column_searching] in line:
+                        # Get all occureneces of  the character '{' and remove the last one, since it is used at "{m}".
+                        opening_curly_brace_indices = self.find_all_occurrences(line, '{')
+
+                        # Get all occureneces of  the character '}' and remove the last one, since it is used at "{m}".
+                        closing_curly_brace_indices = self.find_all_occurrences(line, '}')
+
+                        if self.cols[column_searching] != "Appendage coefficient":
                             opening_curly_brace_indices.pop()
-
-                            # Get all occureneces of  the character '}' and remove the last one, since it is used at "{m}".
-                            closing_curly_brace_indices = self.find_all_occurrences(line, '}')
                             closing_curly_brace_indices.pop()
+                            
+                        # The last occurence of the character '{' is right before the value of the feature we are searching for.
+                        # To get the full value we will search from one position after the start of '{' untill we encounter '}'.
+                        start_index, end_index = opening_curly_brace_indices[-1], closing_curly_brace_indices[-1]  
+                        feature_value = line[start_index + 1 : end_index]
 
-                            # The last occurence of the character '{' is right before the value of the feature we are searching for.
-                            # To get the full value we will search from one position after the start of '{' untill we encounter '}'.
-                            start_index, end_index = opening_curly_brace_indices[-1], closing_curly_brace_indices[-1]  
-                            feature_value = line[start_index + 1 : end_index]
 
-                            self.output_df[self.cols[column_searching]] = feature_value
-                            column_searching += 1
+                        self.output_df.loc[0, self.cols[column_searching]] = feature_value
+                        
+                        if self.cols[column_searching] == self.cols[len(self.cols) - 1]:
+                            break
+                        column_searching += 1
+
 
         except FileNotFoundError:
             print(f"Error: The file '{file_path}' was not found.")
