@@ -29,7 +29,7 @@ def open_file(window: QWidget, caption: str, file_type: str, line_edit_name: str
     file_path, _ = QFileDialog.getOpenFileName(window, caption, "", file_type)
     if file_path:
         line_edit: QLineEdit | None = window.findChild(QLineEdit, line_edit_name)
-        if line_edit:
+        if line_edit is not None:
             line_edit.setText(file_path)
 
 
