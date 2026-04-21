@@ -24,7 +24,7 @@ class MainDimensionsParser(object):
         ]
         self.output_df = pd.DataFrame(columns=self.cols)
 
-    def find_all_occurrences(text: str, char: str):
+    def find_all_occurrences(self,text: str, char: str):
         """
         Returns a list of all indices where `char` occurs in `text`.
         Handles edge cases like empty strings, multi-character input, etc.
@@ -51,17 +51,17 @@ class MainDimensionsParser(object):
                         print (f"searching {self.cols[column_searching]} in {[line]}")
                         if self.cols[column_searching] in line:
                             # Get all occureneces of  the character '{' and remove the last one, since it is used at "{m}".
-                            opening_curly_brace_indices = self.find_all_occurrences(line, "{")
+                            opening_curly_brace_indices = self.find_all_occurrences(line, '{')
                             opening_curly_brace_indices.pop()
-
+                            print(opening_curly_brace_indices)
                             # Get all occureneces of  the character '}' and remove the last one, since it is used at "{m}".
-                            closing_curly_brace_indices = self.find_all_occurrences(line, "}")
+                            closing_curly_brace_indices = self.find_all_occurrences(line, '}')
                             closing_curly_brace_indices.pop()
-
+                            print(closing_curly_brace_indices)
                             # The last occurence of the character '{' is right before the value of the feature we are searching for.
                             # To get the full value we will search from the start of '{' to the end of '}'.
-                            start_index, end_index = opening_curly_brace_indices[:-1], closing_curly_brace_indices[:-1]  
-                            feature_value = line[start_index : end_index]
+                            start_index, end_index = opening_curly_brace_indices[-1], closing_curly_brace_indices[-1]  
+                            feature_value = line[start_index + 1 : end_index]
 
                             print(f"{line} contains value for {self.cols[column_searching]}")
                             print(f"{self.cols[column_searching]}: {feature_value}")
