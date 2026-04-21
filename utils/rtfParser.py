@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 class MainDimensionsParser(object):
     GENERAL_PARTICULARS_START = 31
     FRAME_SPACING_DEFS_START = 47
@@ -12,7 +13,7 @@ class MainDimensionsParser(object):
         ]
         self.output_df = pd.DataFrame(columns=self.cols)
 
-    def find_all_occurrences(self,text: str, char: str):
+    def find_all_occurrences(self, text: str, char: str):
         """
         Returns a list of all indices where `char` occurs in `text`.
         Handles edge cases like empty strings, multi-character input, etc.
@@ -37,26 +38,34 @@ class MainDimensionsParser(object):
                         break
                     if self.cols[column_searching] in line:
                         # Get all occureneces of  the character '{', then remove the last indices because they were used in "{m}".
-                        opening_curly_brace_indices = self.find_all_occurrences(line, '{')
+                        opening_curly_brace_indices = self.find_all_occurrences(
+                            line, "{"
+                        )
                         opening_curly_brace_indices.pop()
 
                         # Get all occureneces of  the character '}', then remove the last indices because they were used in "{m}".
-                        closing_curly_brace_indices = self.find_all_occurrences(line, '}')
+                        closing_curly_brace_indices = self.find_all_occurrences(
+                            line, "}"
+                        )
                         closing_curly_brace_indices.pop()
-                            
+
                         # The last occurence of the character '{' is right before the value of the feature we are searching for.
                         # To get the full value we will search from one position after the start of '{' untill we encounter '}'.
-                        start_index, end_index = opening_curly_brace_indices[-1], closing_curly_brace_indices[-1]  
+                        start_index, end_index = (
+                            opening_curly_brace_indices[-1],
+                            closing_curly_brace_indices[-1],
+                        )
                         feature_value = line[start_index + 1 : end_index]
-                        self.output_df.loc[0, self.cols[column_searching]] = feature_value
-                        
+                        self.output_df.loc[0, self.cols[column_searching]] = (
+                            feature_value
+                        )
+
                         # Check if we are done parsing the data we need.
                         if self.cols[column_searching] == self.cols[len(self.cols) - 1]:
                             break
 
                         # Increment counter to go to the next column.
                         column_searching += 1
-
 
         except FileNotFoundError:
             print(f"Error: The file '{file_path}' was not found.")

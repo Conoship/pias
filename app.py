@@ -70,9 +70,7 @@ def run_agent_pipeline():
     # Step 2: Collect User Defined Value from the UI.
 
     # Step 3: Put the data in a single CSV.
-    df = pd.read_csv(
-        "C:/Users/student02/data/all_ships_all_conditions_v4.csv"
-    )
+    df = pd.read_csv("C:/Users/student02/data/all_ships_all_conditions_v4.csv")
     cols_to_drop = [
         "target_margin",
         "target_attained_index",
@@ -129,15 +127,6 @@ def main():
         caption="Browse Internal Subdivision XML",
         file_type="XML Files (*.xml)",
         line_edit_name="internalSubdivLineEdit",
-    )
-
-    # Connect Damage Stability Button with searching for PDFs/RTFs.
-    connect_file_browse_button(
-        button_name="damageStabBtn",
-        window=window,
-        caption="Browse Damage Stability PDF/RTF",
-        file_type="PDF Files (*.pdf);;RTF Files (*.rtf)",
-        line_edit_name="damageStabLineEdit",
     )
 
     # Connect the Run AI Agent pipeline.

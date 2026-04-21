@@ -6,101 +6,293 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>741</width>
-    <height>700</height>
+    <width>746</width>
+    <height>772</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-
-   <widget class="QLineEdit" name="mainDimsLineEdit">
-    <property name="geometry"><rect><x>20</x><y>20</y><width>461</width><height>31</height></rect></property>
-    <property name="readOnly"><bool>true</bool></property>
-    <property name="placeholderText"><string>Main Dimensions PDF</string></property>
-   </widget>
-   <widget class="QPushButton" name="mainDimsBtn">
-    <property name="geometry"><rect><x>500</x><y>20</y><width>211</width><height>31</height></rect></property>
-    <property name="text"><string>Browse Main Dimensions PDF</string></property>
-   </widget>
-
-   <widget class="QLineEdit" name="openingsLineEdit">
-    <property name="geometry"><rect><x>20</x><y>60</y><width>461</width><height>31</height></rect></property>
-    <property name="readOnly"><bool>true</bool></property>
-    <property name="placeholderText"><string>Openings PDF</string></property>
-   </widget>
-   <widget class="QPushButton" name="openingsBtn">
-    <property name="geometry"><rect><x>500</x><y>60</y><width>211</width><height>31</height></rect></property>
-    <property name="text"><string>Browse Openings PDF</string></property>
-   </widget>
-
-   <widget class="QLineEdit" name="internalSubdivLineEdit">
-    <property name="geometry"><rect><x>20</x><y>100</y><width>461</width><height>31</height></rect></property>
-    <property name="readOnly"><bool>true</bool></property>
-    <property name="placeholderText"><string>Internal Subdivision XML</string></property>
-   </widget>
-   <widget class="QPushButton" name="internalSubdivBtn">
-    <property name="geometry"><rect><x>500</x><y>100</y><width>211</width><height>31</height></rect></property>
-    <property name="text"><string>Browse Internal Subdivision XML</string></property>
-   </widget>
-
-   <widget class="QLineEdit" name="damageStabLineEdit">
-    <property name="geometry"><rect><x>20</x><y>140</y><width>461</width><height>31</height></rect></property>
-    <property name="readOnly"><bool>true</bool></property>
-    <property name="placeholderText"><string>Damage Stability PDF/RTF</string></property>
-   </widget>
-   <widget class="QPushButton" name="damageStabBtn">
-    <property name="geometry"><rect><x>500</x><y>140</y><width>211</width><height>31</height></rect></property>
-    <property name="text"><string>Browse Damage Stability PDF/RTF</string></property>
-   </widget>
-
-   <widget class="QLineEdit" name="csvLineEdit">
-    <property name="geometry"><rect><x>20</x><y>180</y><width>461</width><height>31</height></rect></property>
-    <property name="readOnly"><bool>true</bool></property>
-    <property name="placeholderText"><string>Ship Conditions CSV</string></property>
-   </widget>
-   <widget class="QPushButton" name="csvBrowseBtn">
-    <property name="geometry"><rect><x>500</x><y>180</y><width>211</width><height>31</height></rect></property>
-    <property name="text"><string>Browse CSV</string></property>
-   </widget>
-
-   <widget class="QLineEdit" name="modelLineEdit">
-    <property name="geometry"><rect><x>20</x><y>220</y><width>461</width><height>31</height></rect></property>
-    <property name="readOnly"><bool>true</bool></property>
-    <property name="placeholderText"><string>Trained Model (.pkl / .joblib)</string></property>
-   </widget>
-   <widget class="QPushButton" name="modelBrowseBtn">
-    <property name="geometry"><rect><x>500</x><y>220</y><width>211</width><height>31</height></rect></property>
-    <property name="text"><string>Browse Model</string></property>
-   </widget>
    <widget class="QPushButton" name="runBtn">
-    <property name="geometry"><rect><x>270</x><y>265</y><width>201</width><height>31</height></rect></property>
-    <property name="text"><string>Run AI Agent</string></property>
+    <property name="geometry">
+     <rect>
+      <x>280</x>
+      <y>460</y>
+      <width>181</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Run AI Agent</string>
+    </property>
    </widget>
-
+   <widget class="QFrame" name="filesFrame">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>10</y>
+      <width>721</width>
+      <height>201</height>
+     </rect>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+    <widget class="QLineEdit" name="mainDimsLineEdit">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>50</y>
+       <width>461</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+     <property name="placeholderText">
+      <string>Main Dimensions PDF</string>
+     </property>
+     <property name="clearButtonEnabled">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="openingsLineEdit">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>100</y>
+       <width>461</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+     <property name="placeholderText">
+      <string>Openings PDF</string>
+     </property>
+     <property name="clearButtonEnabled">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="internalSubdivLineEdit">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>150</y>
+       <width>461</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+     <property name="placeholderText">
+      <string>Internal Subdivision XML</string>
+     </property>
+     <property name="clearButtonEnabled">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="mainDimsBtn">
+     <property name="geometry">
+      <rect>
+       <x>490</x>
+       <y>50</y>
+       <width>211</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Browse Main Dimensions PDF</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="openingsBtn">
+     <property name="geometry">
+      <rect>
+       <x>490</x>
+       <y>100</y>
+       <width>211</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Browse Openings PDF</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="internalSubdivBtn">
+     <property name="geometry">
+      <rect>
+       <x>490</x>
+       <y>150</y>
+       <width>211</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Browse Internal Subdivision XML</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>0</y>
+       <width>171</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Enter the required files</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QFrame" name="valuesFrame">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>220</y>
+      <width>721</width>
+      <height>231</height>
+     </rect>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+    <widget class="QLineEdit" name="subdivLenLineEdit">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>40</y>
+       <width>461</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="readOnly">
+      <bool>false</bool>
+     </property>
+     <property name="placeholderText">
+      <string>Enter Subdivision Length</string>
+     </property>
+     <property name="clearButtonEnabled">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="gmLineEdit">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>190</y>
+       <width>461</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="readOnly">
+      <bool>false</bool>
+     </property>
+     <property name="placeholderText">
+      <string>Enter GM</string>
+     </property>
+     <property name="clearButtonEnabled">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="subdivDraftLineEdit">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>140</y>
+       <width>461</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="readOnly">
+      <bool>false</bool>
+     </property>
+     <property name="placeholderText">
+      <string>Enter Subdivision Draft</string>
+     </property>
+     <property name="clearButtonEnabled">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="lightServiceDraftLineEdit">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>90</y>
+       <width>461</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="readOnly">
+      <bool>false</bool>
+     </property>
+     <property name="placeholderText">
+      <string>Enter Light Service Draft</string>
+     </property>
+     <property name="clearButtonEnabled">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_2">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>0</y>
+       <width>211</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Enter the required values</string>
+     </property>
+    </widget>
+   </widget>
    <widget class="QFrame" name="resultsFrame">
-    <property name="geometry"><rect><x>20</x><y>310</y><width>701</width><height>360</height></rect></property>
-    <property name="frameShape"><enum>QFrame::StyledPanel</enum></property>
-    <property name="frameShadow"><enum>QFrame::Raised</enum></property>
-
-    <widget class="QTableWidget" name="resultsTable">
-     <property name="geometry"><rect><x>10</x><y>10</y><width>681</width><height>310</height></rect></property>
-     <property name="alternatingRowColors"><bool>true</bool></property>
-     <property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property>
-     <property name="sortingEnabled"><bool>true</bool></property>
-    </widget>
-
-    <widget class="QLabel" name="predStatusLabel">
-     <property name="geometry"><rect><x>10</x><y>330</y><width>681</width><height>20</height></rect></property>
-     <property name="text"><string>Select files and click Run AI Agent.</string></property>
-    </widget>
-
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>500</y>
+      <width>721</width>
+      <height>211</height>
+     </rect>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
    </widget>
-
   </widget>
   <widget class="QMenuBar" name="menubar">
-   <property name="geometry"><rect><x>0</x><y>0</y><width>741</width><height>26</height></rect></property>
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>746</width>
+     <height>26</height>
+    </rect>
+   </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
