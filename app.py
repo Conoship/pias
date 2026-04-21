@@ -174,8 +174,8 @@ def main():
     )
 
     # Connect the Run AI Agent pipeline.
-    run_btn: QPushButton | None = window.findChild(QPushButton, "runBtn")
-    if run_btn is not None:
+    run_btn = window.findChild(QPushButton, "runBtn")
+    if run_btn:
         run_btn.clicked.connect(lambda: run_agent_pipeline(window))
 
     # Close the file and run the app.
