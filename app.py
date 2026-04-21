@@ -74,6 +74,20 @@ def connect_file_browse_button(
 
 
 def display_results(window: QWidget, prediction: float, confidence: int):
+    """
+    Load the results widget UI, update its labels with prediction data,
+    and display it inside the results frame of the main window.
+
+    Args:
+        window (QWidget):
+            The main application window that contains the target results frame.
+
+        prediction (float):
+            The predicted value to display in the results widget.
+
+        confidence (int):
+            The confidence percentage to display in the results widget.
+    """
     # Load the Results Widget.
     loader = QUiLoader()
     file = QFile("ui/resultsWidget.ui")
@@ -102,10 +116,26 @@ def display_results(window: QWidget, prediction: float, confidence: int):
             layout = results_frame.layout()
 
         if layout:
+            # Clear previous widgets.
+            while layout.count():
+                item = layout.takeAt(0)
+                if item:
+                    widget = item.widget()
+                    if widget:
+                        widget.deleteLater()
             layout.addWidget(results_widget)
 
 
 def run_agent_pipeline(window: QWidget):
+    """
+    Execute the AI agent pipeline: load data, run the trained model,
+    and display prediction results in the UI.
+
+    Args:
+        window (QWidget):
+            The main application window used to locate UI elements
+            where results will be displayed.
+    """
     # Step 1: Parse the files to make CSVs (RTF Parser or RTF -> PDF).
 
     # Step 2: Collect User Defined Value from the UI.
