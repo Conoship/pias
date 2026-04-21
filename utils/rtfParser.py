@@ -48,23 +48,21 @@ class MainDimensionsParser(object):
                     elif idx > self.FRAME_SPACING_DEFS_START:
                         break
                     else:
-                        print (f"searching {self.cols[column_searching]} in {[line]}")
                         if self.cols[column_searching] in line:
                             # Get all occureneces of  the character '{' and remove the last one, since it is used at "{m}".
                             opening_curly_brace_indices = self.find_all_occurrences(line, '{')
                             opening_curly_brace_indices.pop()
-                            print(opening_curly_brace_indices)
+
                             # Get all occureneces of  the character '}' and remove the last one, since it is used at "{m}".
                             closing_curly_brace_indices = self.find_all_occurrences(line, '}')
                             closing_curly_brace_indices.pop()
-                            print(closing_curly_brace_indices)
+
                             # The last occurence of the character '{' is right before the value of the feature we are searching for.
-                            # To get the full value we will search from the start of '{' to the end of '}'.
+                            # To get the full value we will search from one position after the start of '{' untill we encounter '}'.
                             start_index, end_index = opening_curly_brace_indices[-1], closing_curly_brace_indices[-1]  
                             feature_value = line[start_index + 1 : end_index]
 
-                            print(f"{line} contains value for {self.cols[column_searching]}")
-                            print(f"{self.cols[column_searching]}: {feature_value}")
+                            self.output_df[self.cols[column_searching]] = feature_value
                             column_searching += 1
 
         except FileNotFoundError:
@@ -79,6 +77,7 @@ class MainDimensionsParser(object):
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
 
+        print(self.output_df)
         return self.output_df
 
 
@@ -104,27 +103,6 @@ class OpeningsParser(object):
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
 
-
-class OutputParser(object):
-    def __init__(self):
-        self.output_df = pd.DataFrame()
-
-    def parse_file(self, file_path):
-        try:
-            with open(file_path, "r", encoding="rtf") as file:
-                pass
-
-        except FileNotFoundError:
-            print(f"Error: The file '{file_path}' was not found.")
-
-        except PermissionError:
-            print(f"Error: Permission denied to read '{file_path}'.")
-
-        except UnicodeDecodeError:
-            print(f"Error: Could not decode '{file_path}' with UTF-8 encoding.")
-
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
 
 
 def main():
