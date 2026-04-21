@@ -1,4 +1,5 @@
 import yaml
+import pickle
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -8,7 +9,7 @@ from sklearn.model_selection import train_test_split, learning_curve
 
 # Load Data and Initial Clean
 df = pd.read_csv(
-    "C:/Users/student01/Desktop/data/all_ships_all_conditions_v4.csv"
+    "C:/Users/student02/data/all_ships_all_conditions_v4.csv"
 )
 cols_to_drop = [
     "target_margin",
@@ -41,6 +42,10 @@ random_forest_params = config["RandomForestRegressor"]
 model = RandomForestRegressor(**random_forest_params)
 model.fit(X_train, y_train)
 
+# Save the model
+with open("model.pkl", "wb") as f:
+    pickle.dump(model, f)
+
 # Predictions and Errors
 preds = model.predict(X_test)
 r2 = r2_score(y_test, preds)
@@ -64,7 +69,7 @@ plt.xlabel("Actual Attained Index")
 plt.ylabel("Predicted Attained Index")
 plt.tight_layout()
 plt.savefig(
-    "C:/Users/student01/Desktop/rug-project/pias/models/plots/rf_attained_accuracy_v3.png"
+    "plots/rf_attained_accuracy_v3.png"
 )
 
 # R2 Learning Curve
@@ -81,7 +86,7 @@ plt.legend()
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
 plt.savefig(
-    "C:/Users/student01/Desktop/rug-project/pias/models/plots/rf_learning_curve_v3.png"
+    "plots/rf_learning_curve_v3.png"
 )
 
 # Residuals
@@ -93,7 +98,7 @@ plt.xlabel("Predicted Attained Index")
 plt.ylabel("Error")
 plt.tight_layout()
 plt.savefig(
-    "C:/Users/student01/Desktop/rug-project/pias/models/plots/rf_attained_residuals_v3.png"
+    "plots/rf_attained_residuals_v3.png"
 )
 
 plt.show()
