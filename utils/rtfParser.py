@@ -29,7 +29,7 @@ class MainDimensionsParser(object):
 
     def parse_file(self, file_path) -> pd.DataFrame:
         try:
-            with open(file_path, "r", encoding="rtf") as file:
+            with open(file_path, "r", encoding="utf-8") as file:
                 for idx, line in enumerate(file):
                     if idx < self.GENERAL_PARTICULARS_START:
                         continue
@@ -99,7 +99,7 @@ class OutputParser(object):
 
 
 def main():
-    file_path = ""
+    file_path = "C:/Users/student01\Documents/Stephanie/Clean/Concept Design/A3072/v02 - effect_noconnection_daytanks_overflow tk/main.rtf"
     parser = MainDimensionsParser()
     parser.parse_file(file_path)
 
