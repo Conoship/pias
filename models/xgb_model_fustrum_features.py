@@ -33,7 +33,8 @@ features = [
     "max_layout_height",
     "avg_cross_section",
     "sum_bh_sections",
-    "std_breadth,std_height",
+    "std_breadth",
+    "std_height",
     "n_frustum_points",
     "std_breadth",
 ]
