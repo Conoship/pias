@@ -11,15 +11,15 @@ class MainDimensionsParser(object):
     def __init__(self):
         self.cols = [
             "Length between perpendiculars",
-            "Waterline Length",
-            "Length Overall",
-            "Moulded Breadth",
-            "Design Draft",
-            "Moulded Depth",
+            "Waterline length",
+            "Length overall",
+            "Moulded breadth",
+            "Design draft",
+            "Moulded depth",
             "Appendage coefficient",
             "Mean shell plate thickness",
             "Keel plate thickness",
-            "Subdivision Length",
+            "Subdivision length",
             "Light service draft",
             "Subdivision draft",
         ]
@@ -28,14 +28,14 @@ class MainDimensionsParser(object):
     def parse_file(self, file_path) -> pd.DataFrame:
         try:
             with open(file_path, "r", encoding="utf-8") as file:
+                column_searching = 0
                 for idx, line in enumerate(file):
                     if idx < self.GENERAL_PARTICULARS_START:
                         continue
                     elif idx > self.FRAME_SPACING_DEFS_START:
                         break
                     else:
-                        print(f"The line being parsed is: {line}")
-                        column_searching = 0
+                        print (f"searching {self.cols[column_searching]} in {[line]}")
                         if self.cols[column_searching] in line:
                             print(f"{line} contains value for {self.cols[column_searching]}")
                             print(f"{self.cols[column_searching]}: {line[len(line)-8:len(line)]}")
@@ -102,7 +102,7 @@ class OutputParser(object):
 
 
 def main():
-    file_path = "C:/Users/student01\Documents/Stephanie/Clean/Concept Design/A3072/v02 - effect_noconnection_daytanks_overflow tk/main.rtf"
+    file_path = "C:/Users/student01/Documents/Stephanie/Clean/Concept Design/A3072/v00 - initial run new hull/main.rtf"
     parser = MainDimensionsParser()
     parser.parse_file(file_path)
 
