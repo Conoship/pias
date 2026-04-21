@@ -3,10 +3,7 @@ import pandas as pd
 class MainDimensionsParser(object):
     GENERAL_PARTICULARS_START = 31
     FRAME_SPACING_DEFS_START = 47
-    # Subdivision Length
-    # Light Service draft
-    # Subdivision draft
-    # All General particulars and main dimensions. 
+
     def __init__(self):
         self.cols = [
             "Length between perpendiculars",
@@ -47,15 +44,14 @@ class MainDimensionsParser(object):
                         continue
                     if idx > self.FRAME_SPACING_DEFS_START:
                         break
-                    if column_searching >= len(self.cols):
-                        break
                     if self.cols[column_searching] in line:
-                        # Get all occureneces of  the character '{' and remove the last one, since it is used at "{m}".
+                        # Get all occureneces of  the character '{'.
                         opening_curly_brace_indices = self.find_all_occurrences(line, '{')
 
-                        # Get all occureneces of  the character '}' and remove the last one, since it is used at "{m}".
+                        # Get all occureneces of  the character '}'.
                         closing_curly_brace_indices = self.find_all_occurrences(line, '}')
 
+                        # If we are not checking for Appendage coefficient, then remove the last indices because they were used in "{m}"
                         if self.cols[column_searching] != "Appendage coefficient":
                             opening_curly_brace_indices.pop()
                             closing_curly_brace_indices.pop()
@@ -64,12 +60,13 @@ class MainDimensionsParser(object):
                         # To get the full value we will search from one position after the start of '{' untill we encounter '}'.
                         start_index, end_index = opening_curly_brace_indices[-1], closing_curly_brace_indices[-1]  
                         feature_value = line[start_index + 1 : end_index]
-
-
                         self.output_df.loc[0, self.cols[column_searching]] = feature_value
                         
+                        # Check if we are done parsing the data we need.
                         if self.cols[column_searching] == self.cols[len(self.cols) - 1]:
                             break
+
+                        # Increment counter to go to the next column.
                         column_searching += 1
 
 
@@ -87,30 +84,6 @@ class MainDimensionsParser(object):
 
         print(self.output_df)
         return self.output_df
-
-
-
-class OpeningsParser(object):
-    def __init__(self):
-        self.output_df = pd.DataFrame()
-
-    def parse_file(self, file_path):
-        try:
-            with open(file_path, "r", encoding="rtf") as file:
-                pass
-
-        except FileNotFoundError:
-            print(f"Error: The file '{file_path}' was not found.")
-
-        except PermissionError:
-            print(f"Error: Permission denied to read '{file_path}'.")
-
-        except UnicodeDecodeError:
-            print(f"Error: Could not decode '{file_path}' with UTF-8 encoding.")
-
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
-
 
 
 def main():
