@@ -3,13 +3,14 @@ import pandas as pd
 class MainDimensionsParser(object):
     GENERAL_PARTICULARS_START = 31
     FRAME_SPACING_DEFS_START = 50
+    LINE_LEN_AFTER_VALUE = 8
     # Subdivision Length
     # Light Service draft
     # Subdivision draft
     # All General particulars and main dimensions. 
     def __init__(self):
         self.cols = [
-            "Length Between Perpendiculars",
+            "Length between perpendiculars",
             "Waterline Length",
             "Length Overall",
             "Moulded Breadth",
@@ -18,12 +19,9 @@ class MainDimensionsParser(object):
             "Appendage coefficient",
             "Mean shell plate thickness",
             "Keel plate thickness",
-            "Number of persons for whome lifeboats are provided (N1)",
             "Subdivision Length",
             "Light service draft",
             "Subdivision draft",
-            "Number of persons for whome lifeboats are provided (N1)",
-            "Number of persons for whome NO lifeboats are provided (N2)",
         ]
         self.output_df = pd.DataFrame(columns=self.cols)
 
@@ -37,6 +35,11 @@ class MainDimensionsParser(object):
                         break
                     else:
                         print(f"The line being parsed is: {line}")
+                        column_searching = 0
+                        if self.cols[column_searching] in line:
+                            print(f"{line} contains value for {self.cols[column_searching]}")
+                            print(f"{self.cols[column_searching]}: {line[len(line)-8:len(line)]}")
+                            column_searching += 1
 
         except FileNotFoundError:
             print(f"Error: The file '{file_path}' was not found.")
