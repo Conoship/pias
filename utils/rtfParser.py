@@ -96,3 +96,13 @@ class OutputParser(object):
 
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
+
+
+def main():
+    file_path = ""
+    parser = MainDimensionsParser()
+    parser.parse_file(file_path)
+
+
+if __name__ == "__main__":
+    main()
