@@ -7,7 +7,16 @@ import pandas as pd
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import QFile
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QApplication, QWidget, QFileDialog, QLineEdit, QPushButton
+from PySide6.QtWidgets import (
+    QApplication,
+    QWidget,
+    QFileDialog,
+    QLineEdit,
+    QPushButton,
+    QLabel,
+    QFrame,
+    QVBoxLayout,
+)
 
 
 def open_file(window: QWidget, caption: str, file_type: str, line_edit_name: str):
@@ -30,8 +39,8 @@ def open_file(window: QWidget, caption: str, file_type: str, line_edit_name: str
     """
     file_path, _ = QFileDialog.getOpenFileName(window, caption, "", file_type)
     if file_path:
-        line_edit: QLineEdit | None = window.findChild(QLineEdit, line_edit_name)
-        if line_edit is not None:
+        line_edit = window.findChild(QLineEdit, line_edit_name)
+        if line_edit:
             line_edit.setText(file_path)
 
 
@@ -57,14 +66,46 @@ def connect_file_browse_button(
         line_edit_name (str):
             The objectName of the QLineEdit that will display the selected file path.
     """
-    btn: QPushButton | None = window.findChild(QPushButton, button_name)
-    if btn is not None:
+    btn = window.findChild(QPushButton, button_name)
+    if btn:
         btn.clicked.connect(
             lambda: open_file(window, caption, file_type, line_edit_name)
         )
 
 
-def run_agent_pipeline():
+def display_results(window: QWidget, prediction: float, confidence: int):
+    # Load the Results Widget.
+    loader = QUiLoader()
+    file = QFile("ui/resultsWidget.ui")
+    file.open(QFile.OpenModeFlag.ReadOnly)
+    results_widget = loader.load(file)
+    file.close()
+
+    # Get the target labels.
+    prediction_label = results_widget.findChild(QLabel, "prediction")
+    confidence_label = results_widget.findChild(QLabel, "confidence")
+
+    # Modify the content of the placeholder to be the actual values.
+    if prediction_label:
+        prediction_label.setText(str(prediction))
+
+    if confidence_label:
+        confidence_label.setText(f"{confidence}%")
+
+    # Put the widget to the Results Frame in the Main Window.
+    results_frame = window.findChild(QFrame, "resultsFrame")
+    if results_frame:
+        if results_frame.layout() is None:
+            layout = QVBoxLayout()
+            results_frame.setLayout(layout)
+        else:
+            layout = results_frame.layout()
+
+        if layout:
+            layout.addWidget(results_widget)
+
+
+def run_agent_pipeline(window: QWidget):
     # Step 1: Parse the files to make CSVs (RTF Parser or RTF -> PDF).
 
     # Step 2: Collect User Defined Value from the UI.
@@ -84,10 +125,13 @@ def run_agent_pipeline():
 
     # Step 5: Feed the data to the model.
     X = df.select_dtypes(include=["number"]).drop(columns=cols_to_drop, errors="ignore")
-    predictions = model.predict(X)
+    prediction = model.predict(X)
+
+    # TODO: Get the actual value of the confidence in the model's prediction.
+    confidence = 0
 
     # Step 6: Display the output.
-    print(predictions)
+    display_results(window, prediction, confidence)
 
 
 def main():
@@ -132,7 +176,7 @@ def main():
     # Connect the Run AI Agent pipeline.
     run_btn: QPushButton | None = window.findChild(QPushButton, "runBtn")
     if run_btn is not None:
-        run_btn.clicked.connect(run_agent_pipeline)
+        run_btn.clicked.connect(lambda: run_agent_pipeline(window))
 
     # Close the file and run the app.
     file.close()
