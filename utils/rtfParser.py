@@ -1,3 +1,4 @@
+import re
 import pandas as pd
 
 
@@ -13,19 +14,40 @@ class MainDimensionsParser(object):
         ]
         self.output_df = pd.DataFrame(columns=self.cols)
 
-    def find_all_occurrences(self, text: str, char: str):
+    def extract_field_value(self, line: str, feature_name: str):
         """
-        Returns a list of all indices where `char` occurs in `text`.
-        Handles edge cases like empty strings, multi-character input, etc.
-        """
-        # Input validation
-        if not isinstance(text, str) or not isinstance(char, str):
-            raise TypeError("Both text and char must be strings.")
-        if len(char) != 1:
-            raise ValueError("The 'char' argument must be a single character.")
+        Extracts the value associated with a field name in an RTF line.
 
-        # Find all occurrences
-        return [i for i, c in enumerate(text) if c == char]
+        This is done by:
+        - Locating the field name in the line.
+        - Capturing the second {...} group that follows it.
+
+        This avoids interference from other RTF braces.
+
+        Args:
+            line (str):
+                The line being parsed in the RTF file.
+
+            feature_name (str):
+                The name of the feature that we are searching for its value.
+        """
+        if feature_name not in line:
+            return None
+
+        # Isolate the relevant section.
+        start = line.find(feature_name)
+        if start == -1:
+            return None
+
+        # Find all {} occurences in order.
+        substring = line[start:]
+        matches = list(re.finditer(r"\{(.*?)\}", substring))
+
+        # Extract the value from the correct one.
+        if len(matches) >= 3:
+            return matches[2].group(1).strip()
+
+        return None
 
     def parse_file(self, file_path) -> pd.DataFrame:
         try:
@@ -36,36 +58,20 @@ class MainDimensionsParser(object):
                         continue
                     if idx > self.FRAME_SPACING_DEFS_START:
                         break
-                    if self.cols[column_searching] in line:
-                        # Get all occureneces of  the character '{', then remove the last indices because they were used in "{m}".
-                        opening_curly_brace_indices = self.find_all_occurrences(
-                            line, "{"
-                        )
-                        opening_curly_brace_indices.pop()
 
-                        # Get all occureneces of  the character '}', then remove the last indices because they were used in "{m}".
-                        closing_curly_brace_indices = self.find_all_occurrences(
-                            line, "}"
-                        )
-                        closing_curly_brace_indices.pop()
+                    current_col = self.cols[column_searching]
 
-                        # The last occurence of the character '{' is right before the value of the feature we are searching for.
-                        # To get the full value we will search from one position after the start of '{' untill we encounter '}'.
-                        start_index, end_index = (
-                            opening_curly_brace_indices[-1],
-                            closing_curly_brace_indices[-1],
-                        )
-                        feature_value = line[start_index + 1 : end_index]
-                        self.output_df.loc[0, self.cols[column_searching]] = (
-                            feature_value
-                        )
+                    # Extract value safely using field-aware regex.
+                    value = self.extract_field_value(line, current_col)
 
-                        # Check if we are done parsing the data we need.
-                        if self.cols[column_searching] == self.cols[len(self.cols) - 1]:
+                    if value is not None:
+                        self.output_df.loc[0, current_col] = value
+
+                        # Move to next column only when value is found.
+                        if column_searching < len(self.cols) - 1:
+                            column_searching += 1
+                        else:
                             break
-
-                        # Increment counter to go to the next column.
-                        column_searching += 1
 
         except FileNotFoundError:
             print(f"Error: The file '{file_path}' was not found.")
