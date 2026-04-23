@@ -16,7 +16,7 @@
   <widget class="QLabel" name="attainedIndexLabel">
    <property name="geometry">
     <rect>
-     <x>40</x>
+     <x>20</x>
      <y>50</y>
      <width>241</width>
      <height>41</height>
@@ -34,7 +34,7 @@
   <widget class="QLabel" name="predictionLabel">
    <property name="geometry">
     <rect>
-     <x>40</x>
+     <x>20</x>
      <y>100</y>
      <width>241</width>
      <height>51</height>
@@ -46,15 +46,15 @@
     </font>
    </property>
    <property name="text">
-    <string>Prediction Confidence:</string>
+    <string>95% CI for Prediction:</string>
    </property>
   </widget>
   <widget class="QLabel" name="prediction">
    <property name="geometry">
     <rect>
-     <x>300</x>
+     <x>260</x>
      <y>50</y>
-     <width>91</width>
+     <width>131</width>
      <height>41</height>
     </rect>
    </property>
@@ -70,9 +70,9 @@
   <widget class="QLabel" name="confidence">
    <property name="geometry">
     <rect>
-     <x>300</x>
+     <x>260</x>
      <y>100</y>
-     <width>91</width>
+     <width>131</width>
      <height>51</height>
     </rect>
    </property>
