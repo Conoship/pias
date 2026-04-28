@@ -105,7 +105,7 @@ def get_file_from_line_edit(
             reply = QMessageBox.warning(
                 window,
                 "Warning Empty File",
-                f"Please input {file_path}.",
+                f"Please input {file_name}.",
                 QMessageBox.StandardButton.Ok,
             )
             return None
