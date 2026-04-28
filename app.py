@@ -76,6 +76,43 @@ def connect_file_browse_button(
         )
 
 
+def get_file_from_line_edit(
+    window: QWidget, line_edit_name: str, file_name: str
+) -> str | None:
+    """
+    Function to retrieve a file path from a QLineEdit widget.
+
+    Args:
+        window (QWidget):
+            Parent widget containing the QLineEdit.
+
+        object_name (str):
+            The Qt objectName of the QLineEdit.
+
+        file_name (str):
+            The name of the file to be inputted, used to display the error message.
+
+    Returns:
+        file_path (float): The file path from the input field.
+        int: -1 if user confirms leaving the field blank.
+        None: If widget is missing or user cancels the dialog.
+    """
+    file_path = ""
+    line_edit = window.findChild(QLineEdit, line_edit_name)
+    if line_edit:
+        file_path = line_edit.text().strip()
+        if file_path == "":
+            reply = QMessageBox.warning(
+                window,
+                "Warning Empty File",
+                f"Please input {file_path}.",
+                QMessageBox.StandardButton.Ok,
+            )
+            return None
+
+    return file_path
+
+
 def get_value_from_line_edit(
     window: QWidget, line_edit_name: str, feature_name: str
 ) -> float | None:
@@ -94,7 +131,7 @@ def get_value_from_line_edit(
             The name of the feature, used to display the error message.
 
     Returns:
-        value (float): Parsed float value from the input.
+        value (float): Parsed float value from the input field.
         int: -1 if user confirms leaving the field blank.
         None: If widget is missing or user cancels the dialog.
     """
@@ -184,9 +221,26 @@ def run_agent_pipeline(window: QWidget):
             The main application window used to locate UI elements
             where results will be displayed.
     """
-    # Step 1: Parse the files to make CSVs (RTF Parser or RTF -> PDF).
+    # Step 1: Collect the file paths from the UI.
+    main_dims_path = get_file_from_line_edit(
+        window, "mainDimsLineEdit", "Main Dimensions PDF"
+    )
+    if main_dims_path is None:
+        return
 
-    # Step 2: Collect User Defined Value from the UI.
+    openings_path = get_file_from_line_edit(window, "openingsLineEdit", "Openings PDF")
+    if openings_path is None:
+        return
+
+    internal_subdiv_path = get_file_from_line_edit(
+        window, "internalSubdivLineEdit", "Internal Subdivision XML"
+    )
+    if internal_subdiv_path is None:
+        return
+
+    # Step 2: Parse the files to make CSVs (RTF Parser or RTF -> PDF).
+
+    # Step 3: Collect User Defined Value from the UI.
     # If any value is None return immediately.
     subdivision_length = get_value_from_line_edit(
         window, "subdivLenLineEdit", "Subdivision Length"
@@ -210,7 +264,7 @@ def run_agent_pipeline(window: QWidget):
     if gm_value is None:
         return
 
-    # Step 3: Put the data in a single CSV.
+    # Step 4: Put the data in a single CSV.
     df = pd.read_csv("C:/Users/student02/data/all_ships_all_conditions_v4.csv")
     cols_to_drop = [
         "target_margin",
@@ -219,11 +273,11 @@ def run_agent_pipeline(window: QWidget):
         "condition_code",
     ]
 
-    # Step 4: Load the model.
+    # Step 5: Load the model.
     with open("models/model.pkl", "rb") as file:
         model = pickle.load(file)
 
-    # Step 5: Feed the data to the model.
+    # Step 6: Feed the data to the model and get the results.
     X = df.select_dtypes(include=["number"]).drop(columns=cols_to_drop, errors="ignore")
 
     # Get per-tree predictions and calculate the 95% CI to display confidence.
@@ -232,7 +286,7 @@ def run_agent_pipeline(window: QWidget):
     lower = np.percentile(all_tree_preds, 2.5, axis=0)[0]
     upper = np.percentile(all_tree_preds, 97.5, axis=0)[0]
 
-    # Step 6: Display the output.
+    # Step 7: Display the output.
     display_results(window, prediction, lower, upper)
 
 
