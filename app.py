@@ -102,7 +102,7 @@ def get_file_from_line_edit(
     if line_edit:
         file_path = line_edit.text().strip()
         if file_path == "":
-            reply = QMessageBox.warning(
+            QMessageBox.warning(
                 window,
                 "Warning Empty File",
                 f"Please input {file_name}.",
