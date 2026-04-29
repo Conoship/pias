@@ -386,45 +386,45 @@ def run(
 
     if result.returncode != 0:
         logger.error("invoke_run.bat failed for RTF: %s", rtf_path)
-        if result.stderr.strip() and result.stderr.strip():
+        if result.stderr.strip():
             logger.error("  stderr:")
             logger.error(result.stderr.strip())
-        if result.stdout.strip() and result.stdout.strip():
+        if result.stdout.strip():
             logger.error("  stdout:")
             logger.error(result.stdout.strip())
     else:
         logger.info("[invoke] %s", rtf_path)
         logger.info("         PIAS ship run: %s", pias_ship)
         logger.info("         Output file: %s", xml_out)
-        if result.stdout.strip() and result.stdout.strip():
+        if result.stdout.strip():
             logger.info("  stdout:")
             logger.info(result.stdout.strip())
-        if result.stderr.strip() and result.stderr.strip():
+        if result.stderr.strip():
             logger.info("  stderr:")
             logger.info(result.stderr.strip())
 
-    if result.returncode == 0:
-        ship_token = normalize_name(ship_folder or "UnknownShip")
-        proc_key = (process or "").strip().lower()
-        design_token = PROCESS_SHORT.get(
-            proc_key, normalize_name(process or "UnknownProcess")
-        )
-        sub = sub_index if sub_index is not None else 1
-        ship_run = normalize_name(pias_ship) if pias_ship else ""
+    # Always import the existing ProbDam RTF, even if invoke_run.bat failed.
+    ship_token = normalize_name(ship_folder or "UnknownShip")
+    proc_key = (process or "").strip().lower()
+    design_token = PROCESS_SHORT.get(
+        proc_key, normalize_name(process or "UnknownProcess")
+    )
+    sub = sub_index if sub_index is not None else 1
+    ship_run = normalize_name(pias_ship) if pias_ship else ""
 
-        try:
-            logger.info("Importing Probdam data into SQL...")
-            import_probdam_rtf_local(
-                rtf_path,
-                ship_name=ship_token,
-                design_name=design_token,
-                version=version_numeric,
-                subversion=str(sub),
-                ship_run=ship_run,
-            )
-            print("         -> Probdam data imported into SQL")
-        except Exception as e:
-            logger.error("         Probdam import failed: %s", e)
+    try:
+        logger.info("Importing Probdam data into SQL from RTF: %s", rtf_path)
+        import_probdam_rtf_local(
+            rtf_path,
+            ship_name=ship_token,
+            design_name=design_token,
+            version=version_numeric,
+            subversion=str(sub),
+            ship_run=ship_run,
+        )
+        print("         -> Probdam data imported into SQL")
+    except Exception:
+        logger.exception("         Probdam import failed for RTF: %s", rtf_path)
 
     if run_numint:
         if not numint_template:
