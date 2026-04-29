@@ -130,6 +130,7 @@ ORDER BY
     condition_code;
 """
 
+
 def test_entire_table_queries(conn):
     print(pd.read_sql("SELECT COUNT(*) FROM trim_gm", conn))
     print(pd.read_sql("SELECT COUNT(*) FROM compartment", conn))
@@ -137,8 +138,11 @@ def test_entire_table_queries(conn):
     print(pd.read_sql("SELECT COUNT(*) FROM subcompartment_shape", conn))
     print(pd.read_sql("SELECT COUNT(*) FROM frustum_point", conn))
 
+
 def test_ctes_query(conn):
-    print(pd.read_sql("""
+    print(
+        pd.read_sql(
+            """
     WITH comp_data AS (
         SELECT
             comp.ship_version_id,
@@ -150,10 +154,16 @@ def test_ctes_query(conn):
         GROUP BY comp.ship_version_id
     )
     SELECT * FROM comp_data
-    """, conn))
+    """,
+            conn,
+        )
+    )
+
 
 def test_geom_query(conn):
-    print(pd.read_sql("""
+    print(
+        pd.read_sql(
+            """
     WITH geom AS (
         SELECT
             ss.ship_version_id,
@@ -166,7 +176,11 @@ def test_geom_query(conn):
         GROUP BY ss.ship_version_id
     )
     SELECT * FROM geom
-    """, conn))
+    """,
+            conn,
+        )
+    )
+
 
 # Perform test queries.
 test_entire_table_queries(conn)
