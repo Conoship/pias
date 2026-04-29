@@ -137,7 +137,7 @@ df = pd.read_sql_query(query, conn)
 print(df.head())
 
 # Optional: save results
-df.to_csv("../../data/all_ships_all_conditions_v4.csv", index=False)
+df.to_csv("../../../data/all_ships_all_conditions_v4.csv", index=False)
 
 # Close connection
 conn.close()
