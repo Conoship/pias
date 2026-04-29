@@ -307,6 +307,12 @@ def import_layout_xml(xml_path):
     ship_name, design_name, version, subversion, ship_run = parse_filename(xml_path)
 
     root = load_xml(xml_path)
+    print("root tag:",root.tag)
+    print("first 50")
+    for i,elem in enumerate(root.iter()):
+        print(i,elem.tag)
+        if i >= 49:
+            break
     print("Root tag:", root.tag)
 
     print("Content categories found:",
