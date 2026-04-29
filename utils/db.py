@@ -397,9 +397,6 @@ def create_all_tables(conn: sqlite3.Connection):
 
 if __name__ == "__main__":
     conn = get_local_conn()
-
     create_all_tables(conn)
-
     conn.close()
-
     print("All SQLite tables and indexes created successfully.")
