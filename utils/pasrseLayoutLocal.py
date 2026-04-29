@@ -307,6 +307,22 @@ def import_layout_xml(xml_path):
     ship_name, design_name, version, subversion, ship_run = parse_filename(xml_path)
 
     root = load_xml(xml_path)
+    print("Root tag:", root.tag)
+
+    print("Content categories found:",
+        len(root.findall(".//Content_categories/Content_category")))
+
+    print("Subcompartment shapes found:",
+        len(root.findall(".//Subcompartment_shapes/Subcompartment_shape")))
+
+    print("Compartments found:",
+        len(root.findall(".//Compartment")))
+
+    print("Selected compartments found:",
+        sum(
+            1 for comp in root.findall(".//Compartment")
+            if (comp.findtext("Selected_for_output_and_calculations") or "").strip().lower() == "true"
+        ))
     conn = get_local_conn()
     create_layout_tables(conn)
     try:
