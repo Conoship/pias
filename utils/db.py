@@ -99,7 +99,3 @@ def create_layout_tables():
         conn.close()
     except Exception as e:
         print(e)
-
-
-if __name__ == "__main__":
-    create_layout_tables()

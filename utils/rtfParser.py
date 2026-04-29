@@ -86,14 +86,3 @@ class MainDimensionsParser(object):
             print(f"An unexpected error occurred: {e}")
 
         return self.output_df
-
-
-def main():
-    file_path = "C:/Users/student01/Documents/Stephanie/Clean/Concept Design/A3072/v00 - initial run new hull/main.rtf"
-    parser = MainDimensionsParser()
-    data = parser.parse_file(file_path)
-    print(data)
-
-
-if __name__ == "__main__":
-    main()
