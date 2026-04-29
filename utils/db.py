@@ -85,11 +85,9 @@ def create_layout_tables(conn: sqlite3.Connection):
                 name TEXT NOT NULL,
                 selected_for_output INTEGER NOT NULL,
                 design_content_id_number INTEGER,
-
                 FOREIGN KEY (ship_version_id)
                     REFERENCES ship_version(id)
                     ON DELETE CASCADE,
-
                 FOREIGN KEY (design_content_id_number)
                     REFERENCES content_category(design_content_id_number)
                     ON DELETE SET NULL
@@ -105,7 +103,6 @@ def create_layout_tables(conn: sqlite3.Connection):
                 sign INTEGER,
                 permeability_for_damage_stability REAL,
                 is_pipe INTEGER NOT NULL DEFAULT 0,
-
                 FOREIGN KEY (compartment_id)
                     REFERENCES compartment(id)
                     ON DELETE CASCADE
@@ -118,7 +115,6 @@ def create_layout_tables(conn: sqlite3.Connection):
                 ship_version_id INTEGER NOT NULL,
                 shape_guid TEXT NOT NULL,
                 side TEXT,
-
                 FOREIGN KEY (ship_version_id)
                     REFERENCES ship_version(id)
                     ON DELETE CASCADE
@@ -133,7 +129,6 @@ def create_layout_tables(conn: sqlite3.Connection):
                 L REAL,
                 B REAL,
                 H REAL,
-
                 FOREIGN KEY (subcompartment_shape_id)
                     REFERENCES subcompartment_shape(id)
                     ON DELETE CASCADE
@@ -149,24 +144,18 @@ def create_layout_tables(conn: sqlite3.Connection):
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 ship_version_id INTEGER NOT NULL,
                 compartment_id INTEGER,
-
                 description TEXT NOT NULL,
-
                 length REAL,
                 breadth REAL,
                 height REAL,
-
                 opening_type TEXT,
                 connected_compartment TEXT,
-
                 L REAL,
                 B REAL,
                 H REAL,
-
                 FOREIGN KEY (ship_version_id)
                     REFERENCES ship_version(id)
                     ON DELETE CASCADE,
-
                 FOREIGN KEY (compartment_id)
                     REFERENCES compartment(id)
                     ON DELETE SET NULL
@@ -193,20 +182,16 @@ def create_stability_tables(conn: sqlite3.Connection):
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 ship_version_id INTEGER NOT NULL,
                 condition_name TEXT NOT NULL,
-
                 draft REAL,
                 trim REAL,
                 vcg REAL,
                 mg REAL,
                 displacement REAL,
-
                 attained_index REAL,
                 required_index REAL,
-
                 FOREIGN KEY (ship_version_id)
                     REFERENCES ship_version(id)
                     ON DELETE CASCADE,
-
                 UNIQUE (ship_version_id, condition_name)
             )
         """)
@@ -219,26 +204,19 @@ def create_stability_tables(conn: sqlite3.Connection):
             CREATE TABLE IF NOT EXISTS probdam_case (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 ship_version_id INTEGER NOT NULL,
-
                 side TEXT,
                 damage_case TEXT NOT NULL,
-
                 aft_boundary REAL,
                 fwd_boundary REAL,
                 inside_boundary REAL,
                 upper_boundary REAL,
-
                 pi_tlight REAL,
                 si_tlight REAL,
-
                 pi_tpartial REAL,
                 si_tpartial REAL,
-
                 pi_tdeepest REAL,
                 si_tdeepest REAL,
-
                 ai REAL,
-
                 FOREIGN KEY (ship_version_id)
                     REFERENCES ship_version(id)
                     ON DELETE CASCADE
@@ -253,15 +231,11 @@ def create_stability_tables(conn: sqlite3.Connection):
             CREATE TABLE IF NOT EXISTS probdam_total (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 ship_version_id INTEGER NOT NULL,
-
                 side TEXT,
-
                 total_pi_tlight REAL,
                 total_pi_tpartial REAL,
                 total_pi_tdeepest REAL,
-
                 total_ai REAL,
-
                 FOREIGN KEY (ship_version_id)
                     REFERENCES ship_version(id)
                     ON DELETE CASCADE
@@ -276,13 +250,10 @@ def create_stability_tables(conn: sqlite3.Connection):
             CREATE TABLE IF NOT EXISTS probdam_conclusion (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 ship_version_id INTEGER NOT NULL,
-
                 subdivision_length REAL,
                 required_index REAL,
                 attained_index REAL,
-
                 complies INTEGER NOT NULL,
-
                 FOREIGN KEY (ship_version_id)
                     REFERENCES ship_version(id)
                     ON DELETE CASCADE
@@ -297,20 +268,14 @@ def create_stability_tables(conn: sqlite3.Connection):
             CREATE TABLE IF NOT EXISTS numint_case (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 ship_version_id INTEGER NOT NULL,
-
                 damage_case TEXT NOT NULL,
-
                 pi_tlight REAL,
                 si_tlight REAL,
-
                 pi_tpartial REAL,
                 si_tpartial REAL,
-
                 pi_tdeepest REAL,
                 si_tdeepest REAL,
-
                 ai REAL,
-
                 FOREIGN KEY (ship_version_id)
                     REFERENCES ship_version(id)
                     ON DELETE CASCADE
@@ -325,16 +290,12 @@ def create_stability_tables(conn: sqlite3.Connection):
             CREATE TABLE IF NOT EXISTS numint_conclusion (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 ship_version_id INTEGER NOT NULL,
-
                 subdivision_length REAL,
                 required_index REAL,
                 attained_index REAL,
-
                 complies INTEGER NOT NULL,
-
                 step_accuracy INTEGER,
                 penetration_reference TEXT,
-
                 FOREIGN KEY (ship_version_id)
                     REFERENCES ship_version(id)
                     ON DELETE CASCADE
@@ -354,27 +315,17 @@ def create_indexes(conn: sqlite3.Connection):
     try:
         indexes = [
             "CREATE INDEX IF NOT EXISTS idx_ship_version_ship_id ON ship_version(ship_id)",
-
             "CREATE INDEX IF NOT EXISTS idx_main_dim_ship_version_id ON main_dimensions(ship_version_id)",
-
             "CREATE INDEX IF NOT EXISTS idx_compartment_ship_version_id ON compartment(ship_version_id)",
-            "CREATE INDEX IF NOT EXISTS idx_compartment_design_content_id ON compartment(design_content_id_number)",
-
             "CREATE INDEX IF NOT EXISTS idx_subcompartment_compartment_id ON subcompartment(compartment_id)",
-
             "CREATE INDEX IF NOT EXISTS idx_subcompartment_shape_ship_version_id ON subcompartment_shape(ship_version_id)",
-
             "CREATE INDEX IF NOT EXISTS idx_frustum_point_subcompartment_shape_id ON frustum_point(subcompartment_shape_id)",
-
             "CREATE INDEX IF NOT EXISTS idx_opening_ship_version_id ON opening(ship_version_id)",
             "CREATE INDEX IF NOT EXISTS idx_opening_compartment_id ON opening(compartment_id)",
-
             "CREATE INDEX IF NOT EXISTS idx_probdam_case_ship_version_id ON probdam_case(ship_version_id)",
             "CREATE INDEX IF NOT EXISTS idx_probdam_total_ship_version_id ON probdam_total(ship_version_id)",
             "CREATE INDEX IF NOT EXISTS idx_probdam_conclusion_ship_version_id ON probdam_conclusion(ship_version_id)",
-
             "CREATE INDEX IF NOT EXISTS idx_trim_gm_ship_version_id ON trim_gm(ship_version_id)",
-
             "CREATE INDEX IF NOT EXISTS idx_numint_case_ship_version_id ON numint_case(ship_version_id)",
             "CREATE INDEX IF NOT EXISTS idx_numint_conclusion_ship_version_id ON numint_conclusion(ship_version_id)",
         ]
