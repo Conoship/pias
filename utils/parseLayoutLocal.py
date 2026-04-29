@@ -241,9 +241,9 @@ def import_compartments(
             small_b = span_b is not None and span_b < 0.3
             small_h = span_h is not None and span_h < 0.3
 
-            is_pipe = int(bool(
-                contains_pipe and not contains_pipeduct and (small_b or small_h)
-            ))
+            is_pipe = int(
+                bool(contains_pipe and not contains_pipeduct and (small_b or small_h))
+            )
 
             cur.execute(
                 """
