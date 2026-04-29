@@ -98,8 +98,124 @@ def create_layout_tables(conn):
         print(e)
 
 
+def create_stability_tables(conn):
+    """
+    Create the damage-stability tables (trim_gm, probdam_*, numint_*).
+    Safe to call even if the tables already exist.
+    Call this alongside create_layout_tables() for a full local schema.
+    """
+    cursor = conn.cursor()
+    try:
+        cursor.execute("PRAGMA foreign_keys = ON")
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS trim_gm (
+                id INTEGER PRIMARY KEY,
+                ship_version_id INTEGER NOT NULL,
+                condition_name TEXT NOT NULL,
+                draft REAL,
+                trim REAL,
+                vcg REAL,
+                mg REAL,
+                displacement REAL,
+                attained_index REAL,
+                required_index REAL,
+                FOREIGN KEY (ship_version_id) REFERENCES ship_version(id) ON DELETE CASCADE,
+                UNIQUE (ship_version_id, condition_name)
+            )
+            """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS probdam_case (
+                id INTEGER PRIMARY KEY,
+                ship_version_id INTEGER NOT NULL,
+                side TEXT,
+                damage_case TEXT NOT NULL,
+                aft_boundary REAL,
+                fwd_boundary REAL,
+                inside_boundary REAL,
+                upper_boundary REAL,
+                pi_tlight REAL,
+                si_tlight REAL,
+                pi_tpartial REAL,
+                si_tpartial REAL,
+                pi_tdeepest REAL,
+                si_tdeepest REAL,
+                ai REAL,
+                FOREIGN KEY (ship_version_id) REFERENCES ship_version(id) ON DELETE CASCADE
+            )
+            """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS probdam_total (
+                id INTEGER PRIMARY KEY,
+                ship_version_id INTEGER NOT NULL,
+                side TEXT,
+                total_pi_tlight REAL,
+                total_pi_tpartial REAL,
+                total_pi_tdeepest REAL,
+                total_ai REAL,
+                FOREIGN KEY (ship_version_id) REFERENCES ship_version(id) ON DELETE CASCADE
+            )
+            """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS probdam_conclusion (
+                id INTEGER PRIMARY KEY,
+                ship_version_id INTEGER NOT NULL,
+                subdivision_length REAL,
+                required_index REAL,
+                attained_index REAL,
+                complies INTEGER NOT NULL,
+                FOREIGN KEY (ship_version_id) REFERENCES ship_version(id) ON DELETE CASCADE
+            )
+            """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS numint_case (
+                id INTEGER PRIMARY KEY,
+                ship_version_id INTEGER NOT NULL,
+                side TEXT,
+                damage_case TEXT NOT NULL,
+                pi_tlight REAL,
+                si_tlight REAL,
+                pi_tpartial REAL,
+                si_tpartial REAL,
+                pi_tdeepest REAL,
+                si_tdeepest REAL,
+                ai REAL,
+                FOREIGN KEY (ship_version_id) REFERENCES ship_version(id) ON DELETE CASCADE
+            )
+            """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS numint_conclusion (
+                id INTEGER PRIMARY KEY,
+                ship_version_id INTEGER NOT NULL,
+                side TEXT,
+                subdivision_length REAL,
+                required_index REAL,
+                attained_index REAL,
+                complies INTEGER NOT NULL,
+                step_accuracy INTEGER,
+                penetration_reference TEXT,
+                FOREIGN KEY (ship_version_id) REFERENCES ship_version(id) ON DELETE CASCADE
+            )
+            """)
+
+        conn.commit()
+    except Exception as e:
+        print(e)
+
+
+def create_all_tables(conn):
+    """Convenience wrapper: creates layout + stability tables in one call."""
+    create_layout_tables(conn)
+    create_stability_tables(conn)
+
+
 if __name__ == "__main__":
     conn = get_local_conn()
-    create_layout_tables(conn)
+    create_all_tables(conn)
     conn.close()
-    print("Tables created successfully.")
+    print("All tables created successfully.")

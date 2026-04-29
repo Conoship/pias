@@ -369,7 +369,7 @@ def run(
 
     try:
         result = subprocess.run(
-            ["cmd.exe", "/c", bat_windows],
+            ["cmd.exe", "/c", f'"{bat_windows}"'],
             cwd=run_dir,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
