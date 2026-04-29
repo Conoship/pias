@@ -7,3 +7,4 @@ env/
 utils/report.pdf
 config.yaml
 *.pkl
+localhost.db
