@@ -1,8 +1,8 @@
 import re
 from pathlib import Path
 
-from parseProbdam import (
-    get_conn,
+from parseProbdamLocal import (
+    get_local_conn,
     get_ship,
     get_version,
     parse_float,
@@ -137,7 +137,7 @@ def import_numint_rtf(
         _extract_conclusion(text)
     )
 
-    conn = get_conn()
+    conn = get_local_conn()
     try:
         ship_id = get_ship(conn, ship_name)
         ship_version_id = get_version(

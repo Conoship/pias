@@ -5,7 +5,7 @@ import argparse
 import logging
 import sys
 from typing import Optional, Tuple, Dict, List
-from parseProbdam import import_probdam_rtf
+from parseProbdamLocal import import_probdam_rtf_local
 from parseNumInt import import_numint_rtf
 
 logger = logging.getLogger(__name__)
@@ -369,7 +369,7 @@ def run(
 
     try:
         result = subprocess.run(
-            ["cmd.exe", "/c", f'"{bat_windows}"'],
+            ["cmd.exe", "/c", bat_windows],
             cwd=run_dir,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -414,7 +414,7 @@ def run(
 
         try:
             logger.info("Importing Probdam data into SQL...")
-            import_probdam_rtf(
+            import_probdam_rtf_local(
                 rtf_path,
                 ship_name=ship_token,
                 design_name=design_token,
