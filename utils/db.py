@@ -5,7 +5,7 @@ def get_local_conn():
     return sqlite3.connect("localhost.db")
 
 
-def create_layout_tables(conn):
+def create_layout_tables(conn: sqlite3.Connection):
     cursor = conn.cursor()
     try:
         cursor.execute("PRAGMA foreign_keys = ON")
@@ -98,7 +98,7 @@ def create_layout_tables(conn):
         print(e)
 
 
-def create_stability_tables(conn):
+def create_stability_tables(conn: sqlite3.Connection):
     """
     Create the damage-stability tables (trim_gm, probdam_*, numint_*).
     Safe to call even if the tables already exist.
@@ -208,8 +208,7 @@ def create_stability_tables(conn):
         print(e)
 
 
-def create_all_tables(conn):
-    """Convenience wrapper: creates layout + stability tables in one call."""
+def create_all_tables(conn: sqlite3.Connection):
     create_layout_tables(conn)
     create_stability_tables(conn)
 
