@@ -130,6 +130,49 @@ ORDER BY
     condition_code;
 """
 
+def test_entire_table_queries(conn):
+    print(pd.read_sql("SELECT COUNT(*) FROM trim_gm", conn))
+    print(pd.read_sql("SELECT COUNT(*) FROM compartment", conn))
+    print(pd.read_sql("SELECT COUNT(*) FROM subcompartment", conn))
+    print(pd.read_sql("SELECT COUNT(*) FROM subcompartment_shape", conn))
+    print(pd.read_sql("SELECT COUNT(*) FROM frustum_point", conn))
+
+def test_ctes_query(conn):
+    print(pd.read_sql("""
+    WITH comp_data AS (
+        SELECT
+            comp.ship_version_id,
+            COUNT(DISTINCT comp.id) AS total_compartments,
+            AVG(sub.permeability_for_damage_stability) AS avg_permeability
+        FROM compartment comp
+        JOIN subcompartment sub
+            ON sub.compartment_id = comp.id
+        GROUP BY comp.ship_version_id
+    )
+    SELECT * FROM comp_data
+    """, conn))
+
+def test_geom_query(conn):
+    print(pd.read_sql("""
+    WITH geom AS (
+        SELECT
+            ss.ship_version_id,
+            COUNT(*) AS n
+        FROM subcompartment_shape ss
+        JOIN subcompartment sub
+            ON sub.shape_guid = ss.shape_guid
+        JOIN frustum_point fp
+            ON fp.subcompartment_shape_id = ss.id
+        GROUP BY ss.ship_version_id
+    )
+    SELECT * FROM geom
+    """, conn))
+
+# Perform test queries.
+test_entire_table_queries(conn)
+test_ctes_query(conn)
+test_geom_query(conn)
+
 # Execute query and load into DataFrame
 df = pd.read_sql_query(query, conn)
 
