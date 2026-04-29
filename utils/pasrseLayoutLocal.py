@@ -61,16 +61,14 @@ def load_xml(xml_path):
 def get_ship(conn: sqlite3.Connection, ship_name):
     """Get ship.id for name, creating it if needed."""
     cur = conn.cursor()
-    cur.execute("SELECT id FROM ship WHERE name = %s", (ship_name,))
+    cur.execute("SELECT id FROM ship WHERE name = ?", (ship_name,))
     row = cur.fetchone()
     if row:
         return row[0]
 
-    cur.execute("INSERT INTO ship (name) VALUES (%s) RETURNING id", (ship_name,))
-    ship_id = cur.fetchone()[0]
+    cur.execute("INSERT INTO ship (name) VALUES (?)", (ship_name,))
     conn.commit()
-    conn.close()
-    return ship_id
+    return cur.lastrowid
 
 
 def get_version(
@@ -81,11 +79,11 @@ def get_version(
     cur.execute(
         """
         SELECT id FROM ship_version
-        WHERE ship_id = %s
-            AND design_name = %s
-            AND version = %s
-            AND subversion = %s
-            AND ship_run = %s
+        WHERE ship_id = ?
+            AND design_name = ?
+            AND version = ?
+            AND subversion = ?
+            AND ship_run = ?
         """,
         (ship_id, design_name, version, subversion, ship_run),
     )
@@ -96,15 +94,12 @@ def get_version(
     cur.execute(
         """
         INSERT INTO ship_version (ship_id, design_name, version, subversion, ship_run)
-        VALUES (%s, %s, %s, %s, %s)
-        RETURNING id
+        VALUES (?, ?, ?, ?, ?)
         """,
         (ship_id, design_name, version, subversion, ship_run),
     )
-    ship_version_id = cur.fetchone()[0]
     conn.commit()
-    conn.close()
-    return ship_version_id
+    return cur.lastrowid
 
 
 def import_content_categories(conn: sqlite3.Connection, root):
@@ -117,14 +112,12 @@ def import_content_categories(conn: sqlite3.Connection, root):
             continue
         cur.execute(
             """
-            INSERT INTO content_category (design_content_id_number, name)
-            VALUES (%s, %s)
-            ON CONFLICT (design_content_id_number) DO NOTHING
+            INSERT OR IGNORE INTO content_category (design_content_id_number, name)
+            VALUES (?, ?)
             """,
             (design_content_id, name),
         )
     conn.commit()
-    conn.close()
 
 
 def import_coordinates(conn: sqlite3.Connection, root, ship_version_id):
@@ -143,16 +136,14 @@ def import_coordinates(conn: sqlite3.Connection, root, ship_version_id):
         side = shape.findtext("Side")
         shape_type = shape.findtext("Subcompartment_shape_type")
 
-        # Insert shape
         cur.execute(
             """
             INSERT INTO subcompartment_shape (ship_version_id, shape_guid, side)
-            VALUES (%s, %s, %s)
-            RETURNING id
+            VALUES (?, ?, ?)
             """,
             (ship_version_id, shape_guid, side),
         )
-        shape_id = cur.fetchone()[0]
+        shape_id = cur.lastrowid
 
         span_b = None
         span_h = None
@@ -179,7 +170,7 @@ def import_coordinates(conn: sqlite3.Connection, root, ship_version_id):
                     """
                     INSERT INTO frustum_point
                         (subcompartment_shape_id, aftfwd_and_num, L, B, H)
-                    VALUES (%s, %s, %s, %s, %s)
+                    VALUES (?, ?, ?, ?, ?)
                     """,
                     (shape_id, aft_fwd_number, l, b, h),
                 )
@@ -192,7 +183,6 @@ def import_coordinates(conn: sqlite3.Connection, root, ship_version_id):
         shape_guid_spans[shape_guid] = (span_b, span_h)
 
     conn.commit()
-    conn.close()
     return shape_guid_spans
 
 
@@ -208,7 +198,6 @@ def import_compartments(
             comp.findtext("Selected_for_output_and_calculations") or ""
         ).strip().lower() == "true"
         if not selected:
-            # Only store compartments that are actually selected in PIAS output
             continue
 
         xml_comp_id = parse_int(comp.findtext("Compartment_ID"))
@@ -216,7 +205,6 @@ def import_compartments(
         name = comp.findtext("Name") or ""
         design_content_id = parse_int(comp.findtext("Design_content_IDnumber"))
 
-        # Insert compartment
         cur.execute(
             """
             INSERT INTO compartment
@@ -226,19 +214,18 @@ def import_compartments(
                     name,
                     selected_for_output,
                     design_content_id_number)
-            VALUES (%s, %s, %s, %s, %s, %s)
-            RETURNING id
+            VALUES (?, ?, ?, ?, ?, ?)
             """,
             (
                 ship_version_id,
                 xml_comp_id,
                 xml_guid,
                 name,
-                selected,
+                int(selected),
                 design_content_id,
             ),
         )
-        compartment_id = cur.fetchone()[0]
+        compartment_id = cur.lastrowid
 
         name_lower = name.lower()
         contains_pipe = "pipe" in name_lower
@@ -254,8 +241,8 @@ def import_compartments(
             small_b = span_b is not None and span_b < 0.3
             small_h = span_h is not None and span_h < 0.3
 
-            is_pipe = bool(
-                contains_pipe and not contains_pipeduct and (small_b or small_h)
+            is_pipe = int(
+                bool(contains_pipe and not contains_pipeduct and (small_b or small_h))
             )
 
             cur.execute(
@@ -267,7 +254,7 @@ def import_compartments(
                         sign,
                         permeability_for_damage_stability,
                         is_pipe)
-                VALUES (%s, %s, %s, %s, %s, %s)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """,
                 (
                     compartment_id,
@@ -280,7 +267,7 @@ def import_compartments(
             )
 
         for point in comp.findall(".//Special_points/Point"):
-            name = point.findtext("Name") or ""
+            point_name = point.findtext("Name") or ""
             opening_type = point.findtext("Type_of_point") or ""
 
             ref = point.find("Reference_vector")
@@ -299,12 +286,12 @@ def import_compartments(
                     description,
                     opening_type,
                     L, B, H)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     ship_version_id,
                     compartment_id,
-                    name,
+                    point_name,
                     opening_type,
                     l,
                     b,
@@ -313,7 +300,6 @@ def import_compartments(
             )
 
     conn.commit()
-    conn.close()
 
 
 def import_layout_xml(xml_path):
@@ -322,7 +308,7 @@ def import_layout_xml(xml_path):
 
     root = load_xml(xml_path)
     conn = get_local_conn()
-    create_layout_tables()
+    create_layout_tables(conn)
     try:
         ship_id = get_ship(conn, ship_name)
         ship_version_id = get_version(
@@ -337,7 +323,7 @@ def import_layout_xml(xml_path):
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: python parseLayout.py <xml_path>")
+        print("Usage: python parseLayoutLocal.py <xml_path>")
         sys.exit(1)
 
     xml_path = sys.argv[1]

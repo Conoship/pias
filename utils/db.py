@@ -5,8 +5,7 @@ def get_local_conn():
     return sqlite3.connect("localhost.db")
 
 
-def create_layout_tables():
-    conn = get_local_conn()
+def create_layout_tables(conn):
     cursor = conn.cursor()
     try:
         cursor.execute("PRAGMA foreign_keys = ON")
@@ -25,7 +24,7 @@ def create_layout_tables():
                 subversion TEXT NOT NULL,
                 ship_run TEXT NOT NULL,
                 FOREIGN KEY (ship_id) REFERENCES ship(id) ON DELETE CASCADE,
-                UNIQUE (ship_id, design_name, version, subversion)
+                UNIQUE (ship_id, design_name, version, subversion, ship_run)
             )
             """)
         cursor.execute("""
@@ -42,7 +41,7 @@ def create_layout_tables():
                 xml_comparment_id INTEGER,
                 xml_compartment_guid TEXT,
                 name TEXT NOT NULL,
-                selected_for_output BOOLEAN NOT NULL,
+                selected_for_output INTEGER NOT NULL,
                 design_content_id_number INTEGER,
                 FOREIGN KEY (ship_version_id) REFERENCES ship_version(id) ON DELETE CASCADE,
                 FOREIGN KEY (design_content_id_number) REFERENCES content_category(design_content_id_number) ON DELETE SET NULL
@@ -56,7 +55,7 @@ def create_layout_tables():
                 subcompartment_guid TEXT,
                 sign INTEGER,
                 permeability_for_damage_stability REAL,
-                is_pipe BOOLEAN NOT NULL DEFAULT FALSE,
+                is_pipe INTEGER NOT NULL DEFAULT 0,
                 FOREIGN KEY (compartment_id) REFERENCES compartment(id) ON DELETE CASCADE
             )
             """)
@@ -82,20 +81,25 @@ def create_layout_tables():
             """)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS opening (
-                id SERIAL PRIMARY KEY,
+                id INTEGER PRIMARY KEY,
                 ship_version_id INTEGER NOT NULL,
                 compartment_id INTEGER,
                 description TEXT NOT NULL,
-                length REAL,
-                breadth REAL,
-                height REAL,
                 opening_type TEXT,
-                connected_compartment TEXT,
+                L REAL,
+                B REAL,
+                H REAL,
                 FOREIGN KEY (ship_version_id) REFERENCES ship_version(id) ON DELETE CASCADE,
                 FOREIGN KEY (compartment_id) REFERENCES compartment(id) ON DELETE SET NULL
             )
             """)
         conn.commit()
-        conn.close()
     except Exception as e:
         print(e)
+
+
+if __name__ == "__main__":
+    conn = get_local_conn()
+    create_layout_tables(conn)
+    conn.close()
+    print("Tables created successfully.")
