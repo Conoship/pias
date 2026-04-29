@@ -8,34 +8,35 @@ def get_local_conn():
 def create_layout_tables():
     conn = get_local_conn()
     cursor = conn.cursor()
+    cursor.execute("PRAGMA foreign_keys = ON")
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS ship (
-                        id SERIAL PRIMARY KEY,
-                        name TEXT NOT NULL
+            id INTEGER PRIMARY KEY,
+            name TEXT NOT NULL
         )
         """)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS ship_version (
-            id SERIAL PRIMARY KEY,
+            id INTEGER PRIMARY KEY,
             ship_id INTEGER NOT NULL,
             design_name TEXT NOT NULL,
             version TEXT NOT NULL,
             subversion TEXT NOT NULL,
-            ship_run TEXT NOT NULL
+            ship_run TEXT NOT NULL,
             FOREIGN KEY (ship_id) REFERENCES ship(id) ON DELETE CASCADE,
             UNIQUE (ship_id, design_name, version, subversion)
         )
         """)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS content_category (
-            id SERIAL PRIMARY KEY,
+            id INTEGER PRIMARY KEY,
             design_content_id_number INTEGER NOT NULL UNIQUE,
             name TEXT NOT NULL
-        )      
+        )
         """)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS compartment (
-            id SERIAL PRIMARY KEY,
+            id INTEGER PRIMARY KEY,
             ship_version_id INTEGER NOT NULL,
             xml_comparment_id INTEGER,
             xml_compartment_guid TEXT,
@@ -48,7 +49,7 @@ def create_layout_tables():
         """)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS subcompartment (
-            id SERIAL PRIMARY KEY,
+            id INTEGER PRIMARY KEY,
             compartment_id INTEGER NOT NULL,
             shape_guid TEXT,
             subcompartment_guid TEXT,
@@ -60,7 +61,7 @@ def create_layout_tables():
         """)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS subcompartment_shape (
-            id SERIAL PRIMARY KEY,
+            id INTEGER PRIMARY KEY,
             ship_version_id INTEGER NOT NULL,
             shape_guid TEXT NOT NULL,
             side TEXT,
@@ -69,7 +70,7 @@ def create_layout_tables():
         """)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS frustum_point (
-            id SERIAL PRIMARY KEY,
+            id INTEGER PRIMARY KEY,
             subcompartment_shape_id INTEGER NOT NULL,
             aftfwd_and_num TEXT,
             L REAL,
