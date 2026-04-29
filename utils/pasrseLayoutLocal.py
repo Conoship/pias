@@ -1,8 +1,9 @@
-from db import get_local_conn
-import xml.etree.ElementTree as ET
+import sys
+import sqlite3
 from pathlib import Path
+import xml.etree.ElementTree as ET
 
-
+from db import get_local_conn, create_layout_tables
 
 
 def parse_filename(path):
@@ -57,255 +58,262 @@ def load_xml(xml_path):
     return tree.getroot()
 
 
-def get_ship(conn, ship_name):
+def get_ship(conn: sqlite3.Connection, ship_name):
     """Get ship.id for name, creating it if needed."""
-    with conn.cursor() as cur:
-        cur.execute("SELECT id FROM ship WHERE name = %s", (ship_name,))
-        row = cur.fetchone()
-        if row:
-            return row[0]
+    cur = conn.cursor()
+    cur.execute("SELECT id FROM ship WHERE name = %s", (ship_name,))
+    row = cur.fetchone()
+    if row:
+        return row[0]
 
-        cur.execute("INSERT INTO ship (name) VALUES (%s) RETURNING id", (ship_name,))
-        ship_id = cur.fetchone()[0]
+    cur.execute("INSERT INTO ship (name) VALUES (%s) RETURNING id", (ship_name,))
+    ship_id = cur.fetchone()[0]
     conn.commit()
+    conn.close()
     return ship_id
 
 
-def get_version(conn, ship_id, design_name, version, subversion, ship_run):
+def get_version(
+    conn: sqlite3.Connection, ship_id, design_name, version, subversion, ship_run
+):
     """Get ship_version.id for given ship & identifiers, creating if needed."""
-    with conn.cursor() as cur:
-        cur.execute(
-            """
-            SELECT id FROM ship_version
-            WHERE ship_id = %s
-              AND design_name = %s
-              AND version = %s
-              AND subversion = %s
-              AND ship_run = %s
-            """,
-            (ship_id, design_name, version, subversion, ship_run),
-        )
-        row = cur.fetchone()
-        if row:
-            return row[0]
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT id FROM ship_version
+        WHERE ship_id = %s
+            AND design_name = %s
+            AND version = %s
+            AND subversion = %s
+            AND ship_run = %s
+        """,
+        (ship_id, design_name, version, subversion, ship_run),
+    )
+    row = cur.fetchone()
+    if row:
+        return row[0]
 
-        cur.execute(
-            """
-            INSERT INTO ship_version (ship_id, design_name, version, subversion, ship_run)
-            VALUES (%s, %s, %s, %s, %s)
-            RETURNING id
-            """,
-            (ship_id, design_name, version, subversion, ship_run),
-        )
-        ship_version_id = cur.fetchone()[0]
+    cur.execute(
+        """
+        INSERT INTO ship_version (ship_id, design_name, version, subversion, ship_run)
+        VALUES (%s, %s, %s, %s, %s)
+        RETURNING id
+        """,
+        (ship_id, design_name, version, subversion, ship_run),
+    )
+    ship_version_id = cur.fetchone()[0]
     conn.commit()
+    conn.close()
     return ship_version_id
 
 
-def import_content_categories(conn, root):
+def import_content_categories(conn: sqlite3.Connection, root):
     """Fill content_category table from XML Content_category blocks."""
-    with conn.cursor() as cur:
-        for cc in root.findall(".//Content_categories/Content_category"):
-            design_content_id = parse_int(cc.findtext("Design_content_IDnumber"))
-            name = cc.findtext("Name")
-            if design_content_id is None or not name:
-                continue
-            cur.execute(
-                """
-                INSERT INTO content_category (design_content_id_number, name)
-                VALUES (%s, %s)
-                ON CONFLICT (design_content_id_number) DO NOTHING
-                """,
-                (design_content_id, name),
-            )
+    cur = conn.cursor()
+    for cc in root.findall(".//Content_categories/Content_category"):
+        design_content_id = parse_int(cc.findtext("Design_content_IDnumber"))
+        name = cc.findtext("Name")
+        if design_content_id is None or not name:
+            continue
+        cur.execute(
+            """
+            INSERT INTO content_category (design_content_id_number, name)
+            VALUES (%s, %s)
+            ON CONFLICT (design_content_id_number) DO NOTHING
+            """,
+            (design_content_id, name),
+        )
     conn.commit()
+    conn.close()
 
 
-def import_coordinates(conn, root, ship_version_id):
+def import_coordinates(conn: sqlite3.Connection, root, ship_version_id):
     """
     Import subcompartment_shape and frustum_point rows.
     Also compute approximate breadth/height span per shape_guid for pipe detection.
     """
     shape_guid_spans = {}
 
-    with conn.cursor() as cur:
-        for shape in root.findall(".//Subcompartment_shapes/Subcompartment_shape"):
-            shape_guid = shape.findtext("Subcompartment_shape_GUID")
-            if not shape_guid:
-                continue
+    cur = conn.cursor()
+    for shape in root.findall(".//Subcompartment_shapes/Subcompartment_shape"):
+        shape_guid = shape.findtext("Subcompartment_shape_GUID")
+        if not shape_guid:
+            continue
 
-            side = shape.findtext("Side")
-            shape_type = shape.findtext("Subcompartment_shape_type")
+        side = shape.findtext("Side")
+        shape_type = shape.findtext("Subcompartment_shape_type")
 
-            # Insert shape
-            cur.execute(
-                """
-                INSERT INTO subcompartment_shape (ship_version_id, shape_guid, side)
-                VALUES (%s, %s, %s)
-                RETURNING id
-                """,
-                (ship_version_id, shape_guid, side),
-            )
-            shape_id = cur.fetchone()[0]
+        # Insert shape
+        cur.execute(
+            """
+            INSERT INTO subcompartment_shape (ship_version_id, shape_guid, side)
+            VALUES (%s, %s, %s)
+            RETURNING id
+            """,
+            (ship_version_id, shape_guid, side),
+        )
+        shape_id = cur.fetchone()[0]
 
-            span_b = None
-            span_h = None
+        span_b = None
+        span_h = None
 
-            if shape_type == "shapetype_frustum":
-                bs = []
-                hs = []
-                for fp in shape.findall(".//Frustum_points/Frustum_point"):
-                    aft_fwd_number = fp.findtext("AftFwd_and_number")
-                    ref = fp.find("Reference_vector")
-                    if ref is None:
-                        continue
+        if shape_type == "shapetype_frustum":
+            bs = []
+            hs = []
+            for fp in shape.findall(".//Frustum_points/Frustum_point"):
+                aft_fwd_number = fp.findtext("AftFwd_and_number")
+                ref = fp.find("Reference_vector")
+                if ref is None:
+                    continue
 
-                    l = parse_float(ref.findtext("L/Reference_value/Distance"))
-                    b = parse_float(ref.findtext("B/Reference_value/Distance"))
-                    h = parse_float(ref.findtext("H/Reference_value/Distance"))
+                l = parse_float(ref.findtext("L/Reference_value/Distance"))
+                b = parse_float(ref.findtext("B/Reference_value/Distance"))
+                h = parse_float(ref.findtext("H/Reference_value/Distance"))
 
-                    if b is not None:
-                        bs.append(b)
-                    if h is not None:
-                        hs.append(h)
+                if b is not None:
+                    bs.append(b)
+                if h is not None:
+                    hs.append(h)
 
-                    cur.execute(
-                        """
-                        INSERT INTO frustum_point
-                            (subcompartment_shape_id, aftfwd_and_num, L, B, H)
-                        VALUES (%s, %s, %s, %s, %s)
-                        """,
-                        (shape_id, aft_fwd_number, l, b, h),
-                    )
+                cur.execute(
+                    """
+                    INSERT INTO frustum_point
+                        (subcompartment_shape_id, aftfwd_and_num, L, B, H)
+                    VALUES (%s, %s, %s, %s, %s)
+                    """,
+                    (shape_id, aft_fwd_number, l, b, h),
+                )
 
-                if len(bs) >= 2:
-                    span_b = max(bs) - min(bs)
-                if len(hs) >= 2:
-                    span_h = max(hs) - min(hs)
+            if len(bs) >= 2:
+                span_b = max(bs) - min(bs)
+            if len(hs) >= 2:
+                span_h = max(hs) - min(hs)
 
-            shape_guid_spans[shape_guid] = (span_b, span_h)
+        shape_guid_spans[shape_guid] = (span_b, span_h)
 
     conn.commit()
+    conn.close()
     return shape_guid_spans
 
 
-def import_compartments(conn, root, ship_version_id, shape_guid_spans):
+def import_compartments(
+    conn: sqlite3.Connection, root, ship_version_id, shape_guid_spans
+):
     """
     Import compartment and subcompartment rows, including pipe detection.
     """
-    with conn.cursor() as cur:
-        for comp in root.findall(".//Compartment"):
-            selected = (
-                comp.findtext("Selected_for_output_and_calculations") or ""
-            ).strip().lower() == "true"
-            if not selected:
-                # Only store compartments that are actually selected in PIAS output
-                continue
+    cur = conn.cursor()
+    for comp in root.findall(".//Compartment"):
+        selected = (
+            comp.findtext("Selected_for_output_and_calculations") or ""
+        ).strip().lower() == "true"
+        if not selected:
+            # Only store compartments that are actually selected in PIAS output
+            continue
 
-            xml_comp_id = parse_int(comp.findtext("Compartment_ID"))
-            xml_guid = comp.findtext("Compartment_GUID")
-            name = comp.findtext("Name") or ""
-            design_content_id = parse_int(comp.findtext("Design_content_IDnumber"))
+        xml_comp_id = parse_int(comp.findtext("Compartment_ID"))
+        xml_guid = comp.findtext("Compartment_GUID")
+        name = comp.findtext("Name") or ""
+        design_content_id = parse_int(comp.findtext("Design_content_IDnumber"))
 
-            # Insert compartment
+        # Insert compartment
+        cur.execute(
+            """
+            INSERT INTO compartment
+                (ship_version_id,
+                    xml_comparment_id,
+                    xml_compartment_guid,
+                    name,
+                    selected_for_output,
+                    design_content_id_number)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING id
+            """,
+            (
+                ship_version_id,
+                xml_comp_id,
+                xml_guid,
+                name,
+                selected,
+                design_content_id,
+            ),
+        )
+        compartment_id = cur.fetchone()[0]
+
+        name_lower = name.lower()
+        contains_pipe = "pipe" in name_lower
+        contains_pipeduct = "pipeduct" in name_lower or "pipe duct" in name_lower
+
+        for subcomp in comp.findall(".//Subcompartments/Subcompartment"):
+            shape_guid = subcomp.findtext("Shape_GUID")
+            subcomp_guid = subcomp.findtext("Subcompartment_GUID")
+            sign = parse_int(subcomp.findtext("Sign"))
+            perm_ds = parse_float(subcomp.findtext("Permeability_for_damage_stability"))
+
+            span_b, span_h = shape_guid_spans.get(shape_guid, (None, None))
+            small_b = span_b is not None and span_b < 0.3
+            small_h = span_h is not None and span_h < 0.3
+
+            is_pipe = bool(
+                contains_pipe and not contains_pipeduct and (small_b or small_h)
+            )
+
             cur.execute(
                 """
-                INSERT INTO compartment
-                    (ship_version_id,
-                     xml_comparment_id,
-                     xml_compartment_guid,
-                     name,
-                     selected_for_output,
-                     design_content_id_number)
+                INSERT INTO subcompartment
+                    (compartment_id,
+                        shape_guid,
+                        subcompartment_guid,
+                        sign,
+                        permeability_for_damage_stability,
+                        is_pipe)
                 VALUES (%s, %s, %s, %s, %s, %s)
-                RETURNING id
+                """,
+                (
+                    compartment_id,
+                    shape_guid,
+                    subcomp_guid,
+                    sign,
+                    perm_ds,
+                    is_pipe,
+                ),
+            )
+
+        for point in comp.findall(".//Special_points/Point"):
+            name = point.findtext("Name") or ""
+            opening_type = point.findtext("Type_of_point") or ""
+
+            ref = point.find("Reference_vector")
+            if ref is not None:
+                l = parse_float(ref.findtext("L/Reference_value/Distance"))
+                b = parse_float(ref.findtext("B/Reference_value/Distance"))
+                h = parse_float(ref.findtext("H/Reference_value/Distance"))
+            else:
+                l = b = h = None
+
+            cur.execute(
+                """
+                INSERT INTO opening
+                    (ship_version_id,
+                    compartment_id,
+                    description,
+                    opening_type,
+                    L, B, H)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
                     ship_version_id,
-                    xml_comp_id,
-                    xml_guid,
+                    compartment_id,
                     name,
-                    selected,
-                    design_content_id,
+                    opening_type,
+                    l,
+                    b,
+                    h,
                 ),
             )
-            compartment_id = cur.fetchone()[0]
-
-            name_lower = name.lower()
-            contains_pipe = "pipe" in name_lower
-            contains_pipeduct = "pipeduct" in name_lower or "pipe duct" in name_lower
-
-            for subcomp in comp.findall(".//Subcompartments/Subcompartment"):
-                shape_guid = subcomp.findtext("Shape_GUID")
-                subcomp_guid = subcomp.findtext("Subcompartment_GUID")
-                sign = parse_int(subcomp.findtext("Sign"))
-                perm_ds = parse_float(
-                    subcomp.findtext("Permeability_for_damage_stability")
-                )
-
-                span_b, span_h = shape_guid_spans.get(shape_guid, (None, None))
-                small_b = span_b is not None and span_b < 0.3
-                small_h = span_h is not None and span_h < 0.3
-
-                is_pipe = bool(
-                    contains_pipe and not contains_pipeduct and (small_b or small_h)
-                )
-
-                cur.execute(
-                    """
-                    INSERT INTO subcompartment
-                        (compartment_id,
-                         shape_guid,
-                         subcompartment_guid,
-                         sign,
-                         permeability_for_damage_stability,
-                         is_pipe)
-                    VALUES (%s, %s, %s, %s, %s, %s)
-                    """,
-                    (
-                        compartment_id,
-                        shape_guid,
-                        subcomp_guid,
-                        sign,
-                        perm_ds,
-                        is_pipe,
-                    ),
-                )
-
-            for point in comp.findall(".//Special_points/Point"):
-                name = point.findtext("Name") or ""
-                opening_type = point.findtext("Type_of_point") or ""
-
-                ref = point.find("Reference_vector")
-                if ref is not None:
-                    l = parse_float(ref.findtext("L/Reference_value/Distance"))
-                    b = parse_float(ref.findtext("B/Reference_value/Distance"))
-                    h = parse_float(ref.findtext("H/Reference_value/Distance"))
-                else:
-                    l = b = h = None
-
-                cur.execute(
-                    """
-                    INSERT INTO opening
-                        (ship_version_id,
-                        compartment_id,
-                        description,
-                        opening_type,
-                        L, B, H)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
-                    """,
-                    (
-                        ship_version_id,
-                        compartment_id,
-                        name,
-                        opening_type,
-                        l,
-                        b,
-                        h,
-                    ),
-                )
 
     conn.commit()
+    conn.close()
 
 
 def import_layout_xml(xml_path):
@@ -314,6 +322,7 @@ def import_layout_xml(xml_path):
 
     root = load_xml(xml_path)
     conn = get_local_conn()
+    create_layout_tables()
     try:
         ship_id = get_ship(conn, ship_name)
         ship_version_id = get_version(
@@ -327,8 +336,6 @@ def import_layout_xml(xml_path):
 
 
 if __name__ == "__main__":
-    import sys
-
     if len(sys.argv) != 2:
         print("Usage: python parseLayout.py <xml_path>")
         sys.exit(1)

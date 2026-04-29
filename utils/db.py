@@ -80,6 +80,21 @@ def create_layout_tables():
                 FOREIGN KEY (subcompartment_shape_id) REFERENCES subcompartment_shape(id) ON DELETE CASCADE
             )
             """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS opening (
+                id SERIAL PRIMARY KEY,
+                ship_version_id INTEGER NOT NULL,
+                compartment_id INTEGER,
+                description TEXT NOT NULL,
+                length REAL,
+                breadth REAL,
+                height REAL,
+                opening_type TEXT,
+                connected_compartment TEXT,
+                FOREIGN KEY (ship_version_id) REFERENCES ship_version(id) ON DELETE CASCADE,
+                FOREIGN KEY (compartment_id) REFERENCES compartment(id) ON DELETE SET NULL
+            )
+            """)
         conn.commit()
         conn.close()
     except Exception as e:
