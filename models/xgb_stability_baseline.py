@@ -72,9 +72,9 @@ class XGBStabilityBaseline(object):
         with open("model.pkl", "wb") as file:
             pickle.dump(model, file)
 
-    def _display_results(self):
+    def _print_results(self):
         """
-        Display the final results of the training with the average R^2 and the average MAE.
+        Print the final results of the training with the average R^2 and the average MAE.
         """
         print(f"Model Performance")
         print(f"Mean R2: {sum(self.r2_scores) / len(self.r2_scores):.4f}")
@@ -139,7 +139,7 @@ class XGBStabilityBaseline(object):
                 print(f"MAE: {mae}")
 
         if print_training_results:
-            self._display_results()
+            self._print_results()
 
 
 if __name__ == "__main__":
