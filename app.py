@@ -113,6 +113,37 @@ def get_file_from_line_edit(
     return file_path
 
 
+def get_ship_name_from_line_edit(window: QWidget, line_edit_name: str) -> str | None:
+    """
+    Function to retrieve the ship name from a QLineEdit widget.
+
+    Args:
+        window (QWidget):
+            Parent widget containing the QLineEdit.
+
+        object_name (str):
+            The Qt objectName of the QLineEdit.
+
+    Returns:
+        ship_name (str): The ship's name from the input field.
+        None: If widget is missing or user cancels the dialog.
+    """
+    ship_name = ""
+    line_edit = window.findChild(QLineEdit, line_edit_name)
+    if line_edit:
+        ship_name = line_edit.text().strip()
+        if ship_name == "":
+            QMessageBox.warning(
+                window,
+                "Warning Empty value for Ship Name",
+                "Please input the Ship Name.",
+                QMessageBox.StandardButton.Ok,
+            )
+            return None
+
+    return ship_name
+
+
 def get_value_from_line_edit(
     window: QWidget, line_edit_name: str, feature_name: str
 ) -> float | None:
@@ -242,6 +273,10 @@ def run_agent_pipeline(window: QWidget):
 
     # Step 3: Collect User Defined Value from the UI.
     # If any value is None return immediately.
+    ship_name = get_ship_name_from_line_edit(window, "shipNameLineEdit")
+    if ship_name is None:
+        return
+
     subdivision_length = get_value_from_line_edit(
         window, "subdivLenLineEdit", "Subdivision Length"
     )

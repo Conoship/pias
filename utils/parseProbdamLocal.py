@@ -22,7 +22,6 @@ from pathlib import Path
 
 from db import get_local_conn, create_all_tables
 
-
 # ---------- FILENAME PARSING ----------
 
 
@@ -194,7 +193,7 @@ def parse_total_line(line: str, ship_version_id: int, side, cur: sqlite3.Cursor)
     """
     if "Total" not in line:
         return
-    sub = line[line.index("Total"):].strip()
+    sub = line[line.index("Total") :].strip()
     parts = sub.split()
     if not parts or not parts[0].startswith("Total"):
         return
@@ -355,7 +354,7 @@ def import_probdam_rtf_local(
     side = detect_side(text)
 
     conn = get_local_conn()
-    create_all_tables(conn)   # idempotent – safe to call every time
+    create_all_tables(conn)  # idempotent – safe to call every time
 
     try:
         ship_id = get_ship(conn, ship_name)
@@ -391,9 +390,7 @@ def import_probdam_rtf_local(
             parse_damage_line(line, ship_version_id, side, cur)
 
         # --- trim & GM blocks ---
-        parse_trim_gm_block(
-            text, "Light service draft", "light", ship_version_id, cur
-        )
+        parse_trim_gm_block(text, "Light service draft", "light", ship_version_id, cur)
         parse_trim_gm_block(
             text, "Partial subdivision draft", "partial", ship_version_id, cur
         )
@@ -405,7 +402,9 @@ def import_probdam_rtf_local(
         parse_conclusion(text, ship_version_id, cur)
 
         conn.commit()
-        print(f"  -> Probdam local import complete for ship_version_id={ship_version_id}")
+        print(
+            f"  -> Probdam local import complete for ship_version_id={ship_version_id}"
+        )
 
         # Quick sanity print so you can eyeball the result immediately.
         _print_summary(conn, ship_version_id)
@@ -445,9 +444,7 @@ def _print_summary(conn: sqlite3.Connection, ship_version_id: int):
     row = cur.fetchone()
     if row:
         status = "COMPLIES" if row[3] else "DOES NOT COMPLY"
-        print(
-            f"  conclusion        : L={row[0]} m  R={row[1]}  A={row[2]}  {status}"
-        )
+        print(f"  conclusion        : L={row[0]} m  R={row[1]}  A={row[2]}  {status}")
     print()
 
 
@@ -458,7 +455,9 @@ if __name__ == "__main__":
 
     if len(sys.argv) < 2:
         print("Usage: python parseProbdamLocal.py <path/to/_probdam.rtf>")
-        print("       (filename must follow the <ship>_<design>_<ver>_<sub>_probdam.rtf convention)")
+        print(
+            "       (filename must follow the <ship>_<design>_<ver>_<sub>_probdam.rtf convention)"
+        )
         sys.exit(1)
 
     import_probdam_rtf_local(sys.argv[1])

@@ -58,8 +58,7 @@ correlations = correlations.abs().sort_values(ascending=False)
 
 print("\nTarget min/max/mean per ship version:")
 print(
-    df.groupby("ship_version_id")["target_attained_index"]
-    .agg(["min", "max", "mean"])
+    df.groupby("ship_version_id")["target_attained_index"].agg(["min", "max", "mean"])
 )
 
 print("\nCorrelation of each feature with target:")
@@ -78,10 +77,7 @@ print("\nPlot saved!")
 
 # 6. Within-ship vs between-ship variance
 print("\nTarget stats per ship:")
-print(
-    df.groupby("ship_id")["target_attained_index"]
-    .agg(["min", "max", "mean", "std"])
-)
+print(df.groupby("ship_id")["target_attained_index"].agg(["min", "max", "mean", "std"]))
 
 # 7. Target by condition
 if "condition_code" in df.columns:
@@ -89,12 +85,14 @@ if "condition_code" in df.columns:
 
     print("\nTarget stats per condition:")
     print(
-        df.groupby("condition_name")["target_attained_index"]
-        .agg(["count", "min", "max", "mean", "std"])
+        df.groupby("condition_name")["target_attained_index"].agg(
+            ["count", "min", "max", "mean", "std"]
+        )
     )
 
     print("\nTarget stats per ship and condition:")
     print(
-        df.groupby(["ship_id", "condition_name"])["target_attained_index"]
-        .agg(["min", "max", "mean", "std"])
+        df.groupby(["ship_id", "condition_name"])["target_attained_index"].agg(
+            ["min", "max", "mean", "std"]
+        )
     )

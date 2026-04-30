@@ -17,8 +17,8 @@
    <widget class="QPushButton" name="runBtn">
     <property name="geometry">
      <rect>
-      <x>280</x>
-      <y>460</y>
+      <x>270</x>
+      <y>520</y>
       <width>181</width>
       <height>31</height>
      </rect>
@@ -163,7 +163,7 @@
       <x>10</x>
       <y>220</y>
       <width>721</width>
-      <height>231</height>
+      <height>291</height>
      </rect>
     </property>
     <property name="frameShape">
@@ -176,7 +176,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>40</y>
+       <y>90</y>
        <width>461</width>
        <height>31</height>
       </rect>
@@ -195,7 +195,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>190</y>
+       <y>240</y>
        <width>461</width>
        <height>31</height>
       </rect>
@@ -214,7 +214,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>140</y>
+       <y>190</y>
        <width>461</width>
        <height>31</height>
       </rect>
@@ -233,7 +233,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>90</y>
+       <y>140</y>
        <width>461</width>
        <height>31</height>
       </rect>
@@ -266,14 +266,33 @@
       <string>Enter the required values</string>
      </property>
     </widget>
+    <widget class="QLineEdit" name="shipNameLineEdit">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>40</y>
+       <width>461</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="readOnly">
+      <bool>false</bool>
+     </property>
+     <property name="placeholderText">
+      <string>Enter Ship Name</string>
+     </property>
+     <property name="clearButtonEnabled">
+      <bool>true</bool>
+     </property>
+    </widget>
    </widget>
    <widget class="QFrame" name="resultsFrame">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>500</y>
+      <y>560</y>
       <width>721</width>
-      <height>211</height>
+      <height>151</height>
      </rect>
     </property>
     <property name="frameShape">
