@@ -177,7 +177,7 @@
       <rect>
        <x>10</x>
        <y>90</y>
-       <width>461</width>
+       <width>351</width>
        <height>31</height>
       </rect>
      </property>
@@ -194,9 +194,9 @@
     <widget class="QLineEdit" name="lightGMLineEdit">
      <property name="geometry">
       <rect>
-       <x>490</x>
-       <y>140</y>
-       <width>201</width>
+       <x>420</x>
+       <y>40</y>
+       <width>281</width>
        <height>31</height>
       </rect>
      </property>
@@ -215,7 +215,7 @@
       <rect>
        <x>10</x>
        <y>190</y>
-       <width>461</width>
+       <width>351</width>
        <height>31</height>
       </rect>
      </property>
@@ -234,7 +234,7 @@
       <rect>
        <x>10</x>
        <y>140</y>
-       <width>461</width>
+       <width>351</width>
        <height>31</height>
       </rect>
      </property>
@@ -271,7 +271,7 @@
       <rect>
        <x>10</x>
        <y>40</y>
-       <width>461</width>
+       <width>351</width>
        <height>31</height>
       </rect>
      </property>
@@ -288,9 +288,9 @@
     <widget class="QLineEdit" name="deepGMLineEdit">
      <property name="geometry">
       <rect>
-       <x>490</x>
-       <y>190</y>
-       <width>201</width>
+       <x>420</x>
+       <y>140</y>
+       <width>281</width>
        <height>31</height>
       </rect>
      </property>
@@ -299,6 +299,25 @@
      </property>
      <property name="placeholderText">
       <string>Enter Deep GM</string>
+     </property>
+     <property name="clearButtonEnabled">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="partialGMLineEdit">
+     <property name="geometry">
+      <rect>
+       <x>420</x>
+       <y>90</y>
+       <width>281</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="readOnly">
+      <bool>false</bool>
+     </property>
+     <property name="placeholderText">
+      <string>Enter Partial GM</string>
      </property>
      <property name="clearButtonEnabled">
       <bool>true</bool>
