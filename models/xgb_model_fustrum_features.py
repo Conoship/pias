@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from xgboost import XGBRegressor
 from sklearn.metrics import r2_score, mean_absolute_error
-from sklearn.model_selection import train_test_split, learning_curve
+from sklearn.model_selection import GroupKFold, learning_curve
 
 df = pd.read_csv(
     "C:/Users/student01/Desktop/data/all_ships_multiple_features_light_v3.csv"
@@ -45,9 +45,7 @@ features = [f for f in features if f in df.columns]
 X = df_ship[features]
 y = df_ship["target_attained_index"]
 
-X_Train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42
-)
+groups = df["ship_version_id"]
 
 # Load the hyperparameters configuration.
 config = {}

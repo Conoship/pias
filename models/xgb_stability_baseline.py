@@ -6,7 +6,7 @@ from sklearn.model_selection import GroupKFold
 from sklearn.metrics import r2_score, mean_absolute_error
 
 # Load Data
-df = pd.read_csv("C:/Users/student01/Desktop/data/all_ships_baseline.csv")
+df = pd.read_csv("C:/Users/student01/Desktop/data/all_ships_light_v4.csv")
 
 # Define Features (X) and Target (y)
 features = [
