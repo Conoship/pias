@@ -299,6 +299,10 @@ def run_agent_pipeline(window: QWidget):
     if light_gm_value is None:
         return
 
+    partial_gm_value = get_value_from_line_edit(window, "partialGMLineEdit", "GM")
+    if partial_gm_value is None:
+        return
+
     deep_gm_value = get_value_from_line_edit(window, "deepGMLineEdit", "GM")
     if deep_gm_value is None:
         return
