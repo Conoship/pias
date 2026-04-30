@@ -295,8 +295,12 @@ def run_agent_pipeline(window: QWidget):
     if subdivision_draft is None:
         return
 
-    gm_value = get_value_from_line_edit(window, "gmLineEdit", "GM")
-    if gm_value is None:
+    light_gm_value = get_value_from_line_edit(window, "lightGMLineEdit", "GM")
+    if light_gm_value is None:
+        return
+
+    deep_gm_value = get_value_from_line_edit(window, "deepGMLineEdit", "GM")
+    if deep_gm_value is None:
         return
 
     # Step 4: Put the data in a single CSV.
