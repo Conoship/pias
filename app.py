@@ -376,7 +376,7 @@ def main():
         line_edit_name="internalSubdivLineEdit",
     )
 
-    # Connect the Run AI Agent pipeline.
+    # Connect the Run button to the AI Agent pipeline.
     run_btn = window.findChild(QPushButton, "runBtn")
     if run_btn:
         run_btn.clicked.connect(lambda: run_agent_pipeline(window))
