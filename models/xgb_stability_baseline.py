@@ -49,6 +49,7 @@ class XGBStabilityBaseline(object):
         # Lists to hold results.
         self.r2_scores = []
         self.mae_scores = []
+        self.fold_results = []
 
     def _load_config(self):
         """
@@ -72,20 +73,61 @@ class XGBStabilityBaseline(object):
         with open("model.pkl", "wb") as file:
             pickle.dump(model, file)
 
-    def _display_results(self):
+    def _print_results(self):
         """
-        Display the final results of the training with the average R^2 and the average MAE.
+        Print the final results of the training with the average R^2 and the average MAE.
         """
         print(f"Model Performance")
         print(f"Mean R2: {sum(self.r2_scores) / len(self.r2_scores):.4f}")
         print(f"Mean MAE: {sum(self.mae_scores) / len(self.mae_scores):.4f}")
 
-    # Train and evaluate the model.
-    def train_and_evaluate_model(
-        self, save_best_model: bool = False, print_training_results: bool = False
-    ):
+    def train(self):
         """
-        Train the model and perform K-Fold Cross-Validation in parallel.
+        Train models for each fold and store them internally.
+        """
+        # Load Data.
+        df = pd.read_csv(self.path_to_data)
+
+        X = df[self._X_FEATURES]
+        Y = df[self._Y_LABEL]
+        groups = df[self._GROUP_BY]
+
+        # Clear previous results.
+        self.fold_results.clear()
+
+        # Cross-validation.
+        gkf = GroupKFold(n_splits=self._K_FOLD_CROSS_SPLITS)
+        xgb_params = self._load_config()
+        for train_idx, test_idx in gkf.split(X, Y, groups=groups):
+            # Train Data.
+            x_train = X.iloc[train_idx]
+            y_train = Y.iloc[train_idx]
+
+            # Test Data.
+            x_test = X.iloc[test_idx]
+            y_test = Y.iloc[test_idx]
+
+            # Train model.
+            model = XGBRegressor(**xgb_params)
+            model.fit(
+                x_train,
+                y_train,
+                eval_set=[(x_test, y_test)],
+                verbose=False,
+            )
+
+            # Store everything needed for evaluation.
+            self.fold_results.append(
+                {
+                    "model": model,
+                    "x_test": x_test,
+                    "y_test": y_test,
+                }
+            )
+
+    def evaluate(self, save_best_model: bool = False, print_results: bool = False):
+        """
+        Evaluate all trained fold models.
 
         Args:
             save_best_model (bool):
@@ -98,48 +140,40 @@ class XGBStabilityBaseline(object):
                 each training fold and the average R^2 and MAE of the model after the training
                 is completed. Defaults to `False`.
         """
-        # Load Data.
-        df = pd.read_csv(self.path_to_data)
+        if not self.fold_results:
+            raise ValueError("No trained models found. Call train() first.")
 
-        # Define Features (X) and Target (Y).
-        X = df[self._X_FEATURES]
-        Y = df[self._Y_LABEL]
-        groups = df[self._GROUP_BY]
+        self.r2_scores.clear()
+        self.mae_scores.clear()
+        best_r2 = float("-inf")
+        for fold, result in enumerate(self.fold_results):
+            # Get data from each fold.
+            model = result["model"]
+            x_test = result["x_test"]
+            y_test = result["y_test"]
 
-        # K-Fold Cross-validation.
-        gkf = GroupKFold(n_splits=self._K_FOLD_CROSS_SPLITS)
-        xgb_params = self._load_config()
-        previous_r2 = 0
-        for fold, (train_idx, test_idx) in enumerate(gkf.split(X, Y, groups=groups)):
-            x_train, x_test = X.iloc[train_idx], X.iloc[test_idx]
-            y_train, y_test = Y.iloc[train_idx], Y.iloc[test_idx]
-
-            # Train the model.
-            model = XGBRegressor(**xgb_params)
-            model.fit(x_train, y_train, eval_set=[(x_test, y_test)], verbose=False)
-
-            # Evaluate Performance.
+            # Make predictions and calculate R^2 and MAE.
             predictions = model.predict(x_test)
             r2 = r2_score(y_test, predictions)
             mae = mean_absolute_error(y_test, predictions)
 
-            # Save the model if it performed better than the last fold version.
-            if save_best_model and r2 > previous_r2:
-                self._save_model(model)
-
-            # Append to the corresponding list and update last R2 variable.
+            # Append to the lists.
             self.r2_scores.append(r2)
             self.mae_scores.append(mae)
-            previous_r2 = r2
 
-            # Print fold results.
-            if print_training_results:
+            # If we want to save the model - check against the last accuracy to save the best performing model.
+            if save_best_model and r2 > best_r2:
+                self._save_model(model)
+                best_r2 = r2
+
+            # Print fold results if needed.
+            if print_results:
                 print(f"Fold {fold + 1}")
-                print(f"R2: {predictions}")
-                print(f"MAE: {mae}")
+                print(f"R2: {r2:.4f}")
+                print(f"MAE: {mae:.4f}")
 
-        if print_training_results:
-            self._display_results()
+        if print_results:
+            self._print_results()
 
 
 if __name__ == "__main__":
@@ -147,4 +181,5 @@ if __name__ == "__main__":
         path_to_config="config.yaml",
         path_to_data="C:/Users/student02/data/all_ships_all_conditions_v4.csv",
     )
-    xgb_model.train_and_evaluate_model(print_training_results=True)
+    xgb_model.train()
+    xgb_model.evaluate(print_results=True)
