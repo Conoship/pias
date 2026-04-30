@@ -295,15 +295,15 @@ def run_agent_pipeline(window: QWidget):
     if subdivision_draft is None:
         return
 
-    light_gm_value = get_value_from_line_edit(window, "lightGMLineEdit", "GM")
+    light_gm_value = get_value_from_line_edit(window, "lightGMLineEdit", "Light GM")
     if light_gm_value is None:
         return
 
-    partial_gm_value = get_value_from_line_edit(window, "partialGMLineEdit", "GM")
+    partial_gm_value = get_value_from_line_edit(window, "partialGMLineEdit", "Partial GM")
     if partial_gm_value is None:
         return
 
-    deep_gm_value = get_value_from_line_edit(window, "deepGMLineEdit", "GM")
+    deep_gm_value = get_value_from_line_edit(window, "deepGMLineEdit", "Deep GM")
     if deep_gm_value is None:
         return
 
