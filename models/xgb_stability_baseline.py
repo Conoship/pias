@@ -1,3 +1,6 @@
+# Import standard library packages.
+from typing import Any
+
 # Import third party packages.
 import yaml
 import pickle
@@ -31,7 +34,7 @@ class XGBStabilityBaseline(object):
     # The number of splits for K-Fold Cross-Validation
     _K_FOLD_CROSS_SPLITS = 5
 
-    def __init__(self, path_to_config, path_to_data):
+    def __init__(self, path_to_config: str, path_to_data: str) -> None:
         """
         XGB Regressor Stablity Baseline Model.
 
@@ -51,7 +54,20 @@ class XGBStabilityBaseline(object):
         self.mae_scores = []
         self.fold_results = []
 
-    def _load_config(self):
+    def _load_data(self) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series]:
+        """
+        Load the data from the CSV into a Pandas DataFrame and get X and Y.
+
+        Returns:
+            df, X, Y (tuple): A tuple containing the Pandas DataFrame, X and Y
+        """
+        df = pd.read_csv(self.path_to_data)
+        X = df[self._X_FEATURES]
+        Y = df[self._Y_LABEL]
+
+        return df, X, Y
+
+    def _load_config(self) -> dict[str, Any]:
         """
         Load the hyperparameters configuration for the specific model.
         This method uses the constructor argument `path_to_config`.
@@ -62,7 +78,7 @@ class XGBStabilityBaseline(object):
 
         return config[self._CONFIG_NAME]
 
-    def _save_model(self, model: XGBRegressor):
+    def _save_model(self, model: XGBRegressor) -> None:
         """
         Save the model as a .pkl binary file.
 
@@ -73,7 +89,7 @@ class XGBStabilityBaseline(object):
         with open("model.pkl", "wb") as file:
             pickle.dump(model, file)
 
-    def _print_results(self):
+    def _print_results(self) -> None:
         """
         Print the final results of the training with the average R^2 and the average MAE.
         """
@@ -81,15 +97,12 @@ class XGBStabilityBaseline(object):
         print(f"Mean R2: {sum(self.r2_scores) / len(self.r2_scores):.4f}")
         print(f"Mean MAE: {sum(self.mae_scores) / len(self.mae_scores):.4f}")
 
-    def train(self):
+    def train(self) -> None:
         """
         Train models for each fold and store them internally.
         """
         # Load Data.
-        df = pd.read_csv(self.path_to_data)
-
-        X = df[self._X_FEATURES]
-        Y = df[self._Y_LABEL]
+        df, X, Y = self._load_data()
         groups = df[self._GROUP_BY]
 
         # Clear previous results.
@@ -125,17 +138,23 @@ class XGBStabilityBaseline(object):
                 }
             )
 
-    def evaluate(self, save_best_model: bool = False, print_results: bool = False):
+    def evaluate(
+        self, save_best_model: bool = False, print_results: bool = False
+    ) -> None:
         """
         Evaluate all trained fold models.
 
+        Raises:
+            ValueError:
+                If the list `self.fold_results` is empty and therefore the model was not trained.
+
         Args:
-            save_best_model (bool):
+            save_best_model (bool, optional):
                 Boolean flag to enable the user to save the best performing model
                 by comparing in each fold the accuracy to the previous fold accuracy.
                 Defaults to `False`.
 
-            print_training_results (bool):
+            print_training_results (bool, optional):
                 Boolean flag to enable logging and print to the console the results of
                 each training fold and the average R^2 and MAE of the model after the training
                 is completed. Defaults to `False`.
@@ -161,7 +180,7 @@ class XGBStabilityBaseline(object):
             self.r2_scores.append(r2)
             self.mae_scores.append(mae)
 
-            # If we want to save the model - check against the last accuracy to save the best performing model.
+            # If we want to save the model - check against the best accuracy to save the best performing model.
             if save_best_model and r2 > best_r2:
                 self._save_model(model)
                 best_r2 = r2
