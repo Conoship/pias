@@ -40,11 +40,7 @@ for fold, (train_idx, test_idx) in enumerate(gkf.split(X, y, groups=groups)):
     y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
 
     model = XGBRegressor(**xgb_params)
-    model.fit(
-        X_train, 
-        y_train,
-        eval_set=[(X_test, y_test)],
-        verbose=False)
+    model.fit(X_train, y_train, eval_set=[(X_test, y_test)], verbose=False)
     print("Model training complete.")
 
     # Evaluate Performance
