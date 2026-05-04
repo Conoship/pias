@@ -7,12 +7,11 @@ import pickle
 import pandas as pd
 from xgboost import XGBRegressor
 from mapie.regression import SplitConformalRegressor
-from mapie.utils import train_conformalize_test_split
 from sklearn.model_selection import GroupKFold
 from sklearn.metrics import r2_score, mean_absolute_error
 
 
-class XGBStabilityBaseline(object):
+class MapieXGBRegressor(object):
     # The name of the target hyperparameter configuration.
     _CONFIG_NAME = "XGBRegressorBaseline"
 
@@ -211,7 +210,7 @@ class XGBStabilityBaseline(object):
 
 
 if __name__ == "__main__":
-    xgb_model = XGBStabilityBaseline(
+    xgb_model = MapieXGBRegressor(
         path_to_config="config.yaml",
         path_to_data="C:/Users/student01/Desktop/data/all_ships_baseline.csv",
     )

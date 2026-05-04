@@ -5,6 +5,7 @@ import pickle
 # Import third party packages.
 import numpy as np
 import pandas as pd
+from mapie.regression import SplitConformalRegressor
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import QFile
 from PySide6.QtUiTools import QUiLoader
@@ -299,7 +300,9 @@ def run_agent_pipeline(window: QWidget):
     if light_gm_value is None:
         return
 
-    partial_gm_value = get_value_from_line_edit(window, "partialGMLineEdit", "Partial GM")
+    partial_gm_value = get_value_from_line_edit(
+        window, "partialGMLineEdit", "Partial GM"
+    )
     if partial_gm_value is None:
         return
 
@@ -308,26 +311,31 @@ def run_agent_pipeline(window: QWidget):
         return
 
     # Step 4: Put the data in a single CSV.
-    df = pd.read_csv("C:/Users/student02/data/all_ships_all_conditions_v4.csv")
-    cols_to_drop = [
-        "target_margin",
-        "target_attained_index",
-        "ship_version_id",
-        "condition_code",
-    ]
+    df = pd.read_csv("./mockdata.csv")
 
     # Step 5: Load the model.
     with open("models/model.pkl", "rb") as file:
-        model = pickle.load(file)
+        saved = pickle.load(file)
+
+    model = saved["model"]
+    feature_cols = saved["feature_cols"]
 
     # Step 6: Feed the data to the model and get the results.
-    X = df.select_dtypes(include=["number"]).drop(columns=cols_to_drop, errors="ignore")
+    X = df.select_dtypes(include=["number"])
+    X = X[feature_cols]
 
-    # Get per-tree predictions and calculate the 95% CI to display confidence.
-    all_tree_preds = np.array([tree.predict(X) for tree in model.estimators_])
-    prediction = np.mean(all_tree_preds, axis=0)
-    lower = np.percentile(all_tree_preds, 2.5, axis=0)[0]
-    upper = np.percentile(all_tree_preds, 97.5, axis=0)[0]
+    if isinstance(model, SplitConformalRegressor):
+        predictions, intervals = model.predict_interval(X)
+        prediction = predictions[0].item()
+        lower = float(intervals[0, 0, 0].item())
+        upper = float(intervals[0, 1, 0].item())
+
+    else:
+        # Get per-tree predictions and calculate the 95% CI to display confidence.
+        all_tree_preds = np.array([tree.predict(X) for tree in model.estimators_])
+        prediction = np.mean(all_tree_preds, axis=0)[0].item()
+        lower = np.percentile(all_tree_preds, 2.5, axis=0)[0].item()
+        upper = np.percentile(all_tree_preds, 97.5, axis=0)[0].item()
 
     # Step 7: Display the output.
     display_results(window, prediction, lower, upper)
