@@ -13,7 +13,7 @@ from sklearn.metrics import r2_score, mean_absolute_error
 
 class MapieXGBRegressor(object):
     # The name of the target hyperparameter configuration.
-    _CONFIG_NAME = "XGBRegressorBaseline"
+    _CONFIG_NAME = "MapieWrappedXGB"
 
     # The columns of the dataset to use as features (X).
     _X_FEATURES = [
@@ -112,7 +112,7 @@ class MapieXGBRegressor(object):
         self.fold_results.clear()
 
         outer_gkf = GroupKFold(n_splits=self._K_FOLD_CROSS_SPLITS)
-        inner_gkf = GroupKFold(n_splits=2)
+        inner_gkf = GroupKFold(n_splits=5)
         xgb_params = self._load_config()
 
         for train_idx, test_idx in outer_gkf.split(X, Y, groups=groups):
