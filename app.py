@@ -256,61 +256,61 @@ def run_agent_pipeline(window: QWidget):
             where results will be displayed.
     """
     # Step 1: Collect the file paths from the UI.
-    main_dims_path = get_file_from_line_edit(
-        window, "mainDimsLineEdit", "Main Dimensions PDF"
-    )
-    if main_dims_path is None:
-        return
+    # main_dims_path = get_file_from_line_edit(
+    #     window, "mainDimsLineEdit", "Main Dimensions PDF"
+    # )
+    # if main_dims_path is None:
+    #     return
 
-    openings_path = get_file_from_line_edit(window, "openingsLineEdit", "Openings PDF")
-    if openings_path is None:
-        return
+    # openings_path = get_file_from_line_edit(window, "openingsLineEdit", "Openings PDF")
+    # if openings_path is None:
+    #     return
 
-    internal_subdiv_path = get_file_from_line_edit(
-        window, "internalSubdivLineEdit", "Internal Subdivision XML"
-    )
-    if internal_subdiv_path is None:
-        return
+    # internal_subdiv_path = get_file_from_line_edit(
+    #     window, "internalSubdivLineEdit", "Internal Subdivision XML"
+    # )
+    # if internal_subdiv_path is None:
+    #     return
 
     # Step 2: Parse the files to make CSVs (RTF Parser or RTF -> PDF).
 
     # Step 3: Collect User Defined Value from the UI.
     # If any value is None return immediately.
-    ship_name = get_ship_name_from_line_edit(window, "shipNameLineEdit")
-    if ship_name is None:
-        return
+    # ship_name = get_ship_name_from_line_edit(window, "shipNameLineEdit")
+    # if ship_name is None:
+    #     return
 
-    subdivision_length = get_value_from_line_edit(
-        window, "subdivLenLineEdit", "Subdivision Length"
-    )
-    if subdivision_length is None:
-        return
+    # subdivision_length = get_value_from_line_edit(
+    #     window, "subdivLenLineEdit", "Subdivision Length"
+    # )
+    # if subdivision_length is None:
+    #     return
 
-    light_service_draft = get_value_from_line_edit(
-        window, "lightServiceDraftLineEdit", "Light Service Draft"
-    )
-    if light_service_draft is None:
-        return
+    # light_service_draft = get_value_from_line_edit(
+    #     window, "lightServiceDraftLineEdit", "Light Service Draft"
+    # )
+    # if light_service_draft is None:
+    #     return
 
-    subdivision_draft = get_value_from_line_edit(
-        window, "subdivDraftLineEdit", "Subdivision Draft"
-    )
-    if subdivision_draft is None:
-        return
+    # subdivision_draft = get_value_from_line_edit(
+    #     window, "subdivDraftLineEdit", "Subdivision Draft"
+    # )
+    # if subdivision_draft is None:
+    #     return
 
-    light_gm_value = get_value_from_line_edit(window, "lightGMLineEdit", "Light GM")
-    if light_gm_value is None:
-        return
+    # light_gm_value = get_value_from_line_edit(window, "lightGMLineEdit", "Light GM")
+    # if light_gm_value is None:
+    #     return
 
-    partial_gm_value = get_value_from_line_edit(
-        window, "partialGMLineEdit", "Partial GM"
-    )
-    if partial_gm_value is None:
-        return
+    # partial_gm_value = get_value_from_line_edit(
+    #     window, "partialGMLineEdit", "Partial GM"
+    # )
+    # if partial_gm_value is None:
+    #     return
 
-    deep_gm_value = get_value_from_line_edit(window, "deepGMLineEdit", "Deep GM")
-    if deep_gm_value is None:
-        return
+    # deep_gm_value = get_value_from_line_edit(window, "deepGMLineEdit", "Deep GM")
+    # if deep_gm_value is None:
+    #     return
 
     # Step 4: Put the data in a single CSV.
     df = pd.read_csv("./mockdata.csv")
