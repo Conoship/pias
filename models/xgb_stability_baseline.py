@@ -87,7 +87,7 @@ class XGBStabilityBaseline(object):
                 The XGB Regressor model to save as the .pkl file.
         """
         with open("model.pkl", "wb") as file:
-            pickle.dump(model, file)
+            pickle.dump({"model": model, "feature_cols": self._X_FEATURES}, file)
 
     def _print_results(self) -> None:
         """
@@ -198,7 +198,7 @@ class XGBStabilityBaseline(object):
 if __name__ == "__main__":
     xgb_model = XGBStabilityBaseline(
         path_to_config="config.yaml",
-        path_to_data="C:/Users/student02/data/all_ships_all_conditions_v4.csv",
+        path_to_data="C:/Users/student01/Desktop/data/all_ships_baseline.csv",
     )
     xgb_model.train()
-    xgb_model.evaluate(print_results=True)
+    xgb_model.evaluate(print_results=True, save_best_model=True)

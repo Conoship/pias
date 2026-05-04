@@ -90,16 +90,21 @@ class RandomForestBaseline(object):
 
         return config[config_name]
 
-    def _save_model(self, model: RandomForestRegressor) -> None:
+    def _save_model(
+        self, model: RandomForestRegressor, feature_cols: list[str]
+    ) -> None:
         """
         Save the model as a .pkl binary file.
 
         Args:
             model (RandomForestRegressor):
                 The Random Forest Regressor model to save as the .pkl file.
+
+            feature_cols (list[str]):
+                A list of all the columns the model is using as features to train on.
         """
         with open("model.pkl", "wb") as file:
-            pickle.dump(model, file)
+            pickle.dump({"model": model, "feature_cols": feature_cols}, file)
 
     def _print_results(self) -> None:
         """
@@ -204,7 +209,7 @@ class RandomForestBaseline(object):
 
             # If we want to save the model - check against the best accuracy to save the best performing model.
             if save_best_model and r2 > best_r2:
-                self._save_model(model)
+                self._save_model(model, list(x_test.columns))
                 best_r2 = r2
                 self.best_fold = fold
 
@@ -332,7 +337,7 @@ class RandomForestBaseline(object):
         # Create the model to get the learning curve parameters.
         random_forest_params = self._load_config(self._CONFIG_NAME)
         model = RandomForestRegressor(**random_forest_params)
-        train_sizes, train_scores, test_scores, _, _ = learning_curve(
+        train_sizes, train_scores, test_scores = learning_curve(
             model,
             X,
             Y,
@@ -380,8 +385,8 @@ class RandomForestBaseline(object):
 if __name__ == "__main__":
     random_forest_model = RandomForestBaseline(
         path_to_config="config.yaml",
-        path_to_data="C:/Users/student02/data/all_ships_all_conditions_v4.csv",
+        path_to_data="C:/Users/student01/Desktop/data/all_ships_multiple_features.csv",
     )
     random_forest_model.train()
-    random_forest_model.evaluate(print_results=True)
+    random_forest_model.evaluate(print_results=True, save_best_model=True)
     random_forest_model.plot_all(save=False)
