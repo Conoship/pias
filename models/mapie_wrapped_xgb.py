@@ -113,13 +113,11 @@ class MapieXGBRegressor(object):
     def train(self) -> None:
         df, X, Y = self._load_data()
         groups = df[self._GROUP_BY]
-
         self.fold_results.clear()
 
         outer_gkf = GroupKFold(n_splits=self._K_FOLD_CROSS_SPLITS)
         inner_gkf = GroupKFold(n_splits=5)
         xgb_params = self._load_config()
-
         for train_idx, test_idx in outer_gkf.split(X, Y, groups=groups):
             # Outer fold split.
             x_fold_train = X.iloc[train_idx]
@@ -129,21 +127,20 @@ class MapieXGBRegressor(object):
             groups_fold = groups.iloc[train_idx]
 
             # Inner group-aware split into fit + conformalize sets.
-            fit_idx, conf_idx = next(
+            xgb = XGBRegressor(**xgb_params)
+            xgb.fit(x_fold_train, y_fold_train, verbose=False)
+            _, conf_idx = next(
                 inner_gkf.split(x_fold_train, y_fold_train, groups=groups_fold)
             )
-            x_train = x_fold_train.iloc[fit_idx]
-            y_train = y_fold_train.iloc[fit_idx]
             x_conf = x_fold_train.iloc[conf_idx]
             y_conf = y_fold_train.iloc[conf_idx]
 
             # Build and fit the MAPIE-wrapped XGB model.
             mapie_model = SplitConformalRegressor(
-                estimator=XGBRegressor(**xgb_params),
+                estimator=xgb,
                 confidence_level=self._CONFIDENCE_LEVEL,
-                prefit=False,
+                prefit=True,
             )
-            mapie_model.fit(x_train, y_train)
             mapie_model.conformalize(x_conf, y_conf)
 
             self.fold_results.append(
@@ -217,7 +214,7 @@ class MapieXGBRegressor(object):
 if __name__ == "__main__":
     xgb_model = MapieXGBRegressor(
         path_to_config="config.yaml",
-        path_to_data="C:/Users/student01/Desktop/data/all_ships_baseline.csv",
+        path_to_data="C:/Users/student01/Desktop/data/all_ships_multiple_features.csv",
     )
     xgb_model.train()
-    xgb_model.evaluate(save_best_model=True, print_results=True)
+    xgb_model.evaluate(save_best_model=False, print_results=True)

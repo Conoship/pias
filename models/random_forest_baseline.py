@@ -430,7 +430,7 @@ class RandomForestBaseline(object):
 if __name__ == "__main__":
     random_forest_model = RandomForestBaseline(
         path_to_config="config.yaml",
-        path_to_data="C:/Users/student01/Desktop/data/all_ships_multiple_features.csv",
+        path_to_data="C:/Users/student01/Desktop/data/all_ships_partial_v4.csv",
     )
     random_forest_model.train()
     random_forest_model.evaluate(print_results=True, save_best_model=True)
