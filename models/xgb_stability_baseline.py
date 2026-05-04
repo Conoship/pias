@@ -87,7 +87,15 @@ class XGBStabilityBaseline(object):
                 The XGB Regressor model to save as the .pkl file.
         """
         with open("model.pkl", "wb") as file:
-            pickle.dump({"model": model, "feature_cols": self._X_FEATURES}, file)
+            pickle.dump(
+                {
+                    "model_type": "XGB Regressor",
+                    "model": model,
+                    "feature_cols": self._X_FEATURES,
+                    "engineer_features": None,
+                },
+                file,
+            )
 
     def _print_results(self) -> None:
         """

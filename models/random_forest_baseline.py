@@ -26,6 +26,7 @@ class RandomForestBaseline(object):
         "target_attained_index",
         "ship_version_id",
         "condition_code",
+        "subdivision_length",
     ]
 
     # The column of the dataset to use as label (Y).
@@ -104,7 +105,15 @@ class RandomForestBaseline(object):
                 A list of all the columns the model is using as features to train on.
         """
         with open("model.pkl", "wb") as file:
-            pickle.dump({"model": model, "feature_cols": feature_cols}, file)
+            pickle.dump(
+                {
+                    "model_type": "Random Forest Regressor",
+                    "model": model,
+                    "feature_cols": feature_cols,
+                    "engineer_features": self._engineer_features,
+                },
+                file,
+            )
 
     def _print_results(self) -> None:
         """

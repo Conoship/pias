@@ -93,7 +93,12 @@ class MapieXGBRegressor(object):
         """
         with open("model.pkl", "wb") as file:
             pickle.dump(
-                {"model": mapie_model, "feature_cols": self._X_FEATURES},
+                {
+                    "model_type": "MAPIE XGB Regressor",
+                    "model": mapie_model,
+                    "feature_cols": self._X_FEATURES,
+                    "engineer_features": None,
+                },
                 file,
             )
 

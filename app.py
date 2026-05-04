@@ -5,7 +5,6 @@ import pickle
 # Import third party packages.
 import numpy as np
 import pandas as pd
-from mapie.regression import SplitConformalRegressor
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import QFile
 from PySide6.QtUiTools import QUiLoader
@@ -21,6 +20,9 @@ from PySide6.QtWidgets import (
     QFrame,
     QVBoxLayout,
 )
+
+# Import local packages.
+from models.random_forest_baseline import RandomForestBaseline
 
 
 def open_file(window: QWidget, caption: str, file_type: str, line_edit_name: str):
@@ -317,14 +319,18 @@ def run_agent_pipeline(window: QWidget):
     with open("models/model.pkl", "rb") as file:
         saved = pickle.load(file)
 
+    model_type = saved["model_type"]
     model = saved["model"]
     feature_cols = saved["feature_cols"]
+    engineer_features = saved.get("engineer_features")
 
     # Step 6: Feed the data to the model and get the results.
     X = df.select_dtypes(include=["number"])
+    if engineer_features is not None:
+        X = engineer_features(X)
     X = X[feature_cols]
 
-    if isinstance(model, SplitConformalRegressor):
+    if model_type == "MAPIE XGB Regressor":
         predictions, intervals = model.predict_interval(X)
         prediction = predictions[0].item()
         lower = float(intervals[0, 0, 0].item())
@@ -332,7 +338,10 @@ def run_agent_pipeline(window: QWidget):
 
     else:
         # Get per-tree predictions and calculate the 95% CI to display confidence.
-        all_tree_preds = np.array([tree.predict(X) for tree in model.estimators_])
+        X_values = X.to_numpy()
+        all_tree_preds = np.array(
+            [tree.predict(X_values) for tree in model.estimators_]
+        )
         prediction = np.mean(all_tree_preds, axis=0)[0].item()
         lower = np.percentile(all_tree_preds, 2.5, axis=0)[0].item()
         upper = np.percentile(all_tree_preds, 97.5, axis=0)[0].item()
