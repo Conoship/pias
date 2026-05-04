@@ -126,6 +126,40 @@ class RandomForestBaseline(object):
 
         return X
 
+    def _engineer_features(self, X: pd.DataFrame) -> pd.DataFrame:
+        X = X.copy()
+
+        # Displacement-to-length ratio: normalizes displacement by ship size.
+        if "displacement" in X.columns and "total_layout_length" in X.columns:
+            X["displacement_per_length"] = X["displacement"] / X["total_layout_length"]
+
+        # VCG-to-height ratio: how high the centre of gravity is relative to ship height.
+        if "vcg" in X.columns and "max_layout_height" in X.columns:
+            X["vcg_to_height_ratio"] = X["vcg"] / X["max_layout_height"]
+
+        # Draft-to-height ratio: loading depth relative to ship height.
+        if "draft" in X.columns and "max_layout_height" in X.columns:
+            X["draft_to_height_ratio"] = X["draft"] / X["max_layout_height"]
+
+        # Openings exposure: openings scaled by compartment count.
+        if (
+            "openings_per_compartment" in X.columns
+            and "total_compartments" in X.columns
+        ):
+            X["total_openings"] = (
+                X["openings_per_compartment"] * X["total_compartments"]
+            )
+
+        # Void ratio: void compartments as a fraction of total.
+        if "n_void" in X.columns and "total_compartments" in X.columns:
+            X["void_ratio"] = X["n_void"] / X["total_compartments"]
+
+        # Ballast ratio: same for ballast.
+        if "n_ballast" in X.columns and "total_compartments" in X.columns:
+            X["ballast_ratio"] = X["n_ballast"] / X["total_compartments"]
+
+        return X
+
     def train(self) -> None:
         """
         Train models for each fold and store them internally.
@@ -138,6 +172,7 @@ class RandomForestBaseline(object):
         self.fold_results.clear()
 
         # Filter out low impact features.
+        X = self._engineer_features(X)
         X = self._filter_low_impact_features(X, Y)
 
         # Cross-validation.
@@ -333,6 +368,7 @@ class RandomForestBaseline(object):
         """
         # Load the data.
         _, X, Y = self._load_data()
+        X = self._engineer_features(X)
 
         # Create the model to get the learning curve parameters.
         random_forest_params = self._load_config(self._CONFIG_NAME)
