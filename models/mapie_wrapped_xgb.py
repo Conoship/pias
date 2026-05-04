@@ -6,8 +6,8 @@ import yaml
 import pickle
 import pandas as pd
 from xgboost import XGBRegressor
-from mapie.regression import SplitConformalRegressor
 from sklearn.model_selection import GroupKFold
+from mapie.regression import SplitConformalRegressor
 from sklearn.metrics import r2_score, mean_absolute_error
 
 
@@ -214,7 +214,7 @@ class MapieXGBRegressor(object):
 if __name__ == "__main__":
     xgb_model = MapieXGBRegressor(
         path_to_config="config.yaml",
-        path_to_data="C:/Users/student01/Desktop/data/all_ships_multiple_features.csv",
+        path_to_data="C:/Users/student01/Desktop/data/all_ships_deepest_v4.csv",
     )
     xgb_model.train()
-    xgb_model.evaluate(save_best_model=False, print_results=True)
+    xgb_model.evaluate(print_results=True)

@@ -206,7 +206,7 @@ class XGBStabilityBaseline(object):
 if __name__ == "__main__":
     xgb_model = XGBStabilityBaseline(
         path_to_config="config.yaml",
-        path_to_data="C:/Users/student01/Desktop/data/all_ships_partial_v4.csv",
+        path_to_data="C:/Users/student01/Desktop/data/all_ships_deepest_v4.csv",
     )
     xgb_model.train()
     xgb_model.evaluate(print_results=True, save_best_model=False)

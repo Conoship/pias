@@ -331,7 +331,7 @@ class RandomForestBaseline(object):
             os.makedirs(output_dir, exist_ok=True)
             plt.savefig(f"{output_dir}/pred_vs_actual.png")
 
-        plt.close()
+        plt.show()
 
     def plot_residuals(self, save: bool = True, output_dir: str = "plots") -> None:
         """
@@ -362,7 +362,7 @@ class RandomForestBaseline(object):
             os.makedirs(output_dir, exist_ok=True)
             plt.savefig(f"{output_dir}/residuals.png")
 
-        plt.close()
+        plt.show()
 
     def plot_learning_curve(self, save: bool = True, output_dir: str = "plots") -> None:
         """
@@ -407,7 +407,7 @@ class RandomForestBaseline(object):
             os.makedirs(output_dir, exist_ok=True)
             plt.savefig(f"{output_dir}/learning_curve.png")
 
-        plt.close()
+        plt.show()
 
     def plot_all(self, save: bool = True, output_dir: str = "plots") -> None:
         """
@@ -433,5 +433,5 @@ if __name__ == "__main__":
         path_to_data="C:/Users/student01/Desktop/data/all_ships_partial_v4.csv",
     )
     random_forest_model.train()
-    random_forest_model.evaluate(print_results=True, save_best_model=True)
+    random_forest_model.evaluate(print_results=True)
     random_forest_model.plot_all(save=False)

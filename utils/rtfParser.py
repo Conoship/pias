@@ -3,10 +3,10 @@ import pandas as pd
 
 
 class MainDimensionsParser(object):
-    GENERAL_PARTICULARS_START = 31
-    FRAME_SPACING_DEFS_START = 47
+    _GENERAL_PARTICULARS_START = 31
+    _FRAME_SPACING_DEFS_START = 47
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.cols = [
             "Length between perpendiculars",
             "Moulded breadth",
@@ -14,7 +14,7 @@ class MainDimensionsParser(object):
         ]
         self.output_df = pd.DataFrame(columns=self.cols)
 
-    def extract_field_value(self, line: str, feature_name: str):
+    def _extract_field_value(self, line: str, feature_name: str) -> str | None:
         """
         Extracts the value associated with a field name in an RTF line.
 
@@ -49,20 +49,20 @@ class MainDimensionsParser(object):
 
         return None
 
-    def parse_file(self, file_path) -> pd.DataFrame:
+    def parse_file(self, file_path: str) -> pd.DataFrame:
         try:
             with open(file_path, "r", encoding="utf-8") as file:
                 column_searching = 0
                 for idx, line in enumerate(file):
-                    if idx < self.GENERAL_PARTICULARS_START:
+                    if idx < self._GENERAL_PARTICULARS_START:
                         continue
-                    if idx > self.FRAME_SPACING_DEFS_START:
+                    if idx > self._FRAME_SPACING_DEFS_START:
                         break
 
                     current_col = self.cols[column_searching]
 
                     # Extract value safely using field-aware regex.
-                    value = self.extract_field_value(line, current_col)
+                    value = self._extract_field_value(line, current_col)
 
                     if value is not None:
                         self.output_df.loc[0, current_col] = value
