@@ -107,36 +107,31 @@ class XGBStabilityBaseline(object):
         print(f"Mean MAE: {sum(self.mae_scores) / len(self.mae_scores):.4f}")
 
     def train(self) -> None:
-        """
-        Train a MAPIE-wrapped XGB model for each fold and store them internally.
-        Within each fold the training split is further divided into a fit set
-        and a conformalize (calibration) set for MAPIE.
-        """
         df, X, Y = self._load_data()
         groups = df[self._GROUP_BY]
 
         self.fold_results.clear()
 
-        gkf = GroupKFold(n_splits=self._K_FOLD_CROSS_SPLITS)
+        outer_gkf = GroupKFold(n_splits=self._K_FOLD_CROSS_SPLITS)
+        inner_gkf = GroupKFold(n_splits=2)
         xgb_params = self._load_config()
 
-        for train_idx, test_idx in gkf.split(X, Y, groups=groups):
+        for train_idx, test_idx in outer_gkf.split(X, Y, groups=groups):
             # Outer fold split.
             x_fold_train = X.iloc[train_idx]
             y_fold_train = Y.iloc[train_idx]
             x_test = X.iloc[test_idx]
             y_test = Y.iloc[test_idx]
+            groups_fold = groups.iloc[train_idx]
 
-            # Split the training fold into fit + conformalize sets for MAPIE.
-            x_train, x_conf, x_test_unused, y_train, y_conf, y_test_unused = (
-                train_conformalize_test_split(
-                    x_fold_train,
-                    y_fold_train,
-                    train_size=1 - self._CONFORMALIZE_SIZE,
-                    conformalize_size=self._CONFORMALIZE_SIZE,
-                    test_size=0,
-                )
+            # Inner group-aware split into fit + conformalize sets.
+            fit_idx, conf_idx = next(
+                inner_gkf.split(x_fold_train, y_fold_train, groups=groups_fold)
             )
+            x_train = x_fold_train.iloc[fit_idx]
+            y_train = y_fold_train.iloc[fit_idx]
+            x_conf = x_fold_train.iloc[conf_idx]
+            y_conf = y_fold_train.iloc[conf_idx]
 
             # Build and fit the MAPIE-wrapped XGB model.
             mapie_model = SplitConformalRegressor(
