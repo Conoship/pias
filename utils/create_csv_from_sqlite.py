@@ -2,7 +2,7 @@ import sqlite3
 import pandas as pd
 
 # Connect to SQLite database
-conn = sqlite3.connect("../utils/localhost.db")
+conn = sqlite3.connect("localhost.db")
 
 query = """
 WITH comp_data AS (

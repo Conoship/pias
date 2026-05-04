@@ -295,11 +295,15 @@ def run_agent_pipeline(window: QWidget):
     if subdivision_draft is None:
         return
 
-    light_gm_value = get_value_from_line_edit(window, "lightGMLineEdit", "GM")
+    light_gm_value = get_value_from_line_edit(window, "lightGMLineEdit", "Light GM")
     if light_gm_value is None:
         return
 
-    deep_gm_value = get_value_from_line_edit(window, "deepGMLineEdit", "GM")
+    partial_gm_value = get_value_from_line_edit(window, "partialGMLineEdit", "Partial GM")
+    if partial_gm_value is None:
+        return
+
+    deep_gm_value = get_value_from_line_edit(window, "deepGMLineEdit", "Deep GM")
     if deep_gm_value is None:
         return
 
@@ -376,7 +380,7 @@ def main():
         line_edit_name="internalSubdivLineEdit",
     )
 
-    # Connect the Run AI Agent pipeline.
+    # Connect the Run button to the AI Agent pipeline.
     run_btn = window.findChild(QPushButton, "runBtn")
     if run_btn:
         run_btn.clicked.connect(lambda: run_agent_pipeline(window))
