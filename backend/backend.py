@@ -1,0 +1,85 @@
+import sys
+import pickle
+import numpy as np
+import pandas as pd
+from utils.parseMainDimensions import import_main_dimensions
+from utils.parseLayout import import_layout_xml
+from utils.parseOpenings import import_openings
+from utils.db import get_local_conn
+
+import os
+import psycopg
+from dotenv import load_dotenv
+load_dotenv()
+
+def get_conn():
+    return psycopg.connect(
+        dbname=os.environ["PG_DBNAME"],
+        user=os.environ["PG_USER"],
+        password=os.environ["PG_PASSWORD"],
+        host=os.environ["PG_HOST"],
+        port=int(os.environ["PG_PORT"]),
+    )
+
+def load_features(ship_name: str) -> pd.DataFrame:
+    conn = get_local_conn()
+    query = open("queries/all_ships_training_features_v1.sql").read()
+    df = pd.read_sql_query(query, conn, params={"ship_name": ship_name})
+    conn.close()
+    return df
+
+
+def run_agent_pipeline(pass_value: float, ship_name: str):
+    """
+    Execute the AI agent pipeline: load data, run the trained model,
+    and return the predicted results.
+
+    Args:
+        window (QWidget):
+            The main application window used to locate UI elements
+            where results will be displayed.
+    """
+    #----- Put the data in a single CSV.-----
+    # If we use just mock data:
+    # df = pd.read_csv("./mockdata.csv")
+
+    # If we use user input:
+    df = load_features(ship_name)
+
+    # Load the model.
+    with open("models/model.pkl", "rb") as file:
+        saved = pickle.load(file)
+
+    model_type = saved["model_type"]
+    model = saved["model"]
+    feature_cols = saved["feature_cols"]
+    engineer_features = saved.get("engineer_features")
+
+    # Feed the data to the model and get the results.
+    X = df.select_dtypes(include=["number"])
+    if engineer_features is not None:
+        X = engineer_features(X)
+    X = X[feature_cols]
+
+    if model_type == "MAPIE XGB Regressor":
+        predictions, intervals = model.predict_interval(X)
+        prediction = predictions[0].item()
+        lower = float(intervals[0, 0, 0].item())
+        upper = float(intervals[0, 1, 0].item())
+
+    else:
+        # Get per-tree predictions and calculate the 95% CI to display confidence.
+        X_values = X.to_numpy()
+        all_tree_preds = np.array(
+            [tree.predict(X_values) for tree in model.estimators_]
+        )
+        prediction = np.mean(all_tree_preds, axis=0)[0].item()
+        lower = np.percentile(all_tree_preds, 2.5, axis=0)[0].item()
+        upper = np.percentile(all_tree_preds, 97.5, axis=0)[0].item()
+
+    if prediction >= pass_value:
+        pass_result = "A is above the required index R"
+    else:
+        pass_result = "A is below the required index R"
+
+    return prediction, lower, upper, pass_result
