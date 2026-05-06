@@ -3,14 +3,17 @@ import psycopg
 from pathlib import Path
 import pdfplumber
 
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 def get_conn():
     return psycopg.connect(
-        dbname="pias_damage",
-        user="intern_user",
-        password="W!3uCXrdV^%JQ2",
-        host="python.conoship.com",
-        port=5432,
+        dbname=os.environ["PG_DBNAME"],
+        user=os.environ["PG_USER"],
+        password=os.environ["PG_PASSWORD"],
+        host=os.environ["PG_HOST"],
+        port=int(os.environ["PG_PORT"]),
     )
 
 
