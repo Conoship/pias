@@ -323,6 +323,25 @@
       <bool>true</bool>
      </property>
     </widget>
+    <widget class="QLineEdit" name="requiredIndexLineEdit">
+     <property name="geometry">
+      <rect>
+       <x>420</x>
+       <y>190</y>
+       <width>281</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="readOnly">
+      <bool>false</bool>
+     </property>
+     <property name="placeholderText">
+      <string>Enter Required Index R</string>
+     </property>
+     <property name="clearButtonEnabled">
+      <bool>true</bool>
+     </property>
+    </widget>
    </widget>
    <widget class="QFrame" name="resultsFrame">
     <property name="geometry">
