@@ -1,0 +1,13 @@
+TRUNCATE TABLE compartment,
+content_category,
+frustum_point,
+main_dimensions,
+opening,
+probdam_case,
+probdam_conclusion,
+probdam_total,
+ship,
+ship_version,
+subcompartment,
+subcompartment_shape,
+trim_gm RESTART IDENTITY CASCADE;

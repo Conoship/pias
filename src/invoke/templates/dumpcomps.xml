@@ -1,0 +1,11 @@
+<XML_requests>
+  <XML_request>
+    <Request_type>Set_subcompartment_to_frustrum</Request_type>
+    <Request_parameters>
+      <XML_output_filename>{ship}_{design}_{version}_{subversion?}.fromLayout</XML_output_filename>
+    </Request_parameters>
+  </XML_request>
+  <XML_request>
+    <Request_type>export_ship_layout</Request_type>
+  </XML_request>
+</XML_requests>
