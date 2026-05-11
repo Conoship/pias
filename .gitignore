@@ -9,3 +9,4 @@ config.yaml
 *.pkl
 localhost.db
 mockdata/
+__pycache__
