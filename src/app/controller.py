@@ -231,7 +231,7 @@ def display_results(
     """
     # Load the Results Widget.
     loader = QUiLoader()
-    file = QFile("ui/resultsWidget.ui")
+    file = QFile("src/app/ui/resultsWidget.ui")
     file.open(QFile.OpenModeFlag.ReadOnly)
     results_widget = loader.load(file)
     file.close()
