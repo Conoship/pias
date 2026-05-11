@@ -45,7 +45,7 @@ class MainDimensionsParser(object):
 
         # Extract the value from the correct one.
         if len(matches) >= 3:
-            return matches[2].group(1).strip()
+            return matches[1].group(1).strip()
 
         return None
 
