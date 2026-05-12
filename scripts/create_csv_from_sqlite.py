@@ -11,11 +11,16 @@ query = """
 WITH comp_data AS (
     SELECT
         comp.ship_version_id,
-        COUNT(DISTINCT comp.id) AS total_compartments,
-        AVG(sub.permeability_for_damage_stability) AS avg_permeability,
-        CAST(COUNT(DISTINCT op.id) AS REAL) /
-            NULLIF(COUNT(DISTINCT comp.id), 0) AS openings_per_compartment,
 
+        COUNT(DISTINCT comp.id) AS total_compartments,
+
+        AVG(sub.permeability_for_damage_stability) AS avg_permeability,
+
+        CAST(COUNT(DISTINCT op.id) AS REAL) /
+            NULLIF(COUNT(DISTINCT comp.id), 0)
+            AS openings_per_compartment,
+
+        -- Content type counts
         COUNT(DISTINCT CASE
             WHEN comp.design_content_id_number = 1 THEN comp.id
         END) AS n_cargo,
@@ -49,21 +54,26 @@ WITH comp_data AS (
         ON sub.compartment_id = comp.id
     LEFT JOIN opening op
         ON op.compartment_id = comp.id
+
     GROUP BY comp.ship_version_id
 ),
 
 geom AS (
     SELECT
         ss.ship_version_id,
+
         MAX(fp.L) - MIN(fp.L) AS total_layout_length,
         MAX(fp.B) AS max_layout_breadth,
         MAX(fp.H) AS max_layout_height,
+
         AVG(fp.B * fp.H) AS avg_cross_section,
         SUM(fp.B * fp.H) AS sum_bh_sections,
 
-        -- Manual stddev calculation for SQLite
-        SQRT(AVG(fp.B * fp.B) - AVG(fp.B) * AVG(fp.B)) AS std_breadth,
-        SQRT(AVG(fp.H * fp.H) - AVG(fp.H) * AVG(fp.H)) AS std_height,
+        SQRT(AVG(fp.B * fp.B) - AVG(fp.B) * AVG(fp.B))
+            AS std_breadth,
+
+        SQRT(AVG(fp.H * fp.H) - AVG(fp.H) * AVG(fp.H))
+            AS std_height,
 
         COUNT(*) AS n_frustum_points
 
@@ -74,12 +84,14 @@ geom AS (
         ON comp.id = sub.compartment_id
     JOIN frustum_point fp
         ON fp.subcompartment_shape_id = ss.id
+
     GROUP BY ss.ship_version_id
 )
 
 SELECT
     t.ship_version_id,
     sv.ship_id,
+
     t.draft,
     t.trim,
     t.mg,
@@ -96,6 +108,7 @@ SELECT
     comp_data.total_compartments,
     comp_data.avg_permeability,
     comp_data.openings_per_compartment,
+
     comp_data.n_cargo,
     comp_data.n_fuel_oil,
     comp_data.n_gas_oil,
@@ -114,13 +127,18 @@ SELECT
     geom.n_frustum_points,
 
     t.attained_index AS target_attained_index,
-    (t.attained_index - t.required_index) AS target_margin
+
+    (t.attained_index - t.required_index)
+        AS target_margin
 
 FROM trim_gm t
+
 JOIN ship_version sv
     ON sv.id = t.ship_version_id
+
 LEFT JOIN comp_data
     ON comp_data.ship_version_id = t.ship_version_id
+
 LEFT JOIN geom
     ON geom.ship_version_id = t.ship_version_id
 
