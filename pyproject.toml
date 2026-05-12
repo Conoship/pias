@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pias"
+version = "0.1.0"
+description = "PIAS data parsing, modeling, and application tools."
+readme = "README.md"
+requires-python = ">=3.10"
+dynamic = ["dependencies"]
+
+[project.scripts]
+pias-app = "src.app.app:main"
+pias-import-layouts = "scripts.import_layouts:main"
+pias-import-layouts-local = "scripts.import_layouts_local:main"
+pias-run-invoke = "src.invoke.run_invoke:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*", "scripts*"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
