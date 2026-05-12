@@ -1,9 +1,5 @@
 # Import standard library packages.
 import sys
-from pathlib import Path
-
-if __package__ in (None, ""):
-    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 # Import third party packages.
 from PySide6.QtCore import QFile
@@ -125,8 +121,3 @@ class App:
 
         if run_button:
             run_button.clicked.connect(lambda: handle_agent_pipeline(self._window))
-
-
-def main() -> None:
-    """Run the desktop application."""
-    App().run()

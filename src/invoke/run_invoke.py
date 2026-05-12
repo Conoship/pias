@@ -4,12 +4,7 @@ import subprocess
 import argparse
 import logging
 import sys
-from pathlib import Path
 from typing import Optional, Tuple, Dict, List
-
-if __package__ in (None, ""):
-    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-
 from src.parsing.stability.parse_probdam_local import import_probdam_rtf_local
 from src.parsing.stability.parse_num_int import import_numint_rtf
 
