@@ -80,7 +80,7 @@
       <bool>false</bool>
      </property>
     </widget>
-    <widget class="QLineEdit" name="internalSubdivLineEdit">
+    <widget class="QLineEdit" name="layoutsLineEdit">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -93,7 +93,7 @@
       <bool>true</bool>
      </property>
      <property name="placeholderText">
-      <string>Internal Subdivision XML</string>
+      <string>Layouts XML</string>
      </property>
      <property name="clearButtonEnabled">
       <bool>false</bool>
@@ -125,7 +125,7 @@
       <string>Browse Openings PDF</string>
      </property>
     </widget>
-    <widget class="QPushButton" name="internalSubdivBtn">
+    <widget class="QPushButton" name="layoutsBtn">
      <property name="geometry">
       <rect>
        <x>490</x>
@@ -135,7 +135,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Browse Internal Subdivision XML</string>
+      <string>Browse Layouts XML</string>
      </property>
     </widget>
     <widget class="QLabel" name="label">

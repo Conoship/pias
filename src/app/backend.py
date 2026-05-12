@@ -6,16 +6,17 @@ import pickle
 from dotenv import load_dotenv
 import numpy as np
 import pandas as pd
-import psycopg
+from psycopg import connect
 
 # Import local packages.
+from src.models.random_forest_baseline import RandomForestBaseline
 from src.db.db import get_local_conn
 
 load_dotenv()
 
 
 def get_conn():
-    return psycopg.connect(
+    return connect(
         dbname=os.environ["PG_DBNAME"],
         user=os.environ["PG_USER"],
         password=os.environ["PG_PASSWORD"],

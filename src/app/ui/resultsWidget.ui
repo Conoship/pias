@@ -85,13 +85,31 @@
     <string>C</string>
    </property>
   </widget>
+  <widget class="QLabel" name="passResultLabel">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>150</y>
+     <width>241</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>14</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>95% CI for Prediction:</string>
+   </property>
+  </widget>
   <widget class="QLabel" name="passResult">
    <property name="geometry">
     <rect>
      <x>260</x>
      <y>150</y>
-     <width>255</width>
-     <height>61</height>
+     <width>131</width>
+     <height>51</height>
     </rect>
    </property>
    <property name="font">
