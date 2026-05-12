@@ -100,7 +100,7 @@
     </font>
    </property>
    <property name="text">
-    <string>95% CI for Prediction:</string>
+    <string>Pass Result</string>
    </property>
   </widget>
   <widget class="QLabel" name="passResult">
@@ -118,7 +118,7 @@
     </font>
    </property>
    <property name="text">
-    <string>C</string>
+    <string>P</string>
    </property>
   </widget>
  </widget>
