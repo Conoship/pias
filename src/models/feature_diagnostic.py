@@ -8,9 +8,11 @@ import seaborn as sns
 from xgboost import XGBRegressor
 from sklearn.metrics import r2_score, mean_absolute_error
 
-df = pd.read_csv(
-    "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_all_conditions_v5.csv"
-)
+datasets = {
+    "light": "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_light_v5.csv",
+    "partial": "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_partial_v5.csv",
+    "deepest": "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_deepest_v5.csv",
+}
 
 
 with open("config.yaml", "r") as f:
@@ -135,68 +137,73 @@ def evaluate_leave_one_ship_out(df, features, target, group_col):
 
 summary_rows = []
 
-for set_name, features in feature_sets.items():
-    result = evaluate_leave_one_ship_out(
-        df=df,
-        features=features,
-        target=target,
-        group_col=group_col,
-    )
+for condition_name, csv_path in datasets.items():
+    df = pd.read_csv(csv_path)
 
-    summary_rows.append(
-        {
-            "feature_set": set_name,
-            "n_features": len(result["features_used"]),
-            "mean_r2": result["mean_r2"],
-            "mean_mae": result["mean_mae"],
-        }
-    )
+    for set_name, features in feature_sets.items():
+        result = evaluate_leave_one_ship_out(
+            df=df,
+            features=features,
+            target=target,
+            group_col=group_col,
+        )
 
-    print("\n==============================")
-    print(f"Feature set: {set_name}")
-    print(f"Features used: {result['features_used']}")
-    print(f"Mean R2:  {result['mean_r2']:.4f}")
-    print(f"Mean MAE: {result['mean_mae']:.4f}")
-    print("\nPer-ship results:")
-    print(result["per_ship_results"])
+        summary_rows.append(
+            {
+                "condition": condition_name,
+                "feature_set": set_name,
+                "n_features": len(result["features_used"]),
+                "mean_r2": result["mean_r2"],
+                "mean_mae": result["mean_mae"],
+            }
+        )
 
-    plots_dir = Path("C:/Users/student01/Desktop/rug-project/pias/models/plots")
-    plots_dir.mkdir(parents=True, exist_ok=True)
+        print("\n==============================")
+        print(f"Condition: {condition_name}")
+        print(f"Feature set: {set_name}")
+        print(f"Features used: {result['features_used']}")
+        print(f"Mean R2:  {result['mean_r2']:.4f}")
+        print(f"Mean MAE: {result['mean_mae']:.4f}")
+        print("\nPer-ship results:")
+        print(result["per_ship_results"])
 
-    # Graph 1: Mean R2 by feature set
-    plt.figure(figsize=(10, 6))
-    sns.barplot(
-        data=summary_df,
-        x="mean_r2",
-        y="feature_set"
-    )
-    plt.axvline(0, linestyle="--", color="black")
-    plt.title("Mean R2 by Feature Set")
-    plt.xlabel("Mean R2")
-    plt.ylabel("Feature Set")
-    plt.tight_layout()
-    plt.savefig(plots_dir / "feature_set_mean_r2.png")
-    plt.close()
-
-
-    # Graph 2: Mean MAE by feature set
-    summary_mae_df = summary_df.sort_values("mean_mae", ascending=True)
-
-    plt.figure(figsize=(10, 6))
-    sns.barplot(
-        data=summary_mae_df,
-        x="mean_mae",
-        y="feature_set"
-    )
-    plt.title("Mean MAE by Feature Set")
-    plt.xlabel("Mean MAE")
-    plt.ylabel("Feature Set")
-    plt.tight_layout()
-    plt.savefig(plots_dir / "feature_set_mean_mae.png")
-    plt.close()
 
 summary_df = pd.DataFrame(summary_rows)
-summary_df = summary_df.sort_values("mean_r2", ascending=False)
+summary_df = summary_df.sort_values(["condition", "mean_r2"], ascending=[True, False])
 
 print("\n\nFinal feature-set comparison:")
 print(summary_df)
+
+plots_dir = Path("C:/Users/student01/Desktop/rug-project/pias/plots/diagnostics")
+plots_dir.mkdir(parents=True, exist_ok=True)
+
+
+# Graph 1: Mean R2 by feature set and condition
+plt.figure(figsize=(12, 6))
+sns.barplot(data=summary_df, x="feature_set", y="mean_r2", hue="condition")
+plt.axhline(0, linestyle="--", color="black")
+plt.title("Mean R2 by Feature Set and Condition")
+plt.xlabel("Feature Set")
+plt.ylabel("Mean R2")
+plt.xticks(rotation=30, ha="right")
+plt.tight_layout()
+plt.savefig(plots_dir / "feature_set_mean_r2_by_condition.png")
+plt.close()
+
+
+# Graph 2: Mean MAE by feature set and condition
+plt.figure(figsize=(12, 6))
+sns.barplot(data=summary_df, x="feature_set", y="mean_mae", hue="condition")
+plt.title("Mean MAE by Feature Set and Condition")
+plt.xlabel("Feature Set")
+plt.ylabel("Mean MAE")
+plt.xticks(rotation=30, ha="right")
+plt.tight_layout()
+plt.savefig(plots_dir / "feature_set_mean_mae_by_condition.png")
+plt.close()
+
+
+print("\nGraphs saved to:")
+print(plots_dir)
+print("1. feature_set_mean_r2_by_condition.png")
+print("2. feature_set_mean_mae_by_condition.png")

@@ -5,7 +5,7 @@ import sqlite3
 import pandas as pd
 
 # Connect to SQLite database
-conn = sqlite3.connect("data/mockdata.db")
+conn = sqlite3.connect("C:/Users/student01/Desktop/rug-project/pias/localhost.db")
 
 query = """
 WITH comp_data AS (
@@ -145,7 +145,7 @@ LEFT JOIN geom
 WHERE comp_data.avg_permeability IS NOT NULL
     AND comp_data.total_compartments IS NOT NULL
     AND t.attained_index IS NOT NULL
-    AND LOWER(t.condition_name) = 'light'
+    AND LOWER(t.condition_name) = 'partial'
 
 ORDER BY
     t.ship_version_id,
@@ -216,7 +216,7 @@ df = pd.read_sql_query(query, conn)
 print(df.head())
 
 # Optional: save results
-df.to_csv("data/mockdata.csv", index=False)
+df.to_csv("data/all_ships_partial_v5.csv", index=False)
 
 # Close connection
 conn.close()
