@@ -54,7 +54,9 @@ def plot_results(model, X, y, y_test, results_df, preds, errors):
     plt.show()
 
 
-df = pd.read_csv("C:/Users/student02/data/all_ships_light_v4.csv")
+df = pd.read_csv(
+    "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_all_conditions_v5.csv"
+)
 
 features = [
     "draft",
@@ -76,7 +78,8 @@ features = [
     "max_layout_height",
     "avg_cross_section",
     "sum_bh_sections",
-    "std_breadth,std_height",
+    "std_breadth,",
+    "std_height",
     "n_frustum_points",
     "std_breadth",
 ]
