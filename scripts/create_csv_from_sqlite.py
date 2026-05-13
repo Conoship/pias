@@ -145,6 +145,7 @@ LEFT JOIN geom
 WHERE comp_data.avg_permeability IS NOT NULL
     AND comp_data.total_compartments IS NOT NULL
     AND t.attained_index IS NOT NULL
+    AND LOWER(t.condition_name) = 'light'
 
 ORDER BY
     t.ship_version_id,

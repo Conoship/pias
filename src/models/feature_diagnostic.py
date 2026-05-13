@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
 import yaml
+from pathlib import Path
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 from xgboost import XGBRegressor
 from sklearn.metrics import r2_score, mean_absolute_error
@@ -156,6 +159,41 @@ for set_name, features in feature_sets.items():
     print(f"Mean MAE: {result['mean_mae']:.4f}")
     print("\nPer-ship results:")
     print(result["per_ship_results"])
+
+    plots_dir = Path("C:/Users/student01/Desktop/rug-project/pias/models/plots")
+    plots_dir.mkdir(parents=True, exist_ok=True)
+
+    # Graph 1: Mean R2 by feature set
+    plt.figure(figsize=(10, 6))
+    sns.barplot(
+        data=summary_df,
+        x="mean_r2",
+        y="feature_set"
+    )
+    plt.axvline(0, linestyle="--", color="black")
+    plt.title("Mean R2 by Feature Set")
+    plt.xlabel("Mean R2")
+    plt.ylabel("Feature Set")
+    plt.tight_layout()
+    plt.savefig(plots_dir / "feature_set_mean_r2.png")
+    plt.close()
+
+
+    # Graph 2: Mean MAE by feature set
+    summary_mae_df = summary_df.sort_values("mean_mae", ascending=True)
+
+    plt.figure(figsize=(10, 6))
+    sns.barplot(
+        data=summary_mae_df,
+        x="mean_mae",
+        y="feature_set"
+    )
+    plt.title("Mean MAE by Feature Set")
+    plt.xlabel("Mean MAE")
+    plt.ylabel("Feature Set")
+    plt.tight_layout()
+    plt.savefig(plots_dir / "feature_set_mean_mae.png")
+    plt.close()
 
 summary_df = pd.DataFrame(summary_rows)
 summary_df = summary_df.sort_values("mean_r2", ascending=False)
