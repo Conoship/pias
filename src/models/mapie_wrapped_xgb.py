@@ -51,7 +51,7 @@ class MapieXGBRegressor(object):
     _Y_LABEL = "target_attained_index"
 
     # The column by which we create the groups for K-Fold Cross-Validation.
-    _GROUP_BY = "ship_version_id"
+    _GROUP_BY = "ship_id"
 
     # The number of splits for K-Fold Cross-Validation.
     _K_FOLD_CROSS_SPLITS = 5
@@ -147,14 +147,18 @@ class MapieXGBRegressor(object):
             y_test = Y.iloc[test_idx]
             groups_fold = groups.iloc[train_idx]
 
-            # Inner group-aware split into fit + conformalize sets.
-            xgb = XGBRegressor(**xgb_params)
-            xgb.fit(x_fold_train, y_fold_train, verbose=False)
-            _, conf_idx = next(
+            fit_idx, conf_idx = next(
                 inner_gkf.split(x_fold_train, y_fold_train, groups=groups_fold)
             )
+
+            x_fit = x_fold_train.iloc[fit_idx]
+            y_fit = y_fold_train.iloc[fit_idx]
+
             x_conf = x_fold_train.iloc[conf_idx]
             y_conf = y_fold_train.iloc[conf_idx]
+
+            xgb = XGBRegressor(**xgb_params)
+            xgb.fit(x_fit, y_fit, verbose=False)
 
             # Build and fit the MAPIE-wrapped XGB model.
             mapie_model = SplitConformalRegressor(
