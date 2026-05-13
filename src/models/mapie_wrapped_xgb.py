@@ -17,17 +17,38 @@ class MapieXGBRegressor(object):
 
     # The columns of the dataset to use as features (X).
     _X_FEATURES = [
+        # Loading / stability features
         "draft",
-        "vcg",
-        "displacement",
-        "condition_code",
         "trim",
+        "mg",
+        "displacement",
+        "vcg",
+        "condition_code",
+        # Compartment features
         "openings_per_compartment",
         "total_compartments",
+        "avg_permeability",
+        # Compartment content counts
+        "n_cargo",
+        "n_ballast",
+        "n_cargohold_hatch",
+        "n_potable_water",
+        "n_gas_oil",
+        "n_void",
+        "n_fuel_oil",
+        # Geometry features
+        "total_layout_length",
+        "max_layout_breadth",
+        "max_layout_height",
+        "avg_cross_section",
+        "sum_bh_sections",
+        "std_breadth",
+        "std_height",
+        "n_frustum_points",
     ]
 
     # The column of the dataset to use as label (Y).
-    _Y_LABEL = "target_margin"
+    _Y_LABEL = "target_attained_index"
 
     # The column by which we create the groups for K-Fold Cross-Validation.
     _GROUP_BY = "ship_version_id"
@@ -214,7 +235,7 @@ class MapieXGBRegressor(object):
 if __name__ == "__main__":
     xgb_model = MapieXGBRegressor(
         path_to_config="config.yaml",
-        path_to_data="C:/Users/student01/Desktop/data/all_ships_deepest_v4.csv",
+        path_to_data="C:/Users/student01/Desktop/rug-project/pias/data/all_ships_deepest_v5.csv",
     )
     xgb_model.train()
     xgb_model.evaluate(print_results=True)

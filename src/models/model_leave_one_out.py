@@ -6,56 +6,55 @@ from xgboost import XGBRegressor
 from sklearn.model_selection import learning_curve
 from sklearn.metrics import r2_score, mean_absolute_error
 
+# def plot_results(model, X, y, y_test, results_df, preds, errors):
+#     # Accuracy with R2 Label
+#     plt.figure(figsize=(8, 6))
+#     plt.scatter(y_test, preds, alpha=0.6, color="blue")
+#     plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], "r--")
+#     plt.text(
+#         0.05,
+#         0.9,
+#         f"$R^2 Score: {results_df['r2'].mean():.3f}$/nAvg Error: {results_df['mae'].mean():.4f}",
+#         transform=plt.gca().transAxes,
+#         fontsize=12,
+#         bbox=dict(facecolor="white", alpha=0.7),
+#     )
+#     plt.title("Attained Index: Predicted vs Actual")
+#     plt.xlabel("Actual Attained Index")
+#     plt.ylabel("Predicted Attained Index")
+#     plt.tight_layout()
+#     plt.savefig("plots/xgb_attained_accuracy_one_out_v3.png")
 
-def plot_results(model, X, y, y_test, results_df, preds, errors):
-    # Accuracy with R2 Label
-    plt.figure(figsize=(8, 6))
-    plt.scatter(y_test, preds, alpha=0.6, color="blue")
-    plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], "r--")
-    plt.text(
-        0.05,
-        0.9,
-        f"$R^2 Score: {results_df['r2'].mean():.3f}$\nAvg Error: {results_df['mae'].mean():.4f}",
-        transform=plt.gca().transAxes,
-        fontsize=12,
-        bbox=dict(facecolor="white", alpha=0.7),
-    )
-    plt.title("Attained Index: Predicted vs Actual")
-    plt.xlabel("Actual Attained Index")
-    plt.ylabel("Predicted Attained Index")
-    plt.tight_layout()
-    plt.savefig("plots/xgb_attained_accuracy_one_out_v3.png")
+#     # R2 Learning Curve
+#     train_sizes, train_scores, test_scores = learning_curve(
+#         model, X, y, cv=5, scoring="r2", train_sizes=np.linspace(0.1, 1.0, 5)
+#     )
+#     plt.figure(figsize=(8, 6))
+#     plt.plot(train_sizes, np.mean(train_scores, axis=1), "o-", label="Training R2")
+#     plt.plot(train_sizes, np.mean(test_scores, axis=1), "o-", label="Validation R2")
+#     plt.title("R2 Performance vs Data Size")
+#     plt.xlabel("Number of Samples")
+#     plt.ylabel("R2 Score")
+#     plt.legend()
+#     plt.grid(True, alpha=0.3)
+#     plt.tight_layout()
+#     plt.savefig("plots/xgb_learning_curve_one_out_v3.png")
 
-    # R2 Learning Curve
-    train_sizes, train_scores, test_scores = learning_curve(
-        model, X, y, cv=5, scoring="r2", train_sizes=np.linspace(0.1, 1.0, 5)
-    )
-    plt.figure(figsize=(8, 6))
-    plt.plot(train_sizes, np.mean(train_scores, axis=1), "o-", label="Training R2")
-    plt.plot(train_sizes, np.mean(test_scores, axis=1), "o-", label="Validation R2")
-    plt.title("R2 Performance vs Data Size")
-    plt.xlabel("Number of Samples")
-    plt.ylabel("R2 Score")
-    plt.legend()
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    plt.savefig("plots/xgb_learning_curve_one_out_v3.png")
+#     # Residuals
+#     plt.figure(figsize=(8, 6))
+#     plt.scatter(preds, errors, alpha=0.6, color="purple")
+#     plt.axhline(0, color="black", linestyle="-")
+#     plt.title("Residuals (Error Patterns)")
+#     plt.xlabel("Predicted Attained Index")
+#     plt.ylabel("Error")
+#     plt.tight_layout()
+#     plt.savefig("plots/xgb_attained_residuals_one_out_v3.png")
 
-    # Residuals
-    plt.figure(figsize=(8, 6))
-    plt.scatter(preds, errors, alpha=0.6, color="purple")
-    plt.axhline(0, color="black", linestyle="-")
-    plt.title("Residuals (Error Patterns)")
-    plt.xlabel("Predicted Attained Index")
-    plt.ylabel("Error")
-    plt.tight_layout()
-    plt.savefig("plots/xgb_attained_residuals_one_out_v3.png")
-
-    plt.show()
+#     plt.show()
 
 
 df = pd.read_csv(
-    "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_all_conditions_v5.csv"
+    "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_deepest_v5.csv"
 )
 
 features = [
