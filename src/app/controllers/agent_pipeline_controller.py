@@ -148,6 +148,9 @@ class AgentPipelineController(object):
         df["Partial GM Value"] = partial_gm_value
         df["Deep GM Value"] = deep_gm_value
 
+        # Combine the Data Frames.
+        df_final = pd.concat([df, main_dimensions_df, layouts_df], axis=1)
+
         # Run the agent pipeline and collect results.
         prediction, lower, upper, pass_result = run_agent_pipeline(
             pass_value, ship_name
