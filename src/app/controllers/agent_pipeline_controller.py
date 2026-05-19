@@ -12,6 +12,7 @@ from src.app.controllers.line_edit_collector_controller import (
 )
 from src.app.parsers.main_dimensions_parser import MainDimensionsParser
 from src.app.parsers.layouts_parser import LayoutsParser
+from src.app.parsers.openings_parser import OpeningsParser
 
 
 class AgentPipelineController(object):
@@ -128,6 +129,7 @@ class AgentPipelineController(object):
         # Parse the file paths.
         main_dimensions_df = MainDimensionsParser().parse_file(main_dimensions_path)
         layouts_df = LayoutsParser().parse_file(layouts_path)
+        openings_df = OpeningsParser().parse_openings(openings_path)
 
         # Add the UI data to the df.
         df_cols = [
@@ -149,11 +151,11 @@ class AgentPipelineController(object):
         df["Deep GM Value"] = deep_gm_value
 
         # Combine the Data Frames.
-        df_final = pd.concat([df, main_dimensions_df, layouts_df], axis=1)
+        df_final = pd.concat([df, main_dimensions_df, layouts_df, openings_df], axis=1)
 
         # Run the agent pipeline and collect results.
         prediction, lower, upper, pass_result = run_agent_pipeline(
-            pass_value, ship_name
+            pass_value, ship_name, df_final
         )
 
         # Display the output.

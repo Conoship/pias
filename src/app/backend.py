@@ -15,25 +15,7 @@ from src.db.db import get_local_conn
 load_dotenv()
 
 
-def get_conn():
-    return connect(
-        dbname=os.environ["PG_DBNAME"],
-        user=os.environ["PG_USER"],
-        password=os.environ["PG_PASSWORD"],
-        host=os.environ["PG_HOST"],
-        port=int(os.environ["PG_PORT"]),
-    )
-
-
-def load_features(ship_name: str) -> pd.DataFrame:
-    conn = get_local_conn()
-    query = open("queries/all_ships_training_features_v1.sql").read()
-    df = pd.read_sql_query(query, conn, params={"ship_name": ship_name})
-    conn.close()
-    return df
-
-
-def run_agent_pipeline(pass_value: float, ship_name: str):
+def run_agent_pipeline(pass_value: float, df_final: pd.DataFrame):
     """
     Execute the AI agent pipeline: load data, run the trained model,
     and return the predicted results.
@@ -43,12 +25,12 @@ def run_agent_pipeline(pass_value: float, ship_name: str):
             The main application window used to locate UI elements
             where results will be displayed.
     """
-    # ----- Put the data in a single CSV.-----
+
     # If we use just mock data:
     # df = pd.read_csv("./mockdata.csv")
 
     # If we use user input:
-    df = load_features(ship_name)
+    df = df_final
 
     # Load the model.
     with open("models/model.pkl", "rb") as file:
