@@ -1,9 +1,12 @@
 import psycopg
 from pathlib import Path
 import pdfplumber
+import pandas as pd
+import re
 
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
 
@@ -24,9 +27,8 @@ class OpeningsParser(object):
         ]
         self._df = pd.DataFrame(columns=self._cols)
 
-
     def _parse_filename(self, file_path: Path) -> tuple[str, str, str, str, str]:
-        stem = file_path.name
+        stem = file_path.stem
 
         # strip optional "_openings" suffix before extension
         if stem.lower().endswith("_openings"):
@@ -37,10 +39,8 @@ class OpeningsParser(object):
         ship = parts[0] if len(parts) > 0 else "unknownship"
         design = parts[1] if len(parts) > 1 else "unknowndesign"
         version = parts[2] if len(parts) > 2 else "unknownversion"
-        subversion = "_".join(parts[3:]) if len(parts) > 3 else ""
 
-        return ship.strip(), design.strip(), version.strip(), subversion.strip()
-
+        return ship.strip(), design.strip(), version.strip()
 
     def _parse_float(self, text: str | None) -> float | None:
         if text is None:
@@ -50,46 +50,79 @@ class OpeningsParser(object):
         except ValueError:
             return None
 
-    
-    
     def parse_openings(self, pdf_path: str | Path) -> pd.DataFrame:
         pdf_path = Path(pdf_path)
 
-        ship, design, version, subversion = self._parse_filename(pdf_path)
+        ship, design, version = self._parse_filename(pdf_path)
 
         rows = []
+        found_table = False
 
         with pdfplumber.open(pdf_path) as pdf:
             for page in pdf.pages:
-                tables = page.extract_tables() or []
+                text = page.extract_text() or ""
 
-                for table in tables:
-                    for row in table:
-                        if not row or all(cell is None for cell in row):
-                            continue
+                for line in text.split("\n"):
+                    line = line.strip()
 
-                        # skip header row
-                        if row[0] and "Description" in row[0]:
-                            continue
+                    if not line:
+                        continue
 
-                        if len(row) < 6:
-                            continue
+                    lower = line.lower()
 
-                        rows.append({
+                    # Skip row if it is the title:
+                    if (
+                        "description" in lower
+                        and "length" in lower
+                        and "breadth" in lower
+                        and "height" in lower
+                        and "type of point" in lower
+                        and "connected with compartment" in lower
+                    ):
+                        found_table = True
+                        continue
+
+                    if not found_table:
+                        continue
+
+                    if "list of special points" in lower:
+                        continue
+
+                    # Split the row into columns:
+                    match = re.match(
+                        r"^(.*)\s+"
+                        r"(-?\d+(?:[.,]\d+)?)\s+"
+                        r"(-?\d+(?:[.,]\d+)?)\s+"
+                        r"(-?\d+(?:[.,]\d+)?)\s+"
+                        r"(.+?)\s+"
+                        r"([A-Z][A-Za-z0-9\s\-\/]*|-)$",
+                        line,
+                    )
+
+                    if not match:
+                        print("Could not parse:", repr(line))
+                        continue
+
+                    rows.append(
+                        {
                             "ship": ship,
                             "design": design,
                             "version": version,
-                            "subversion": subversion,
-                            "description": (row[0] or "").strip(),
-                            "length": self._parse_float(row[1]),
-                            "breadth": self._parse_float(row[2]),
-                            "height": self._parse_float(row[3]),
-                            "opening_type": (row[4] or "").strip(),
-                            "connected": (row[5] or "").strip(),
-                        })
+                            "description": match.group(1).strip(),
+                            "length": self._parse_float(match.group(2)),
+                            "breadth": self._parse_float(match.group(3)),
+                            "height": self._parse_float(match.group(4)),
+                            "opening_type": match.group(5).strip(),
+                            "connected": match.group(6).strip(),
+                        }
+                    )
 
-        self._df = pd.DataFrame(rows, columns=self._cols)
+        self._df = pd.DataFrame(rows)
         return self._df
 
 
-
+# Testing the parser:
+# parser = OpeningsParser()
+# path = "c:/Users/student01/Documents/Stephanie/Clean/A2994_Concept_v1_ps_Openings.pdf"
+# df = parser.parse_openings(path)
+# print(df)
