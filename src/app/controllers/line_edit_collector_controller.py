@@ -1,5 +1,5 @@
 # Import third party packages.
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QMessageBox, QWidget
 
 # Import local packages.
 from src.app.controllers.line_edit_controller import LineEditController
@@ -14,6 +14,8 @@ class LineEditCollectorController(object):
             window (QWidget):
                 The window to pass to the `LineEditController` as its constructor argument.
         """
+        # Attribute Construction.
+        self._window = window
         self._line_edit_controller = LineEditController(window)
 
     def collect_file_paths(self) -> tuple[str, str, str] | None:
@@ -48,7 +50,7 @@ class LineEditCollectorController(object):
 
     def collect_user_defined_value(
         self,
-    ) -> tuple[float, float, float, float, float, float] | None:
+    ) -> tuple[float, float, float, float, float, float] | int | None:
         """
         Collect the user defined values: subdivision length,
         light service draft, subdivision draft, light gm value, partial gm value,
@@ -59,41 +61,53 @@ class LineEditCollectorController(object):
                 A tuple containing the collected values, unless a value is None then returns None.
         """
         # If any value is None return immediately.
-        subdivision_length = self._line_edit_controller.get_value_from_line_edit(
-            "subdivLenLineEdit", "Subdivision Length"
-        )
-        if subdivision_length is None:
-            return None
+        try:
+            subdivision_length = self._line_edit_controller.get_value_from_line_edit(
+                "subdivLenLineEdit"
+            )
+            light_service_draft = self._line_edit_controller.get_value_from_line_edit(
+                "lightServiceDraftLineEdit"
+            )
+            subdivision_draft = self._line_edit_controller.get_value_from_line_edit(
+                "subdivDraftLineEdit"
+            )
+            light_gm_value = self._line_edit_controller.get_value_from_line_edit(
+                "lightGMLineEdit"
+            )
+            partial_gm_value = self._line_edit_controller.get_value_from_line_edit(
+                "partialGMLineEdit"
+            )
+            deep_gm_value = self._line_edit_controller.get_value_from_line_edit(
+                "deepGMLineEdit"
+            )
+            empty_feature = (
+                not subdivision_length
+                or not light_service_draft
+                or not subdivision_draft
+                or not light_gm_value
+                or not partial_gm_value
+                or not deep_gm_value
+            )
+            if empty_feature:
+                reply = QMessageBox.question(
+                    self._window,
+                    "Confirm Empty Value",
+                    "Are you sure you want to leave the value of a feature blank and use the RTF file values instead?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.No,
+                )
+                if reply == QMessageBox.StandardButton.Yes:
+                    return None
 
-        light_service_draft = self._line_edit_controller.get_value_from_line_edit(
-            "lightServiceDraftLineEdit", "Light Service Draft"
-        )
-        if light_service_draft is None:
-            return None
+                else:
+                    return -1
 
-        subdivision_draft = self._line_edit_controller.get_value_from_line_edit(
-            "subdivDraftLineEdit", "Subdivision Draft"
-        )
-        if subdivision_draft is None:
-            return None
-
-        light_gm_value = self._line_edit_controller.get_value_from_line_edit(
-            "lightGMLineEdit", "Light GM"
-        )
-        if light_gm_value is None:
-            return None
-
-        partial_gm_value = self._line_edit_controller.get_value_from_line_edit(
-            "partialGMLineEdit", "Partial GM"
-        )
-        if partial_gm_value is None:
-            return None
-
-        deep_gm_value = self._line_edit_controller.get_value_from_line_edit(
-            "deepGMLineEdit", "Deep GM"
-        )
-        if deep_gm_value is None:
-            return None
+        except ValueError:
+            QMessageBox.information(
+                self._window,
+                "Invalid value inputted",
+                "All values must be positive floating point numbers.\nMake sure you did not input any letters or negative numbers.",
+            )
 
         return (
             subdivision_length,

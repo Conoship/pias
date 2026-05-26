@@ -130,9 +130,19 @@ class AgentPipelineController(object):
         ]
         df = pd.DataFrame(columns=df_cols)
 
-        # Check if user defined values exist.
+        # Collect the user defined values from the UI.
         user_defined_values = self._collector_controller.collect_user_defined_value()
-        if user_defined_values is not None:
+
+        # If the user left accidentally something blank.
+        if user_defined_values == -1:
+            return
+
+        # If the user confirmed that they prefer to use the RTF defined values.
+        if user_defined_values is None:
+            pass
+
+        # No blanks where left.
+        else:
             (
                 subdivision_length,
                 light_service_draft,
