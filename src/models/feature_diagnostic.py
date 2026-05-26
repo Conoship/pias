@@ -30,7 +30,7 @@ feature_groups = {
         "mg",
         "displacement",
         "vcg",
-        "condition_code",
+        # "condition_code",
     ],
     "compartment_features": [
         "openings_per_compartment",
