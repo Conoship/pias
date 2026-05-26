@@ -1,6 +1,7 @@
-# Import third party packages.
+# Import local packages.
 from typing import Optional, Tuple, Union
 
+# Import third party packages.
 from PySide6.QtWidgets import QMessageBox, QWidget
 
 # Import local packages.
