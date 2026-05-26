@@ -25,7 +25,7 @@ similarity_features = [
     "mg",
     "displacement",
     "vcg",
-    "condition_code",
+    # "condition_code",
     # Compartment features
     "openings_per_compartment",
     "total_compartments",

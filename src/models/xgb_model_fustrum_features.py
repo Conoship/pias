@@ -6,9 +6,7 @@ from xgboost import XGBRegressor
 from sklearn.metrics import r2_score, mean_absolute_error
 from sklearn.model_selection import train_test_split, learning_curve
 
-df = pd.read_csv(
-    "C:/Users/student01/Desktop/data/all_ships_multiple_features_light_v3.csv"
-)
+df = pd.read_csv("C:/Users/student01/Desktop/rug-project/pias/data/test.csv")
 
 df_ship = df.copy()
 df_ship = df_ship[df_ship["target_attained_index"] > 0.1].copy()
@@ -45,9 +43,9 @@ features = [f for f in features if f in df.columns]
 X = df_ship[features]
 Y = df_ship["target_attained_index"]
 
-x_Train, x_test, y_train, y_test = train_test_split(
-    X, Y, test_size=0.2, random_state=42
-)
+# x_Train, x_test, y_train, y_test = train_test_split(
+#   X, Y, test_size=0.2, random_state=42
+# )
 
 # Load the hyperparameters configuration.
 config = {}

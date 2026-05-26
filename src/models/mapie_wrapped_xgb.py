@@ -239,7 +239,7 @@ class MapieXGBRegressor(object):
 if __name__ == "__main__":
     xgb_model = MapieXGBRegressor(
         path_to_config="config.yaml",
-        path_to_data="C:/Users/student01/Desktop/rug-project/pias/data/all_ships_deepest_v5.csv",
+        path_to_data="C:/Users/student01/Desktop/rug-project/pias/data/all_ships_all_conditions_v5.csv",
     )
     xgb_model.train()
     xgb_model.evaluate(print_results=True)

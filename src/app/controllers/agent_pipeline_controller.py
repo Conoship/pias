@@ -30,7 +30,7 @@ class AgentPipelineController(object):
 
     def _display_results(
         self,
-        prediction: float,
+        predictions: list[float],
         lower: float,
         upper: float,
         r_comparison_result: str,
@@ -40,8 +40,8 @@ class AgentPipelineController(object):
         and display it inside the results frame of the main window.
 
         Args:
-            prediction (float):
-                The model's prediction.
+            prediction (list[float]):
+                The model's predictions, being a list containing the prediction for all three loading conditions.
 
             lower (float):
                 The lower end of the 95% CI of the model's prediction.
@@ -57,15 +57,29 @@ class AgentPipelineController(object):
         file.close()
 
         # Get the target labels.
-        prediction_label = results_widget.findChild(QLabel, "prediction")
+        light_prediction_label = results_widget.findChild(
+            QLabel, "lightPredictionLabel"
+        )
+        partial_prediction_label = results_widget.findChild(
+            QLabel, "partialPredictionLabel"
+        )
+        deepest_prediction_label = results_widget.findChild(
+            QLabel, "deepestPredictionLabel"
+        )
         confidence_label = results_widget.findChild(QLabel, "confidence")
         required_index_compare_label = results_widget.findChild(
             QLabel, "requiredIndexComparison"
         )
 
         # Modify the content of the placeholder to be the actual values.
-        if prediction_label:
-            prediction_label.setText(str(round(prediction, 3)))
+        if light_prediction_label:
+            light_prediction_label.setText(str(round(predictions[0], 3)))
+
+        if partial_prediction_label:
+            partial_prediction_label.setText(str(round(predictions[1], 3)))
+
+        if deepest_prediction_label:
+            deepest_prediction_label.setText(str(round(predictions[2], 3)))
 
         if confidence_label:
             confidence_label.setText(f"[{lower:.3f}, {upper:.3f}]")
@@ -109,21 +123,13 @@ class AgentPipelineController(object):
         if user_defined_values is None:
             return
         (
-            ship_name,
             subdivision_length,
             light_service_draft,
             subdivision_draft,
             light_gm_value,
             partial_gm_value,
             deep_gm_value,
-            pass_value,
         ) = user_defined_values
-
-        value = self._controller.get_value_from_line_edit(
-            "requiredIndexLineEdit", "Required Index R"
-        )
-        if value is not None:
-            pass_value = float(value)
 
         # Import the data to a csv and pass it to the agent.
         # Parse the file paths.
@@ -153,10 +159,13 @@ class AgentPipelineController(object):
         # Combine the Data Frames.
         df_final = pd.concat([df, main_dimensions_df, layouts_df, openings_df], axis=1)
 
+        # Calculate the pass value using the regular formulae.
+        pass_value = 0
+
         # Run the agent pipeline and collect results.
-        prediction, lower, upper, pass_result = run_agent_pipeline(
-            pass_value, ship_name, df_final
+        predictions, lower, upper, pass_result = run_agent_pipeline(
+            pass_value, df_final
         )
 
         # Display the output.
-        self._display_results(prediction, lower, upper, pass_result)
+        self._display_results(predictions, lower, upper, pass_result)
