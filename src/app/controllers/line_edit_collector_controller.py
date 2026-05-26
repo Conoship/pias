@@ -1,5 +1,5 @@
 # Import local packages.
-from typing import Optional, Tuple, Union
+from typing import Tuple, Union
 
 # Import third party packages.
 from PySide6.QtWidgets import QMessageBox, QWidget
@@ -21,7 +21,7 @@ class LineEditCollectorController(object):
         self._window = window
         self._line_edit_controller = LineEditController(window)
 
-    def collect_file_paths(self) -> Optional[Tuple[str, str]]:
+    def collect_file_paths(self) -> tuple[str, str] | None:
         """
         Collect the file paths for main dimensions and layouts.
 
@@ -42,19 +42,23 @@ class LineEditCollectorController(object):
         if layouts_path is None:
             return None
 
-        return (main_dims_path, layouts_path)
+        return main_dims_path, layouts_path
 
     def collect_user_defined_value(
         self,
     ) -> Union[Tuple[float, float, float, float, float, float], int, None]:
         """
-        Collect the user defined values: subdivision length,
-        light service draft, subdivision draft, light gm value, partial gm value,
-        deep gm value.
+        Collect the user defined values:
+        - Subdivision Length
+        - Light Service Draft
+        - Subdivision Draft
+        - Light GM
+        - Partial GM
+        - Deep GM
 
         Returns:
             tuple[float, float, float, float, float, float]:
-                A tuple containing the collected values
+                A tuple containing the collected values.
 
             int (-1):
                 If the user said that the do not wish to leave one or more features empty or there was an invalid value inputted.
@@ -62,7 +66,7 @@ class LineEditCollectorController(object):
             None:
                 If the user said that they wish to leave one or more features empty.
         """
-        # If any value is None return immediately.
+        # Try to retrieve the values, unless the LineEditController raised a ValueError.
         try:
             subdivision_length = self._line_edit_controller.get_value_from_line_edit(
                 "subdivLenLineEdit"
@@ -90,6 +94,8 @@ class LineEditCollectorController(object):
                 or not partial_gm_value
                 or not deep_gm_value
             )
+
+            # If any of the Line Edits are empty, ensure that this was intended behaviour by the user.
             if empty_feature:
                 reply = QMessageBox.question(
                     self._window,

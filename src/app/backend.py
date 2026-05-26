@@ -42,6 +42,7 @@ def run_agent_pipeline(
     try:
         with open("models/model.pkl", "rb") as file:
             saved = pickle.load(file)
+
     except FileNotFoundError:
         QMessageBox.warning(
             window,

@@ -28,6 +28,7 @@ class LineEditController(object):
         try:
             float(text)
             return True
+
         except ValueError:
             return False
 
@@ -45,9 +46,11 @@ class LineEditController(object):
                 The name of the file to be inputted, used to display the error message.
 
         Returns:
-            file_path (float): The file path from the input field.
-            int: -1 if user confirms leaving the field blank.
-            None: If widget is missing or user cancels the dialog.
+            file_path (str):
+                The file path from the input field.
+
+            None:
+                If widget is missing or user cancels the dialog.
         """
         file_path = ""
         line_edit = self._window.findChild(QLineEdit, line_edit_name)
