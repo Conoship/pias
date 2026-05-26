@@ -180,9 +180,7 @@ class AgentPipelineController(object):
         pass_value = 0
 
         # Run the agent pipeline and collect results.
-        predictions, lower, upper, pass_result = run_agent_pipeline(
-            pass_value, df_final
-        )
-
-        # Display the output.
-        self._display_results(predictions, lower, upper, pass_result)
+        agent_result = run_agent_pipeline(pass_value, df_final)
+        if agent_result:
+            # Display the output.
+            self._display_results(**agent_result)

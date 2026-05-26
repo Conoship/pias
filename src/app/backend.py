@@ -4,6 +4,7 @@ import pickle
 # Import third party packages.
 import numpy as np
 import pandas as pd
+from PySide6.QtWidgets import QMessageBox, QWidget
 
 # Import local packages.
 from src.models.random_forest_baseline import RandomForestBaseline  # noqa: F401
@@ -11,8 +12,8 @@ from src.models.random_forest_baseline import RandomForestBaseline  # noqa: F401
 
 # TODO: Modify this function to return one prediction per loading condition.
 def run_agent_pipeline(
-    pass_value: float, df_final: pd.DataFrame
-) -> tuple[list[float], float, float, str]:
+    window: QWidget, pass_value: float, df_final: pd.DataFrame
+) -> tuple[list[float], float, float, str] | None:
     """
     Execute the AI agent pipeline: load data, run the trained model,
     and return the predicted results.
@@ -25,9 +26,10 @@ def run_agent_pipeline(
             The df containing the the concatened data frames from the other parsers and the user defined values.
 
     Returns:
-        tuple[list[float], float, float, str]:
+        tuple[list[float], float, float, str] | None:
             A tuple containing the list of predictions (one per loading condition),
-            the lower and the upper bounds of the 95% CI and lastly the A against R comparison result
+            the lower and the upper bounds of the 95% CI and lastly the A against R comparison result.
+            Returns `None` if the `.pkl` file was not found.
     """
     # If we use just mock data:
     # df = pd.read_csv("./mockdata.csv")
@@ -36,8 +38,16 @@ def run_agent_pipeline(
     df = df_final
 
     # Load the model.
-    with open("models/model.pkl", "rb") as file:
-        saved = pickle.load(file)
+    try:
+        with open("models/model.pkl", "rb") as file:
+            saved = pickle.load(file)
+    except FileNotFoundError:
+        QMessageBox.warning(
+            window,
+            "File not found",
+            "The ML model .pkl file could not be found.",
+        )
+        return
 
     model_type = saved["model_type"]
     model = saved["model"]
