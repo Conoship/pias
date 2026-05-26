@@ -10,26 +10,27 @@ from PySide6.QtWidgets import QMessageBox, QWidget
 from src.models.random_forest_baseline import RandomForestBaseline  # noqa: F401
 
 
-# TODO: Modify this function to return one prediction per loading condition.
+# TODO: Modify this function to return one prediction, CI and pass result per loading condition.
 def run_agent_pipeline(
-    window: QWidget, pass_value: float, df_final: pd.DataFrame
-) -> tuple[list[float], float, float, str] | None:
+    window: QWidget, required_index: float, df_final: pd.DataFrame
+) -> tuple[list[float], list[tuple[float, float]], list[str]]:
     """
     Execute the AI agent pipeline: load data, run the trained model,
     and return the predicted results.
 
     Args:
-        pass_value (float):
+        window (QWidget):
+            The main application window.
+
+        required_index (float):
             The Required Index (R) value required for the ship to pass according to the SOLAS requirements.
 
         df_final (pd.DataFrame):
             The df containing the the concatened data frames from the other parsers and the user defined values.
 
     Returns:
-        tuple[list[float], float, float, str] | None:
-            A tuple containing the list of predictions (one per loading condition),
-            the lower and the upper bounds of the 95% CI and lastly the A against R comparison result.
-            Returns `None` if the `.pkl` file was not found.
+        tuple[list[float], list[tuple[float, float]], list[str]]:
+            A tuple containing the lists of predictions, 95% CIs and the A against R comparison result (one element per loading condition)
     """
     # If we use just mock data:
     # df = pd.read_csv("./mockdata.csv")
@@ -60,14 +61,18 @@ def run_agent_pipeline(
         X = engineer_features(X)
     X = X[feature_cols]
 
+    # TODO: Training data, X has 3 rows, one per condition => split data into X_light, X_partial and X_deepest to predict an Attained Index (A) for each one of them.
+
     # Predict based on the model type - once a single performing model is selected, this can be narrowed down.
-    lower, upper = -1, -1
     predictions = []
+    confidence_intevals = []
     if model_type == "MAPIE XGB Regressor":
         model_predictions, intervals = model.predict_interval(X)
         prediction = model_predictions[0].item()
+        predictions.append(prediction)
         lower = float(intervals[0, 0, 0].item())
         upper = float(intervals[0, 1, 0].item())
+        confidence_intevals.append((lower, upper))
 
     else:
         # Get per-tree predictions and calculate the 95% CI to display confidence.
@@ -76,12 +81,16 @@ def run_agent_pipeline(
             [tree.predict(X_values) for tree in model.estimators_]
         )
         prediction = np.mean(all_tree_preds, axis=0)[0].item()
+        predictions.append(prediction)
         lower = np.percentile(all_tree_preds, 2.5, axis=0)[0].item()
         upper = np.percentile(all_tree_preds, 97.5, axis=0)[0].item()
+        confidence_intevals.append((lower, upper))
 
-    if prediction >= pass_value:
-        pass_result = "A is above the required index R"
-    else:
-        pass_result = "A is below the required index R"
+    # Get the pass results for each prediction, for each loading condition.
+    # The minimum value for each condition is 0.5 * R.
+    pass_results = [
+        "Pass" if prediction >= required_index * 0.5 else "Fail"
+        for prediction in predictions
+    ]
 
-    return predictions, lower, upper, pass_result
+    return predictions, confidence_intevals, pass_results

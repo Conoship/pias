@@ -112,15 +112,6 @@ class App(object):
             line_edit_name="mainDimsLineEdit",
         )
 
-        # Connect Openings Button with searching for RTFs.
-        self._button_controller.connect_file_browse_button(
-            button_name="openingsBtn",
-            window=self._window,
-            caption="Browse Openings RTF",
-            file_type="RTF Files (*.rtf)",
-            line_edit_name="openingsLineEdit",
-        )
-
         # Connect Layouts Button with searching for XMLs.
         self._button_controller.connect_file_browse_button(
             button_name="layoutsBtn",
