@@ -30,23 +30,26 @@ class AgentPipelineController(object):
     def _display_results(
         self,
         predictions: list[float],
-        lower: float,
-        upper: float,
-        r_comparison_result: str,
+        confidence_intervals: list[tuple],
+        pass_results: list[str],
+        required_index: float,
     ) -> None:
         """
         Load the results widget UI, update its labels with prediction data,
         and display it inside the results frame of the main window.
 
         Args:
-            prediction (list[float]):
-                The model's predictions, being a list containing the prediction for all three loading conditions.
+            predictions (list[float]):
+                A list of the model's predictions per loading condition.
 
-            lower (float):
-                The lower end of the 95% CI of the model's prediction.
+            confidence_intervals (list[tuple]):
+                A list of the 95% CI per loading condition.
 
-            upper (float):
-                The upper end of the 95% CI of the model's prediction.
+            pass_results (list[str]):
+                A list of whether the model passed or failed the A vs R comparison at each loading condition.
+
+            required_index (float):
+                The value of the Required Index (R).
         """
         # Load the Results Widget.
         loader = QUiLoader()
@@ -56,35 +59,48 @@ class AgentPipelineController(object):
         file.close()
 
         # Get the target labels.
-        light_prediction_label = results_widget.findChild(
-            QLabel, "lightPredictionLabel"
+        attained_indices_label = results_widget.findChild(QLabel, "attainedIndices")
+        confidence_intervals_label = results_widget.findChild(
+            QLabel, "confidenceIntervals"
         )
-        partial_prediction_label = results_widget.findChild(
-            QLabel, "partialPredictionLabel"
-        )
-        deepest_prediction_label = results_widget.findChild(
-            QLabel, "deepestPredictionLabel"
-        )
-        confidence_label = results_widget.findChild(QLabel, "confidence")
-        required_index_compare_label = results_widget.findChild(
-            QLabel, "requiredIndexComparison"
-        )
+        pass_results_label = results_widget.findChild(QLabel, "passResults")
+        overall_summary_label = results_widget.findChild(QLabel, "overallSummary")
 
         # Modify the content of the placeholder to be the actual values.
-        if light_prediction_label:
-            light_prediction_label.setText(str(round(predictions[0], 3)))
+        if attained_indices_label:
+            light_prediction = predictions[0]
+            partial_prediction = predictions[1]
+            deepest_prediction = predictions[2]
+            attained_indices_text = f"{round(light_prediction, 3)}, {round(partial_prediction, 3)}, {round(deepest_prediction, 3)}"
+            attained_indices_label.setText(attained_indices_text)
 
-        if partial_prediction_label:
-            partial_prediction_label.setText(str(round(predictions[1], 3)))
+        if confidence_intervals_label:
+            light_ci = confidence_intervals[0]
+            partial_ci = confidence_intervals[1]
+            deepest_ci = confidence_intervals[2]
+            confidence_intervals_text = f"[{light_ci[0]}, {light_ci[1]}], [{partial_ci[0]}, {partial_ci[1]}], [{deepest_ci[0]}, {deepest_ci[1]}]"
+            confidence_intervals_label.setText(confidence_intervals_text)
 
-        if deepest_prediction_label:
-            deepest_prediction_label.setText(str(round(predictions[2], 3)))
+        if pass_results_label:
+            light_pass_result = pass_results[0]
+            partial_pass_result = pass_results[1]
+            deepest_pass_result = pass_results[2]
+            pass_results_text = (
+                f"{light_pass_result}, {partial_pass_result}, {deepest_pass_result}"
+            )
+            pass_results_label.setText(pass_results_text)
 
-        if confidence_label:
-            confidence_label.setText(f"[{lower:.3f}, {upper:.3f}]")
-
-        if required_index_compare_label:
-            required_index_compare_label.setText(str(r_comparison_result))
+        if overall_summary_label:
+            # A = 0.2 * LIGHT_A + 0.4 * PARTIAL_A + 0.4 * DEEPEST_A.
+            weighted_attained_index = (
+                0.2 * predictions[0] + 0.4 * predictions[1] + 0.4 * predictions[1]
+            )
+            overall_summary_text = f"Attained Index (A): {weighted_attained_index} Required Index (R): {required_index}"
+            if weighted_attained_index >= required_index:
+                overall_summary_text += " PASSED"
+            else:
+                overall_summary_text += " FAILED"
+            overall_summary_label.setText(overall_summary_text)
 
         # Put the widget to the Results Frame in the Main Window.
         results_frame = self._window.findChild(QFrame, "resultsFrame")
@@ -115,7 +131,7 @@ class AgentPipelineController(object):
         if file_paths is None:
             return
 
-        main_dimensions_path, openings_path, layouts_path = file_paths
+        main_dimensions_path, layouts_path = file_paths
 
         # Columns and data frame for the user defined UI values.
         df_cols = [
@@ -172,13 +188,15 @@ class AgentPipelineController(object):
         else:
             df_final = pd.concat([main_dimensions_df, layouts_df], axis=1)
 
-        # Calculate the pass value using the given formulae.
-        pass_value = 0
+        # Calculate the Required Index (R) using the given formulae.
+        required_index = 0
 
         # Run the agent pipeline and collect results.
-        predictions, lower, upper, pass_result = run_agent_pipeline(
-            pass_value, df_final
+        predictions, confidence_intervals, pass_results = run_agent_pipeline(
+            required_index, df_final
         )
 
         # Display the output.
-        self._display_results(predictions, lower, upper, pass_result)
+        self._display_results(
+            predictions, confidence_intervals, pass_results, required_index
+        )
