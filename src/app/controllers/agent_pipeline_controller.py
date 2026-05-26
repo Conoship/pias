@@ -133,7 +133,7 @@ class AgentPipelineController(object):
         # Collect the user defined values from the UI.
         user_defined_values = self._collector_controller.collect_user_defined_value()
 
-        # If the user left accidentally something blank.
+        # If the user left accidentally something blank or they inputted an invalid value.
         if user_defined_values == -1:
             return
 

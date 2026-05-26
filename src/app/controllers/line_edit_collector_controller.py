@@ -57,8 +57,14 @@ class LineEditCollectorController(object):
         deep gm value.
 
         Returns:
-            tuple[float, float, float, float, float, float] | None:
-                A tuple containing the collected values, unless a value is None then returns None.
+            tuple[float, float, float, float, float, float]:
+                A tuple containing the collected values
+
+            int (-1):
+                If the user said that the do not wish to leave one or more features empty or there was an invalid value inputted.
+
+            None:
+                If the user said that they wish to leave one or more features empty.
         """
         # If any value is None return immediately.
         try:
@@ -108,6 +114,7 @@ class LineEditCollectorController(object):
                 "Invalid value inputted",
                 "All values must be positive floating point numbers.\nMake sure you did not input any letters or negative numbers.",
             )
+            return -1
 
         return (
             subdivision_length,
