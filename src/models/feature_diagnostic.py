@@ -8,11 +8,11 @@ import seaborn as sns
 from xgboost import XGBRegressor
 from sklearn.metrics import r2_score, mean_absolute_error
 
-
 datasets = {
-    "light": "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_light_v11_model_ready.csv",
-    "partial": "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_partial_v11_model_ready.csv",
-    "deepest": "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_deepest_v11_model_ready.csv",
+    "light": "data/all_ships_v7_light.csv",
+    "partial": "data/all_ships_v7_partial.csv",
+    "deepest": "data/all_ships_v7_deepest.csv",
+    "all": "data/all_ships_v7.csv",
 }
 
 
@@ -34,7 +34,6 @@ feature_groups = {
         "vcg",
         # "condition_code",
     ],
-
     "main_dimension_features": [
         "lpp",
         "loa",
@@ -45,7 +44,6 @@ feature_groups = {
         "box_volume",
         "layout_length_lpp_ratio",
     ],
-
     "compartment_features": [
         "total_compartments",
         "n_subcompartments",
@@ -58,7 +56,6 @@ feature_groups = {
         "pipe_subcompartment_ratio",
         "compartments_per_meter",
     ],
-
     "content_features": [
         "n_cargo",
         "n_ballast",
@@ -76,7 +73,6 @@ feature_groups = {
         "void_ratio",
         "cargohold_hatch_ratio",
     ],
-
     "opening_features": [
         "total_openings",
         "openings_per_compartment",
@@ -89,27 +85,21 @@ feature_groups = {
         "n_opening_types",
         "n_connected_openings",
     ],
-
     "spatial_zone_features": [
         "total_layout_length",
-
         "n_comp_aft",
         "n_comp_mid",
         "n_comp_fwd",
         "n_comp_unknown_zone",
-
         "avg_perm_aft",
         "avg_perm_mid",
         "avg_perm_fwd",
-
         "n_void_aft",
         "n_void_mid",
         "n_void_fwd",
-
         "n_ballast_aft",
         "n_ballast_mid",
         "n_ballast_fwd",
-
         "n_openings_aft",
         "n_openings_mid",
         "n_openings_fwd",
@@ -120,23 +110,16 @@ feature_groups = {
 
 feature_sets = {
     "loading_only": feature_groups["loading_features"],
-
     "main_dimensions_only": feature_groups["main_dimension_features"],
-
     "compartments_only": (
-        feature_groups["compartment_features"]
-        + feature_groups["content_features"]
+        feature_groups["compartment_features"] + feature_groups["content_features"]
     ),
-
     "openings_only": feature_groups["opening_features"],
-
     "spatial_zones_only": feature_groups["spatial_zone_features"],
-
     "geometry_only": (
         feature_groups["main_dimension_features"]
         + feature_groups["spatial_zone_features"]
     ),
-
     "geometry_plus_compartments": (
         feature_groups["main_dimension_features"]
         + feature_groups["spatial_zone_features"]
@@ -144,7 +127,6 @@ feature_sets = {
         + feature_groups["content_features"]
         + feature_groups["opening_features"]
     ),
-
     "all_features": (
         feature_groups["loading_features"]
         + feature_groups["main_dimension_features"]
@@ -153,7 +135,6 @@ feature_sets = {
         + feature_groups["content_features"]
         + feature_groups["opening_features"]
     ),
-
     "all_without_trim_mg": (
         ["draft", "displacement", "vcg"]
         + feature_groups["main_dimension_features"]
