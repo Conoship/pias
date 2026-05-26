@@ -1,16 +1,12 @@
 # Import standard library packages.
-import os
 import pickle
 
 # Import third party packages.
-from dotenv import load_dotenv
 import numpy as np
 import pandas as pd
 
 # Import local packages.
-from src.models.random_forest_baseline import RandomForestBaseline
-
-load_dotenv()
+from src.models.random_forest_baseline import RandomForestBaseline  # noqa: F401
 
 
 # TODO: Modify this function to return one prediction per loading condition.
