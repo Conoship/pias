@@ -134,7 +134,7 @@ class AgentPipelineController(object):
         user_defined_values = self._collector_controller.collect_user_defined_value()
 
         # If the user left accidentally something blank or they inputted an invalid value.
-        if user_defined_values == -1:
+        if isinstance(user_defined_values, int):
             return
 
         # If the user confirmed that they prefer to use the RTF defined values.

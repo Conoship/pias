@@ -1,4 +1,6 @@
 # Import third party packages.
+from typing import Optional, Tuple, Union
+
 from PySide6.QtWidgets import QMessageBox, QWidget
 
 # Import local packages.
@@ -18,7 +20,7 @@ class LineEditCollectorController(object):
         self._window = window
         self._line_edit_controller = LineEditController(window)
 
-    def collect_file_paths(self) -> tuple[str, str, str] | None:
+    def collect_file_paths(self) -> Optional[Tuple[str, str, str]]:
         """
          Collect the file paths for main dimensions, openings, and
         layouts.
@@ -35,7 +37,7 @@ class LineEditCollectorController(object):
             return None
 
         openings_path = self._line_edit_controller.get_file_from_line_edit(
-            "openingsLineEdit", "Openings PDF"
+            "openingsLineEdit", "Openings RTF"
         )
         if openings_path is None:
             return None
@@ -50,7 +52,7 @@ class LineEditCollectorController(object):
 
     def collect_user_defined_value(
         self,
-    ) -> tuple[float, float, float, float, float, float] | int | None:
+    ) -> Union[Tuple[float, float, float, float, float, float], int, None]:
         """
         Collect the user defined values: subdivision length,
         light service draft, subdivision draft, light gm value, partial gm value,
@@ -107,6 +109,23 @@ class LineEditCollectorController(object):
 
                 else:
                     return -1
+            else:
+                # At this point we've already checked for empties, so narrow types for the return.
+                assert subdivision_length is not None
+                assert light_service_draft is not None
+                assert subdivision_draft is not None
+                assert light_gm_value is not None
+                assert partial_gm_value is not None
+                assert deep_gm_value is not None
+
+                return (
+                    subdivision_length,
+                    light_service_draft,
+                    subdivision_draft,
+                    light_gm_value,
+                    partial_gm_value,
+                    deep_gm_value,
+                )
 
         except ValueError:
             QMessageBox.information(
@@ -115,12 +134,3 @@ class LineEditCollectorController(object):
                 "All values must be positive floating point numbers.\nMake sure you did not input any letters or negative numbers.",
             )
             return -1
-
-        return (
-            subdivision_length,
-            light_service_draft,
-            subdivision_draft,
-            light_gm_value,
-            partial_gm_value,
-            deep_gm_value,
-        )
