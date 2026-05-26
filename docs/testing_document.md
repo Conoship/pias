@@ -1,6 +1,6 @@
 # PIAS AI Agent Testing Document
 
-## 1.
+## 1
 
 The tests cover:
 
@@ -12,7 +12,6 @@ The tests cover:
 - Displaying the predicted attained index, confidence interval, and pass/fail comparison.
 - Handling missing or invalid input.
 
-
 ## 2. Test Data
 
 | Input | Example file/value | Notes |
@@ -20,33 +19,31 @@ The tests cover:
 | Main dimensions PDF |  | Required |
 | Openings PDF |  | Required (we only use layout and main) |
 | Layouts XML |  | Required |
-| Ship name |  | Required |
 | Subdivision length |  | Numeric |
 | Light service draft |  | Numeric |
 | Subdivision draft |  | Numeric |
 | Light GM value |  | Numeric |
 | Partial GM value |  | Numeric |
 | Deep GM value |  | Numeric |
-| Required index R |  | Numeric comparison value |
 
 ## 3. Acceptance Test Cases
 
 ### AT-01: Start Application
 
 | Field | Description |
-| --- | --- |
-| Objective | test that the desktop UI opens successfully. 
-| Steps | Open PowerShell in the project root. 
-| Expected result | The main application window opens with file inputs and a run button. 
-| Actual result 
-| Status 
+| ----- | ----------- |
+| Objective | Test that the desktop UI opens successfully. |
+| Steps | Open PowerShell in the project root and run  `python main.py`. |
+| Expected result | The main application window opens with file inputs and a run button. |
+| Actual result | The main application window opened with the file inputs and a run button. |
+| Status | Passed |
 
 ### AT-02: Browse Required Files
 
 | Field | Description |
-| --- | --- |
-| Objective | test that each browse button fills the correct file field. |
-| Steps |  Click the browse button and select a rtf/xml |
+| ----- | ----------- |
+| Objective | Test that each browse button fills the correct file field. |
+| Steps |  Click the browse button and select a RTF/XML |
 | Expected result | Each selected file path appears in the matching input field. |
 | Actual result |  |
 | Status |  |
@@ -151,7 +148,6 @@ The tests cover:
 | Actual result |  |
 | Status |  |
 
-
 ### AT-13: Engineered Features Are Applied
 
 | Field | Description |
@@ -172,7 +168,7 @@ The tests cover:
 | Actual result |  |
 | Status |  |
 
-### AT-15: Random Forest 
+### AT-15: Random Forest
 
 | Field | Description |
 | --- | --- |
@@ -201,7 +197,6 @@ The tests cover:
 | Expected result | The pipeline completes and the result is recalculated for the changed input. |
 | Actual result |  |
 | Status |  |
-
 
 ### AT-18: Empty Parsed Data Handling
 
@@ -235,13 +230,13 @@ The tests cover:
 
 ## 6. Defects Found
 
-| ID | Test case | Description | Status |
-| --- | --- | --- | --- | --- |
-|  |  |  |  |  |
+| ID  | Test case | Description | Status |
+| --- | --------- | ----------- | ------ |
+|     |           |             |        |
 
 ## 7. Summary
 
 | Result | Count |
-| --- | --- |
-| Passed |  |
-| Failed |  |
+| ---    | ---   |
+| Passed |       |
+| Failed |       |
