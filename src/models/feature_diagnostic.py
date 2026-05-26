@@ -8,11 +8,11 @@ import seaborn as sns
 from xgboost import XGBRegressor
 from sklearn.metrics import r2_score, mean_absolute_error
 
+
 datasets = {
-    "light": "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_light_v7.csv",
-    "partial": "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_partial_v7.csv",
-    "deepest": "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_deepest_v7.csv",
-    "all": "data/all_ships_v7.csv",
+    "light": "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_light_v11_model_ready.csv",
+    "partial": "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_partial_v11_model_ready.csv",
+    "deepest": "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_deepest_v11_model_ready.csv",
 }
 
 
@@ -24,6 +24,7 @@ xgb_params = config["XGBRegressorLeaveOneOut"]
 target = "target_attained_index"
 group_col = "ship_id"
 
+
 feature_groups = {
     "loading_features": [
         "draft",
@@ -33,11 +34,31 @@ feature_groups = {
         "vcg",
         # "condition_code",
     ],
-    "compartment_features": [
-        "openings_per_compartment",
-        "total_compartments",
-        "avg_permeability",
+
+    "main_dimension_features": [
+        "lpp",
+        "loa",
+        "breadth",
+        "depth",
+        "slenderness_ratio",
+        "breadth_depth_ratio",
+        "box_volume",
+        "layout_length_lpp_ratio",
     ],
+
+    "compartment_features": [
+        "total_compartments",
+        "n_subcompartments",
+        "subcompartments_per_compartment",
+        "avg_permeability",
+        "min_permeability",
+        "max_permeability",
+        "std_permeability",
+        "n_pipe_subcompartments",
+        "pipe_subcompartment_ratio",
+        "compartments_per_meter",
+    ],
+
     "content_features": [
         "n_cargo",
         "n_ballast",
@@ -46,47 +67,114 @@ feature_groups = {
         "n_gas_oil",
         "n_void",
         "n_fuel_oil",
+        "n_unknown_content",
+        "cargo_ratio",
+        "fuel_oil_ratio",
+        "gas_oil_ratio",
+        "potable_water_ratio",
+        "ballast_ratio",
+        "void_ratio",
+        "cargohold_hatch_ratio",
     ],
-    "geometry_features": [
+
+    "opening_features": [
+        "total_openings",
+        "openings_per_compartment",
+        "openings_per_meter",
+        "mean_opening_length",
+        "mean_opening_breadth",
+        "mean_opening_height",
+        "mean_opening_area",
+        "max_opening_area",
+        "n_opening_types",
+        "n_connected_openings",
+    ],
+
+    "spatial_zone_features": [
         "total_layout_length",
-        "max_layout_breadth",
-        "max_layout_height",
-        "avg_cross_section",
-        "sum_bh_sections",
-        "std_breadth",
-        "std_height",
-        "n_frustum_points",
+
+        "n_comp_aft",
+        "n_comp_mid",
+        "n_comp_fwd",
+        "n_comp_unknown_zone",
+
+        "avg_perm_aft",
+        "avg_perm_mid",
+        "avg_perm_fwd",
+
+        "n_void_aft",
+        "n_void_mid",
+        "n_void_fwd",
+
+        "n_ballast_aft",
+        "n_ballast_mid",
+        "n_ballast_fwd",
+
+        "n_openings_aft",
+        "n_openings_mid",
+        "n_openings_fwd",
+        "n_openings_unknown_zone",
     ],
 }
 
+
 feature_sets = {
     "loading_only": feature_groups["loading_features"],
+
+    "main_dimensions_only": feature_groups["main_dimension_features"],
+
     "compartments_only": (
-        feature_groups["compartment_features"] + feature_groups["content_features"]
-    ),
-    "geometry_only": feature_groups["geometry_features"],
-    "geometry_plus_compartments": (
-        feature_groups["geometry_features"]
-        + feature_groups["compartment_features"]
+        feature_groups["compartment_features"]
         + feature_groups["content_features"]
     ),
+
+    "openings_only": feature_groups["opening_features"],
+
+    "spatial_zones_only": feature_groups["spatial_zone_features"],
+
+    "geometry_only": (
+        feature_groups["main_dimension_features"]
+        + feature_groups["spatial_zone_features"]
+    ),
+
+    "geometry_plus_compartments": (
+        feature_groups["main_dimension_features"]
+        + feature_groups["spatial_zone_features"]
+        + feature_groups["compartment_features"]
+        + feature_groups["content_features"]
+        + feature_groups["opening_features"]
+    ),
+
     "all_features": (
         feature_groups["loading_features"]
+        + feature_groups["main_dimension_features"]
+        + feature_groups["spatial_zone_features"]
         + feature_groups["compartment_features"]
         + feature_groups["content_features"]
-        + feature_groups["geometry_features"]
+        + feature_groups["opening_features"]
     ),
+
     "all_without_trim_mg": (
-        ["draft", "displacement", "vcg", "condition_code"]
+        ["draft", "displacement", "vcg"]
+        + feature_groups["main_dimension_features"]
+        + feature_groups["spatial_zone_features"]
         + feature_groups["compartment_features"]
         + feature_groups["content_features"]
-        + feature_groups["geometry_features"]
+        + feature_groups["opening_features"]
     ),
 }
 
 
 def evaluate_leave_one_ship_out(df, features, target, group_col):
-    features = [f for f in features if f in df.columns]
+    requested_features = features
+    features = [f for f in requested_features if f in df.columns]
+    missing_features = [f for f in requested_features if f not in df.columns]
+
+    if missing_features:
+        print("Missing features skipped:", missing_features)
+
+    if len(features) == 0:
+        raise ValueError("No valid features found in this dataframe.")
 
     X = df[features].copy()
     y = df[target]
@@ -112,13 +200,18 @@ def evaluate_leave_one_ship_out(df, features, target, group_col):
 
         preds = model.predict(X_test)
 
-        r2 = r2_score(y_test, preds)
         mae = mean_absolute_error(y_test, preds)
+
+        if len(y_test) >= 2:
+            ship_r2 = r2_score(y_test, preds)
+        else:
+            ship_r2 = np.nan
 
         results.append(
             {
                 "test_ship": test_ship,
-                "r2": r2,
+                "n_test_rows": len(y_test),
+                "r2": ship_r2,
                 "mae": mae,
             }
         )
@@ -128,10 +221,17 @@ def evaluate_leave_one_ship_out(df, features, target, group_col):
 
     results_df = pd.DataFrame(results)
 
+    if len(all_y_true) >= 2:
+        pooled_r2 = r2_score(all_y_true, all_y_pred)
+    else:
+        pooled_r2 = np.nan
+
+    pooled_mae = mean_absolute_error(all_y_true, all_y_pred)
+
     return {
         "features_used": features,
-        "mean_r2": results_df["r2"].mean(),
-        "mean_mae": results_df["mae"].mean(),
+        "mean_r2": pooled_r2,
+        "mean_mae": pooled_mae,
         "per_ship_results": results_df,
     }
 
@@ -163,8 +263,8 @@ for condition_name, csv_path in datasets.items():
         print(f"Condition: {condition_name}")
         print(f"Feature set: {set_name}")
         print(f"Features used: {result['features_used']}")
-        print(f"Mean R2:  {result['mean_r2']:.4f}")
-        print(f"Mean MAE: {result['mean_mae']:.4f}")
+        print(f"Pooled R2:  {result['mean_r2']:.4f}")
+        print(f"Pooled MAE: {result['mean_mae']:.4f}")
         print("\nPer-ship results:")
         print(result["per_ship_results"])
 
@@ -179,32 +279,29 @@ plots_dir = Path("C:/Users/student01/Desktop/rug-project/pias/plots/diagnostics"
 plots_dir.mkdir(parents=True, exist_ok=True)
 
 
-# Graph 1: Mean R2 by feature set and condition
 plt.figure(figsize=(12, 6))
 sns.barplot(data=summary_df, x="feature_set", y="mean_r2", hue="condition")
 plt.axhline(0, linestyle="--", color="black")
-plt.title("Mean R2 by Feature Set and Condition")
+plt.title("Pooled Leave-One-Ship-Out R2 by Feature Set and Condition")
 plt.xlabel("Feature Set")
-plt.ylabel("Mean R2")
+plt.ylabel("Pooled R2")
 plt.xticks(rotation=30, ha="right")
 plt.tight_layout()
-plt.savefig(plots_dir / "feature_set_mean_r2_by_condition.png")
+plt.savefig(plots_dir / "feature_set_pooled_r2_by_condition.png")
 plt.close()
 
-
-# Graph 2: Mean MAE by feature set and condition
 plt.figure(figsize=(12, 6))
 sns.barplot(data=summary_df, x="feature_set", y="mean_mae", hue="condition")
-plt.title("Mean MAE by Feature Set and Condition")
+plt.title("Pooled Leave-One-Ship-Out MAE by Feature Set and Condition")
 plt.xlabel("Feature Set")
-plt.ylabel("Mean MAE")
+plt.ylabel("Pooled MAE")
 plt.xticks(rotation=30, ha="right")
 plt.tight_layout()
-plt.savefig(plots_dir / "feature_set_mean_mae_by_condition.png")
+plt.savefig(plots_dir / "feature_set_pooled_mae_by_condition.png")
 plt.close()
 
 
 print("\nGraphs saved to:")
 print(plots_dir)
-print("1. feature_set_mean_r2_by_condition.png")
-print("2. feature_set_mean_mae_by_condition.png")
+print("1. feature_set_pooled_r2_by_condition.png")
+print("2. feature_set_pooled_mae_by_condition.png")
