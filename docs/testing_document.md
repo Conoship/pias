@@ -1,6 +1,6 @@
-# PIAS AI Agent Testing Document
+# AI Agent to predict damage stability Testing Document
 
-## 1 Overview
+## 1. Overview
 
 The Tests cover:
 
@@ -17,7 +17,6 @@ The Tests cover:
 | Input | Example file/value | Notes |
 | ----- | ----------- | --- |
 | Main dimensions PDF | | Required |
-| Openings PDF | | Required (we only use layout and main) |
 | Layouts XML | | Required |
 | Subdivision length | | Numeric |
 | Light service draft | | Numeric |
@@ -224,7 +223,7 @@ The Tests cover:
 | ----- | ----------- |
 | Objective | Test that model results are readable in the UI. |
 | Steps | Run a successful prediction. |
-| Expected result | The prediction is rounded and the confidence interval is displayed as `[lower, upper]`. |
+| Expected result | The prediction is rounded, the confidence intervals are displayed as `[lower, upper]` and the pass results and overall summary are clearly readable. |
 | Actual result | |
 | Status | |
 
@@ -248,5 +247,5 @@ The Tests cover:
 
 | Result | Count |
 | ------ | ----- |
-| Passed |   9   |
+| Passed |  13   |
 | Failed |       |
