@@ -20,14 +20,13 @@ class LineEditCollectorController(object):
         self._window = window
         self._line_edit_controller = LineEditController(window)
 
-    def collect_file_paths(self) -> Optional[Tuple[str, str, str]]:
+    def collect_file_paths(self) -> Optional[Tuple[str, str]]:
         """
-         Collect the file paths for main dimensions, openings, and
-        layouts.
+        Collect the file paths for main dimensions and layouts.
 
-         Returns:
-             tuple[str, str, str] | None:
-                 A tuple containing the collected values, unless a value is None then returns None.
+        Returns:
+            tuple[str, str] | None:
+                A tuple containing the collected values, unless a value is None then returns None.
         """
         # Collect the file paths from the UI
         main_dims_path = self._line_edit_controller.get_file_from_line_edit(
@@ -36,19 +35,13 @@ class LineEditCollectorController(object):
         if main_dims_path is None:
             return None
 
-        openings_path = self._line_edit_controller.get_file_from_line_edit(
-            "openingsLineEdit", "Openings RTF"
-        )
-        if openings_path is None:
-            return None
-
         layouts_path = self._line_edit_controller.get_file_from_line_edit(
             "layoutsLineEdit", "Layouts XML"
         )
         if layouts_path is None:
             return None
 
-        return (main_dims_path, openings_path, layouts_path)
+        return (main_dims_path, layouts_path)
 
     def collect_user_defined_value(
         self,

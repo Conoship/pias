@@ -12,7 +12,6 @@ from src.app.controllers.line_edit_collector_controller import (
 from src.app.controllers.line_edit_controller import LineEditController
 from src.app.parsers.layouts_parser import LayoutsParser
 from src.app.parsers.main_dimensions_parser import MainDimensionsParser
-from src.app.parsers.openings_parser import OpeningsParser
 
 
 class AgentPipelineController(object):
@@ -165,16 +164,13 @@ class AgentPipelineController(object):
         # Parse the file paths.
         main_dimensions_df = MainDimensionsParser().parse_file(main_dimensions_path)
         layouts_df = LayoutsParser().parse_file(layouts_path)
-        openings_df = OpeningsParser().parse_file(openings_path)
 
         # Combine the Data Frames.
         df_final = pd.DataFrame()
         if user_defined_values is not None:
-            df_final = pd.concat(
-                [df, main_dimensions_df, layouts_df, openings_df], axis=1
-            )
+            df_final = pd.concat([df, main_dimensions_df, layouts_df], axis=1)
         else:
-            df_final = pd.concat([main_dimensions_df, layouts_df, openings_df], axis=1)
+            df_final = pd.concat([main_dimensions_df, layouts_df], axis=1)
 
         # Calculate the pass value using the given formulae.
         pass_value = 0
