@@ -74,7 +74,7 @@
       <bool>true</bool>
      </property>
      <property name="placeholderText">
-      <string>Openings PDF</string>
+      <string>Openings RTF</string>
      </property>
      <property name="clearButtonEnabled">
       <bool>false</bool>
@@ -122,7 +122,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Browse Openings PDF</string>
+      <string>Browse Openings RTF</string>
      </property>
     </widget>
     <widget class="QPushButton" name="layoutsBtn">
