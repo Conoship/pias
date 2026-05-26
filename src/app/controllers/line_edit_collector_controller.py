@@ -29,7 +29,7 @@ class LineEditCollectorController(object):
         """
         # Collect the file paths from the UI
         main_dims_path = self._line_edit_controller.get_file_from_line_edit(
-            "mainDimsLineEdit", "Main Dimensions PDF"
+            "mainDimsLineEdit", "Main Dimensions RTF"
         )
         if main_dims_path is None:
             return None
