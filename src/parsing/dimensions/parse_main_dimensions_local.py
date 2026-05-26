@@ -112,15 +112,24 @@ def import_main_dimensions_rtf_local(rtf_path):
         cur = conn.cursor()
         cur.execute(
             """
+            DELETE FROM main_dimensions
+            WHERE ship_version_id = ?
+                AND id <> ?
+            """,
+            (ship_version_id, ship_id),
+        )
+
+        cur.execute(
+            """
             UPDATE main_dimensions
-            SET id = ?,
+            SET ship_version_id = ?,
                 lpp = ?,
                 loa = ?,
                 breadth = ?,
                 depth = ?
-            WHERE ship_version_id = ?
+            WHERE id = ?
             """,
-            (ship_id, lpp, loa, breadth, depth, ship_version_id),
+            (ship_version_id, lpp, loa, breadth, depth, ship_id),
         )
 
         if cur.rowcount == 0:
