@@ -10,7 +10,6 @@ from src.invoke.run_invoke import (
     normalize_name,
     numeric_version_from_token,
 )
-from src.parsing.layout.parse_layout_local import get_ship, get_version
 from src.parsing.utils.rtf_utils import rtf_to_text
 
 
@@ -54,6 +53,31 @@ def get_main_dimensions(text):
     )
 
 
+def get_existing_ship_version_id(conn, ship, design, version, subversion, ship_run):
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT sv.id
+        FROM ship_version sv
+        JOIN ship s ON s.id = sv.ship_id
+        WHERE s.name = ?
+            AND sv.design_name = ?
+            AND sv.version = ?
+            AND sv.subversion = ?
+            AND sv.ship_run = ?
+        """,
+        (ship, design, version, subversion, ship_run),
+    )
+    row = cur.fetchone()
+    if row is None:
+        raise ValueError(
+            "No existing ship_version found for "
+            f"ship={ship}, design={design}, version={version}, "
+            f"subversion={subversion}, ship_run={ship_run}"
+        )
+    return row[0]
+
+
 def import_main_dimensions_rtf_local(rtf_path):
     rtf_path = Path(rtf_path)
     ship, design, version, subversion, ship_run = get_ship_version_from_rtf_path(
@@ -69,24 +93,33 @@ def import_main_dimensions_rtf_local(rtf_path):
     create_all_tables(conn)
 
     try:
-        ship_id = get_ship(conn, ship)
-        ship_version_id = get_version(
-            conn, ship_id, design, version, subversion, ship_run
+        ship_version_id = get_existing_ship_version_id(
+            conn, ship, design, version, subversion, ship_run
         )
 
         cur = conn.cursor()
         cur.execute(
-            "DELETE FROM main_dimensions WHERE ship_version_id = ?",
-            (ship_version_id,),
-        )
-        cur.execute(
             """
-            INSERT INTO main_dimensions
-                (ship_version_id, lpp, loa, breadth, depth)
-            VALUES (?, ?, ?, ?, ?)
+            UPDATE main_dimensions
+            SET lpp = ?,
+                loa = ?,
+                breadth = ?,
+                depth = ?
+            WHERE ship_version_id = ?
             """,
-            (ship_version_id, lpp, loa, breadth, depth),
+            (lpp, loa, breadth, depth, ship_version_id),
         )
+
+        if cur.rowcount == 0:
+            cur.execute(
+                """
+                INSERT INTO main_dimensions
+                    (ship_version_id, lpp, loa, breadth, depth)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (ship_version_id, lpp, loa, breadth, depth),
+            )
+
         conn.commit()
         print(f"Main dimensions imported for ship_version_id={ship_version_id}")
 
