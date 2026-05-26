@@ -55,7 +55,7 @@ class LineEditCollectorController(object):
         deep gm value.
 
         Returns:
-            tuple[float] | None:
+            tuple[float, float, float, float, float, float] | None:
                 A tuple containing the collected values, unless a value is None then returns None.
         """
         # If any value is None return immediately.
