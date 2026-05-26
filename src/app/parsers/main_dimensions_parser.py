@@ -18,6 +18,7 @@ class MainDimensionsParser(object):
         """
         self._cols = [
             "Length between perpendiculars",
+            "Length overall",
             "Moulded breadth",
             "Moulded depth",
         ]
@@ -106,5 +107,12 @@ class MainDimensionsParser(object):
 
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
+
+        # Before returning the DataFrame, rename the columns to match the ones in the database.
+        renamed_cols = ["lpp", "loa", "breadth", "depth"]
+        self._df.rename(
+            columns={old: new for old, new in zip(self._cols, renamed_cols)},
+            inplace=True,
+        )
 
         return self._df
