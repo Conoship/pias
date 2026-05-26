@@ -6,16 +6,17 @@ import pickle
 from dotenv import load_dotenv
 import numpy as np
 import pandas as pd
-from psycopg import connect
 
 # Import local packages.
 from src.models.random_forest_baseline import RandomForestBaseline
-from src.db.db import get_local_conn
 
 load_dotenv()
 
 
-def run_agent_pipeline(pass_value: float, df_final: pd.DataFrame):
+# TODO: Modify this function to return one prediction per loading condition.
+def run_agent_pipeline(
+    pass_value: float, df_final: pd.DataFrame
+) -> tuple[list[float], float, float, str]:
     """
     Execute the AI agent pipeline: load data, run the trained model,
     and return the predicted results.
@@ -47,9 +48,12 @@ def run_agent_pipeline(pass_value: float, df_final: pd.DataFrame):
         X = engineer_features(X)
     X = X[feature_cols]
 
+    # Predict based on the model type - once a single performing model is selected, this can be narrowed down.
+    lower, upper = -1, -1
+    predictions = []
     if model_type == "MAPIE XGB Regressor":
-        predictions, intervals = model.predict_interval(X)
-        prediction = predictions[0].item()
+        model_predictions, intervals = model.predict_interval(X)
+        prediction = model_predictions[0].item()
         lower = float(intervals[0, 0, 0].item())
         upper = float(intervals[0, 1, 0].item())
 
@@ -68,4 +72,4 @@ def run_agent_pipeline(pass_value: float, df_final: pd.DataFrame):
     else:
         pass_result = "A is below the required index R"
 
-    return prediction, lower, upper, pass_result
+    return predictions, lower, upper, pass_result

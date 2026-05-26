@@ -48,9 +48,9 @@ class LineEditCollectorController(object):
 
     def collect_user_defined_value(
         self,
-    ) -> tuple[str, float, float, float, float, float, float, float] | None:
+    ) -> tuple[float, float, float, float, float, float] | None:
         """
-        Collect the user defined values: ship name, subdivision length,
+        Collect the user defined values: subdivision length,
         light service draft, subdivision draft, light gm value, partial gm value,
         deep gm value.
 
@@ -59,12 +59,6 @@ class LineEditCollectorController(object):
                 A tuple containing the collected values, unless a value is None then returns None.
         """
         # If any value is None return immediately.
-        ship_name = self._line_edit_controller.get_ship_name_from_line_edit(
-            "shipNameLineEdit"
-        )
-        if ship_name is None:
-            return None
-
         subdivision_length = self._line_edit_controller.get_value_from_line_edit(
             "subdivLenLineEdit", "Subdivision Length"
         )
@@ -101,19 +95,11 @@ class LineEditCollectorController(object):
         if deep_gm_value is None:
             return None
 
-        pass_value = self._line_edit_controller.get_value_from_line_edit(
-            "requiredIndexLineEdit", "Required Index R"
-        )
-        if pass_value is None:
-            return None
-
         return (
-            ship_name,
             subdivision_length,
             light_service_draft,
             subdivision_draft,
             light_gm_value,
             partial_gm_value,
             deep_gm_value,
-            pass_value,
         )

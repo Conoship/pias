@@ -17,8 +17,8 @@
    <widget class="QPushButton" name="runBtn">
     <property name="geometry">
      <rect>
-      <x>270</x>
-      <y>480</y>
+      <x>260</x>
+      <y>440</y>
       <width>181</width>
       <height>31</height>
      </rect>
@@ -163,7 +163,7 @@
       <x>10</x>
       <y>220</y>
       <width>721</width>
-      <height>251</height>
+      <height>201</height>
      </rect>
     </property>
     <property name="frameShape">
@@ -176,7 +176,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>90</y>
+       <y>40</y>
        <width>351</width>
        <height>31</height>
       </rect>
@@ -185,7 +185,7 @@
       <bool>false</bool>
      </property>
      <property name="placeholderText">
-      <string>Enter Subdivision Length</string>
+      <string>Enter Subdivision Length (m)</string>
      </property>
      <property name="clearButtonEnabled">
       <bool>true</bool>
@@ -204,32 +204,13 @@
       <bool>false</bool>
      </property>
      <property name="placeholderText">
-      <string>Enter Light GM</string>
+      <string>Enter Light GM (m)</string>
      </property>
      <property name="clearButtonEnabled">
       <bool>true</bool>
      </property>
     </widget>
     <widget class="QLineEdit" name="subdivDraftLineEdit">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>190</y>
-       <width>351</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="readOnly">
-      <bool>false</bool>
-     </property>
-     <property name="placeholderText">
-      <string>Enter Subdivision Draft</string>
-     </property>
-     <property name="clearButtonEnabled">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="lightServiceDraftLineEdit">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -242,7 +223,26 @@
       <bool>false</bool>
      </property>
      <property name="placeholderText">
-      <string>Enter Light Service Draft</string>
+      <string>Enter Subdivision Draft (m)</string>
+     </property>
+     <property name="clearButtonEnabled">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="lightServiceDraftLineEdit">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>90</y>
+       <width>351</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="readOnly">
+      <bool>false</bool>
+     </property>
+     <property name="placeholderText">
+      <string>Enter Light Service Draft (m)</string>
      </property>
      <property name="clearButtonEnabled">
       <bool>true</bool>
@@ -266,25 +266,6 @@
       <string>Enter the required values</string>
      </property>
     </widget>
-    <widget class="QLineEdit" name="shipNameLineEdit">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>40</y>
-       <width>351</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="readOnly">
-      <bool>false</bool>
-     </property>
-     <property name="placeholderText">
-      <string>Enter Ship Name</string>
-     </property>
-     <property name="clearButtonEnabled">
-      <bool>true</bool>
-     </property>
-    </widget>
     <widget class="QLineEdit" name="deepGMLineEdit">
      <property name="geometry">
       <rect>
@@ -298,7 +279,7 @@
       <bool>false</bool>
      </property>
      <property name="placeholderText">
-      <string>Enter Deep GM</string>
+      <string>Enter Deep GM (m)</string>
      </property>
      <property name="clearButtonEnabled">
       <bool>true</bool>
@@ -317,26 +298,7 @@
       <bool>false</bool>
      </property>
      <property name="placeholderText">
-      <string>Enter Partial GM</string>
-     </property>
-     <property name="clearButtonEnabled">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="requiredIndexLineEdit">
-     <property name="geometry">
-      <rect>
-       <x>420</x>
-       <y>190</y>
-       <width>281</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="readOnly">
-      <bool>false</bool>
-     </property>
-     <property name="placeholderText">
-      <string>Enter Required Index R</string>
+      <string>Enter Partial GM (m)</string>
      </property>
      <property name="clearButtonEnabled">
       <bool>true</bool>
@@ -347,9 +309,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>520</y>
+      <y>490</y>
       <width>721</width>
-      <height>191</height>
+      <height>221</height>
      </rect>
     </property>
     <property name="frameShape">
