@@ -13,7 +13,7 @@ from src.models.random_forest_baseline import RandomForestBaseline  # noqa: F401
 # TODO: Modify this function to return one prediction, CI and pass result per loading condition.
 def run_agent_pipeline(
     window: QWidget, required_index: float, df_final: pd.DataFrame
-) -> tuple[list[float], list[tuple[float, float]], list[str]]:
+) -> tuple[list[float], list[tuple[float, float]], list[str]] | None:
     """
     Execute the AI agent pipeline: load data, run the trained model,
     and return the predicted results.

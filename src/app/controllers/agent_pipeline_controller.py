@@ -192,7 +192,11 @@ class AgentPipelineController(object):
         required_index = 0
 
         # Run the agent pipeline and collect results.
-        agent_result = run_agent_pipeline(required_index, df_final)
+        agent_result = run_agent_pipeline(self._window, required_index, df_final)
         if agent_result:
+            predictions, confidence_intervals, pass_results = agent_result
+
             # Display the output.
-            self._display_results(**agent_result)
+            self._display_results(
+                predictions, confidence_intervals, pass_results, required_index
+            )
