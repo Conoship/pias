@@ -55,7 +55,7 @@
       <bool>true</bool>
      </property>
      <property name="placeholderText">
-      <string>Main Dimensions PDF</string>
+      <string>Main Dimensions RTF</string>
      </property>
      <property name="clearButtonEnabled">
       <bool>false</bool>
@@ -109,7 +109,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Browse Main Dimensions PDF</string>
+      <string>Browse Main Dimensions RTF</string>
      </property>
     </widget>
     <widget class="QPushButton" name="openingsBtn">
