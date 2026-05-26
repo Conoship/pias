@@ -178,7 +178,7 @@ geom AS (
 
 main_dims AS (
     SELECT
-        md.ship_version_id,
+        md.id AS ship_id,
 
         MAX(md.lpp) AS lpp,
         MAX(md.loa) AS loa,
@@ -187,7 +187,7 @@ main_dims AS (
 
     FROM main_dimensions md
 
-    GROUP BY md.ship_version_id
+    GROUP BY md.id
 )
 
 SELECT
@@ -355,7 +355,7 @@ JOIN ship_version sv
     ON sv.id = t.ship_version_id
 
 LEFT JOIN main_dims
-    ON main_dims.ship_version_id = t.ship_version_id
+    ON main_dims.ship_id = sv.ship_id
 
 LEFT JOIN comp_data
     ON comp_data.ship_version_id = t.ship_version_id
