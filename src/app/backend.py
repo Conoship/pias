@@ -62,18 +62,18 @@ def run_agent_pipeline(
         X = engineer_features(X)
     X = X[feature_cols]
 
-    # TODO: Training data, X has 3 rows, one per condition => split data into X_light, X_partial and X_deepest to predict an Attained Index (A) for each one of them.
+    # Split the data into light, partial and deepest to get results for each loading condition.
+    X = X.iloc[[0, 1, 2]]
 
     # Predict based on the model type - once a single performing model is selected, this can be narrowed down.
     predictions = []
     confidence_intevals = []
     if model_type == "MAPIE XGB Regressor":
         model_predictions, intervals = model.predict_interval(X)
-        prediction = model_predictions[0].item()
-        predictions.append(prediction)
-        lower = float(intervals[0, 0, 0].item())
-        upper = float(intervals[0, 1, 0].item())
-        confidence_intevals.append((lower, upper))
+        predictions = model_predictions.ravel().tolist()
+        confidence_intevals = [
+            (float(lower), float(upper)) for lower, upper in intervals[:, :, 0]
+        ]
 
     else:
         # Get per-tree predictions and calculate the 95% CI to display confidence.
@@ -81,11 +81,10 @@ def run_agent_pipeline(
         all_tree_preds = np.array(
             [tree.predict(X_values) for tree in model.estimators_]
         )
-        prediction = np.mean(all_tree_preds, axis=0)[0].item()
-        predictions.append(prediction)
-        lower = np.percentile(all_tree_preds, 2.5, axis=0)[0].item()
-        upper = np.percentile(all_tree_preds, 97.5, axis=0)[0].item()
-        confidence_intevals.append((lower, upper))
+        predictions = np.mean(all_tree_preds, axis=0).tolist()
+        lower_bounds = np.percentile(all_tree_preds, 2.5, axis=0)
+        upper_bounds = np.percentile(all_tree_preds, 97.5, axis=0)
+        confidence_intevals = list(zip(lower_bounds.tolist(), upper_bounds.tolist()))
 
     # Get the pass results for each prediction, for each loading condition.
     # The minimum value for each condition is 0.5 * R.
