@@ -53,11 +53,11 @@ def get_main_dimensions(text):
     )
 
 
-def get_existing_ship_version_id(conn, ship, design, version, subversion, ship_run):
+def get_existing_ship_and_version_id(conn, ship, design, version, subversion, ship_run):
     cur = conn.cursor()
     cur.execute(
         """
-        SELECT sv.id
+        SELECT s.id, sv.id
         FROM ship_version sv
         JOIN ship s ON s.id = sv.ship_id
         WHERE s.name = ?
@@ -75,7 +75,7 @@ def get_existing_ship_version_id(conn, ship, design, version, subversion, ship_r
             f"ship={ship}, design={design}, version={version}, "
             f"subversion={subversion}, ship_run={ship_run}"
         )
-    return row[0]
+    return row[0], row[1]
 
 
 def import_main_dimensions_rtf_local(rtf_path):
@@ -93,7 +93,19 @@ def import_main_dimensions_rtf_local(rtf_path):
     create_all_tables(conn)
 
     try:
-        ship_version_id = get_existing_ship_version_id(
+        db_path = conn.execute("PRAGMA database_list").fetchone()[2]
+        print(f"Using database: {db_path}")
+        print(
+            "Looking for ship_version: "
+            f"ship={ship}, design={design}, version={version}, "
+            f"subversion={subversion}, ship_run={ship_run}"
+        )
+        print(
+            "Parsed dimensions: "
+            f"lpp={lpp}, loa={loa}, breadth={breadth}, depth={depth}"
+        )
+
+        ship_id, ship_version_id = get_existing_ship_and_version_id(
             conn, ship, design, version, subversion, ship_run
         )
 
@@ -101,27 +113,31 @@ def import_main_dimensions_rtf_local(rtf_path):
         cur.execute(
             """
             UPDATE main_dimensions
-            SET lpp = ?,
+            SET id = ?,
+                lpp = ?,
                 loa = ?,
                 breadth = ?,
                 depth = ?
             WHERE ship_version_id = ?
             """,
-            (lpp, loa, breadth, depth, ship_version_id),
+            (ship_id, lpp, loa, breadth, depth, ship_version_id),
         )
 
         if cur.rowcount == 0:
             cur.execute(
                 """
                 INSERT INTO main_dimensions
-                    (ship_version_id, lpp, loa, breadth, depth)
-                VALUES (?, ?, ?, ?, ?)
+                    (id, ship_version_id, lpp, loa, breadth, depth)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """,
-                (ship_version_id, lpp, loa, breadth, depth),
+                (ship_id, ship_version_id, lpp, loa, breadth, depth),
             )
 
         conn.commit()
-        print(f"Main dimensions imported for ship_version_id={ship_version_id}")
+        print(
+            "Main dimensions imported "
+            f"for ship_id={ship_id}, ship_version_id={ship_version_id}"
+        )
 
     finally:
         conn.close()
