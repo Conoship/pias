@@ -9,9 +9,10 @@ from xgboost import XGBRegressor
 from sklearn.metrics import r2_score, mean_absolute_error
 
 datasets = {
-    "light": "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_light_v5.csv",
-    "partial": "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_partial_v5.csv",
-    "deepest": "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_deepest_v5.csv",
+    "light": "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_light_v7.csv",
+    "partial": "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_partial_v7.csv",
+    "deepest": "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_deepest_v7.csv",
+    "all": "data/all_ships_v7.csv",
 }
 
 

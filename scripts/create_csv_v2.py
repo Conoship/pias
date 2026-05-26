@@ -7,17 +7,41 @@ import pandas as pd
 # Connect to SQLite database
 conn = sqlite3.connect("C:/Users/student01/Desktop/rug-project/pias/localhost.db")
 
+
 query = """
-WITH comp_data AS (
+WITH
+comp_counts AS (
     SELECT
         comp.ship_version_id,
 
         COUNT(DISTINCT comp.id) AS total_compartments,
-        COUNT(DISTINCT sub.id) AS n_subcompartments,
 
-        CAST(COUNT(DISTINCT sub.id) AS REAL) /
-            NULLIF(COUNT(DISTINCT comp.id), 0)
-            AS subcompartments_per_compartment,
+        COUNT(DISTINCT CASE WHEN comp.design_content_id_number = 1 THEN comp.id END)
+            AS n_cargo,
+        COUNT(DISTINCT CASE WHEN comp.design_content_id_number = 2 THEN comp.id END)
+            AS n_fuel_oil,
+        COUNT(DISTINCT CASE WHEN comp.design_content_id_number = 3 THEN comp.id END)
+            AS n_gas_oil,
+        COUNT(DISTINCT CASE WHEN comp.design_content_id_number = 4 THEN comp.id END)
+            AS n_potable_water,
+        COUNT(DISTINCT CASE WHEN comp.design_content_id_number = 6 THEN comp.id END)
+            AS n_ballast,
+        COUNT(DISTINCT CASE WHEN comp.design_content_id_number = 8 THEN comp.id END)
+            AS n_void,
+        COUNT(DISTINCT CASE WHEN comp.design_content_id_number = 12 THEN comp.id END)
+            AS n_cargohold_hatch,
+        COUNT(DISTINCT CASE WHEN comp.design_content_id_number IS NULL THEN comp.id END)
+            AS n_unknown_content
+
+    FROM compartment comp
+    GROUP BY comp.ship_version_id
+),
+
+sub_data AS (
+    SELECT
+        comp.ship_version_id,
+
+        COUNT(DISTINCT sub.id) AS n_subcompartments,
 
         AVG(sub.permeability_for_damage_stability) AS avg_permeability,
         MIN(sub.permeability_for_damage_stability) AS min_permeability,
@@ -37,170 +61,266 @@ WITH comp_data AS (
             ELSE 0
         END AS std_permeability,
 
-        SUM(CASE
-            WHEN sub.is_pipe = 1 THEN 1
-            ELSE 0
-        END) AS n_pipe_subcompartments,
-
-        CAST(SUM(CASE
-            WHEN sub.is_pipe = 1 THEN 1
-            ELSE 0
-        END) AS REAL) /
-            NULLIF(COUNT(DISTINCT sub.id), 0)
-            AS pipe_subcompartment_ratio,
-
-        -- Content type counts
-        COUNT(DISTINCT CASE
-            WHEN comp.design_content_id_number = 1 THEN comp.id
-        END) AS n_cargo,
-
-        COUNT(DISTINCT CASE
-            WHEN comp.design_content_id_number = 2 THEN comp.id
-        END) AS n_fuel_oil,
-
-        COUNT(DISTINCT CASE
-            WHEN comp.design_content_id_number = 3 THEN comp.id
-        END) AS n_gas_oil,
-
-        COUNT(DISTINCT CASE
-            WHEN comp.design_content_id_number = 4 THEN comp.id
-        END) AS n_potable_water,
-
-        COUNT(DISTINCT CASE
-            WHEN comp.design_content_id_number = 6 THEN comp.id
-        END) AS n_ballast,
-
-        COUNT(DISTINCT CASE
-            WHEN comp.design_content_id_number = 8 THEN comp.id
-        END) AS n_void,
-
-        COUNT(DISTINCT CASE
-            WHEN comp.design_content_id_number = 12 THEN comp.id
-        END) AS n_cargohold_hatch
+        SUM(CASE WHEN sub.is_pipe = 1 THEN 1 ELSE 0 END) AS n_pipe_subcompartments
 
     FROM compartment comp
-
     JOIN subcompartment sub
         ON sub.compartment_id = comp.id
-
     GROUP BY comp.ship_version_id
 ),
 
-opening_data AS (
-    SELECT
-        op.ship_version_id,
-
-        COUNT(DISTINCT op.id) AS total_openings,
-
-        AVG(op.length) AS mean_opening_length,
-        AVG(op.breadth) AS mean_opening_breadth,
-        AVG(op.height) AS mean_opening_height,
-
-        MIN(op.height) AS min_opening_height,
-        MAX(op.height) AS max_opening_height,
-
-        AVG(op.length * op.breadth) AS mean_opening_area,
-        MAX(op.length * op.breadth) AS max_opening_area,
-
-        COUNT(DISTINCT op.opening_type) AS n_opening_types,
-
-        COUNT(DISTINCT CASE
-            WHEN op.connected_compartment IS NOT NULL
-                 AND TRIM(op.connected_compartment) <> ''
-            THEN op.id
-        END) AS n_connected_openings,
-
-        -- Opening position features, if L/B/H columns are populated
-        AVG(op.L) AS mean_opening_L,
-        AVG(op.B) AS mean_opening_B,
-        AVG(op.H) AS mean_opening_H,
-
-        MIN(op.H) AS min_opening_H,
-        MAX(op.H) AS max_opening_H,
-
-        CASE
-            WHEN (AVG(op.L * op.L) - AVG(op.L) * AVG(op.L)) > 0
-            THEN SQRT(AVG(op.L * op.L) - AVG(op.L) * AVG(op.L))
-            ELSE 0
-        END AS std_opening_L,
-
-        CASE
-            WHEN (AVG(op.B * op.B) - AVG(op.B) * AVG(op.B)) > 0
-            THEN SQRT(AVG(op.B * op.B) - AVG(op.B) * AVG(op.B))
-            ELSE 0
-        END AS std_opening_B,
-
-        CASE
-            WHEN (AVG(op.H * op.H) - AVG(op.H) * AVG(op.H)) > 0
-            THEN SQRT(AVG(op.H * op.H) - AVG(op.H) * AVG(op.H))
-            ELSE 0
-        END AS std_opening_H
-
-    FROM opening op
-
-    GROUP BY op.ship_version_id
-),
-
-geom AS (
+ship_bounds AS (
     SELECT
         ss.ship_version_id,
 
-        MAX(fp.L) - MIN(fp.L) AS total_layout_length,
-        MAX(fp.B) AS max_layout_breadth,
-        MAX(fp.H) AS max_layout_height,
-
-        AVG(fp.B * fp.H) AS avg_cross_section,
-        SUM(fp.B * fp.H) AS sum_bh_sections,
-
-        CASE
-            WHEN (AVG(fp.B * fp.B) - AVG(fp.B) * AVG(fp.B)) > 0
-            THEN SQRT(AVG(fp.B * fp.B) - AVG(fp.B) * AVG(fp.B))
-            ELSE 0
-        END AS std_breadth,
-
-        CASE
-            WHEN (AVG(fp.H * fp.H) - AVG(fp.H) * AVG(fp.H)) > 0
-            THEN SQRT(AVG(fp.H * fp.H) - AVG(fp.H) * AVG(fp.H))
-            ELSE 0
-        END AS std_height,
-
-        COUNT(*) AS n_frustum_points,
-        COUNT(DISTINCT ss.id) AS n_shapes,
-        COUNT(DISTINCT ss.side) AS n_shape_sides
+        MIN(fp.L) AS ship_min_L,
+        MAX(fp.L) AS ship_max_L,
+        MAX(fp.L) - MIN(fp.L) AS total_layout_length
 
     FROM subcompartment_shape ss
-
     JOIN frustum_point fp
         ON fp.subcompartment_shape_id = ss.id
+
+    WHERE fp.L IS NOT NULL
 
     GROUP BY ss.ship_version_id
 ),
 
-main_dims AS (
+main_dims_by_ship AS (
     SELECT
-        md.id AS ship_id,
+        sv.ship_id,
 
-        MAX(md.lpp) AS lpp,
-        MAX(md.loa) AS loa,
-        MAX(md.breadth) AS breadth,
-        MAX(md.depth) AS depth
+        AVG(md.lpp) AS lpp,
+        AVG(md.loa) AS loa,
+        AVG(md.breadth) AS breadth,
+        AVG(md.depth) AS depth
 
     FROM main_dimensions md
+    JOIN ship_version sv
+        ON sv.id = md.ship_version_id
 
-    GROUP BY md.id
+    GROUP BY sv.ship_id
+),
+
+comp_perm AS (
+    SELECT
+        comp.ship_version_id,
+        comp.id AS compartment_id,
+
+        AVG(sub.permeability_for_damage_stability) AS comp_avg_permeability
+
+    FROM compartment comp
+    LEFT JOIN subcompartment sub
+        ON sub.compartment_id = comp.id
+
+    GROUP BY
+        comp.ship_version_id,
+        comp.id
+),
+
+comp_l_position AS (
+    SELECT
+        comp.ship_version_id,
+        comp.id AS compartment_id,
+        comp.design_content_id_number,
+
+        AVG(fp.L) AS comp_center_L
+
+    FROM compartment comp
+
+    LEFT JOIN subcompartment sub
+        ON sub.compartment_id = comp.id
+
+    LEFT JOIN subcompartment_shape ss
+        ON ss.shape_guid = sub.shape_guid
+       AND ss.ship_version_id = comp.ship_version_id
+
+    LEFT JOIN frustum_point fp
+        ON fp.subcompartment_shape_id = ss.id
+       AND fp.L IS NOT NULL
+
+    GROUP BY
+        comp.ship_version_id,
+        comp.id,
+        comp.design_content_id_number
+),
+
+comp_position AS (
+    SELECT
+        clp.ship_version_id,
+        clp.compartment_id,
+        clp.design_content_id_number,
+
+        (
+            clp.comp_center_L - sb.ship_min_L
+        ) / NULLIF(sb.total_layout_length, 0)
+            AS comp_norm_L,
+
+        cp.comp_avg_permeability
+
+    FROM comp_l_position clp
+
+    LEFT JOIN ship_bounds sb
+        ON sb.ship_version_id = clp.ship_version_id
+
+    LEFT JOIN comp_perm cp
+        ON cp.ship_version_id = clp.ship_version_id
+       AND cp.compartment_id = clp.compartment_id
+),
+
+zone_data AS (
+    SELECT
+        ship_version_id,
+
+        SUM(CASE WHEN comp_norm_L < 0.333333 THEN 1 ELSE 0 END)
+            AS n_comp_aft,
+
+        SUM(CASE
+            WHEN comp_norm_L >= 0.333333
+             AND comp_norm_L < 0.666667
+            THEN 1 ELSE 0
+        END) AS n_comp_mid,
+
+        SUM(CASE WHEN comp_norm_L >= 0.666667 THEN 1 ELSE 0 END)
+            AS n_comp_fwd,
+
+        SUM(CASE WHEN comp_norm_L IS NULL THEN 1 ELSE 0 END)
+            AS n_comp_unknown_zone,
+
+        AVG(CASE
+            WHEN comp_norm_L < 0.333333
+            THEN comp_avg_permeability
+        END) AS avg_perm_aft,
+
+        AVG(CASE
+            WHEN comp_norm_L >= 0.333333
+             AND comp_norm_L < 0.666667
+            THEN comp_avg_permeability
+        END) AS avg_perm_mid,
+
+        AVG(CASE
+            WHEN comp_norm_L >= 0.666667
+            THEN comp_avg_permeability
+        END) AS avg_perm_fwd,
+
+        SUM(CASE
+            WHEN comp_norm_L < 0.333333
+             AND design_content_id_number = 8
+            THEN 1 ELSE 0
+        END) AS n_void_aft,
+
+        SUM(CASE
+            WHEN comp_norm_L >= 0.333333
+             AND comp_norm_L < 0.666667
+             AND design_content_id_number = 8
+            THEN 1 ELSE 0
+        END) AS n_void_mid,
+
+        SUM(CASE
+            WHEN comp_norm_L >= 0.666667
+             AND design_content_id_number = 8
+            THEN 1 ELSE 0
+        END) AS n_void_fwd,
+
+        SUM(CASE
+            WHEN comp_norm_L < 0.333333
+             AND design_content_id_number = 6
+            THEN 1 ELSE 0
+        END) AS n_ballast_aft,
+
+        SUM(CASE
+            WHEN comp_norm_L >= 0.333333
+             AND comp_norm_L < 0.666667
+             AND design_content_id_number = 6
+            THEN 1 ELSE 0
+        END) AS n_ballast_mid,
+
+        SUM(CASE
+            WHEN comp_norm_L >= 0.666667
+             AND design_content_id_number = 6
+            THEN 1 ELSE 0
+        END) AS n_ballast_fwd
+
+    FROM comp_position
+    GROUP BY ship_version_id
+),
+
+opening_norm AS (
+    SELECT
+        op.ship_version_id,
+        op.id,
+        op.length,
+        op.breadth,
+        op.height,
+        op.opening_type,
+        op.connected_compartment,
+        op.L,
+        op.H,
+
+        (
+            op.L - sb.ship_min_L
+        ) / NULLIF(sb.total_layout_length, 0)
+            AS opening_l_norm
+
+    FROM opening op
+
+    LEFT JOIN ship_bounds sb
+        ON sb.ship_version_id = op.ship_version_id
+),
+
+opening_data AS (
+    SELECT
+        ship_version_id,
+
+        COUNT(DISTINCT id) AS total_openings,
+
+        AVG(length) AS mean_opening_length,
+        AVG(breadth) AS mean_opening_breadth,
+        AVG(height) AS mean_opening_height,
+        AVG(length * breadth) AS mean_opening_area,
+        MAX(length * breadth) AS max_opening_area,
+
+        COUNT(DISTINCT CASE
+            WHEN opening_type IS NOT NULL
+             AND TRIM(opening_type) <> ''
+            THEN opening_type
+        END) AS n_opening_types,
+
+        COUNT(DISTINCT CASE
+            WHEN connected_compartment IS NOT NULL
+             AND TRIM(connected_compartment) <> ''
+             AND TRIM(connected_compartment) <> '-'
+            THEN id
+        END) AS n_connected_openings,
+
+        SUM(CASE WHEN opening_l_norm < 0.333333 THEN 1 ELSE 0 END)
+            AS n_openings_aft,
+
+        SUM(CASE
+            WHEN opening_l_norm >= 0.333333
+             AND opening_l_norm < 0.666667
+            THEN 1 ELSE 0
+        END) AS n_openings_mid,
+
+        SUM(CASE WHEN opening_l_norm >= 0.666667 THEN 1 ELSE 0 END)
+            AS n_openings_fwd,
+
+        SUM(CASE WHEN opening_l_norm IS NULL THEN 1 ELSE 0 END)
+            AS n_openings_unknown_zone
+
+    FROM opening_norm
+    GROUP BY ship_version_id
 )
 
 SELECT
     t.ship_version_id,
     sv.ship_id,
 
-    -- Loading / stability features
     t.draft,
     t.trim,
     t.mg,
     t.displacement,
     t.vcg,
-    t.required_index,
 
     CASE
         WHEN LOWER(t.condition_name) = 'light' THEN 0
@@ -209,165 +329,168 @@ SELECT
         ELSE NULL
     END AS condition_code,
 
-    -- Main dimensions
-    main_dims.lpp,
-    main_dims.loa,
-    main_dims.breadth,
-    main_dims.depth,
+    CASE WHEN md.lpp IS NULL THEN 1 ELSE 0 END AS main_dimensions_missing,
 
-    -- Dimension ratios
-    main_dims.lpp / NULLIF(main_dims.breadth, 0)
-        AS lpp_over_breadth,
+    COALESCE(md.lpp, ship_bounds.total_layout_length) AS lpp,
+    COALESCE(md.loa, ship_bounds.total_layout_length) AS loa,
+    md.breadth,
+    md.depth,
 
-    main_dims.loa / NULLIF(main_dims.breadth, 0)
-        AS loa_over_breadth,
+    COALESCE(md.lpp, ship_bounds.total_layout_length)
+        / NULLIF(md.breadth, 0)
+        AS slenderness_ratio,
 
-    main_dims.breadth / NULLIF(main_dims.depth, 0)
-        AS breadth_over_depth,
+    md.breadth / NULLIF(md.depth, 0)
+        AS breadth_depth_ratio,
 
-    t.draft / NULLIF(main_dims.depth, 0)
-        AS draft_over_depth,
+    md.loa * md.breadth * md.depth
+        AS box_volume,
 
-    t.displacement /
-        NULLIF(main_dims.lpp * main_dims.breadth * main_dims.depth, 0)
-        AS displacement_over_lbd,
+    comp_counts.total_compartments,
+    sub_data.n_subcompartments,
 
-    -- Compartment / subcompartment features
-    comp_data.total_compartments,
-    comp_data.n_subcompartments,
-    comp_data.subcompartments_per_compartment,
+    CAST(sub_data.n_subcompartments AS REAL)
+        / NULLIF(comp_counts.total_compartments, 0)
+        AS subcompartments_per_compartment,
 
-    comp_data.avg_permeability,
-    comp_data.min_permeability,
-    comp_data.max_permeability,
-    comp_data.std_permeability,
+    sub_data.avg_permeability,
+    sub_data.min_permeability,
+    sub_data.max_permeability,
+    sub_data.std_permeability,
+    sub_data.n_pipe_subcompartments,
 
-    comp_data.n_pipe_subcompartments,
-    comp_data.pipe_subcompartment_ratio,
+    CAST(sub_data.n_pipe_subcompartments AS REAL)
+        / NULLIF(sub_data.n_subcompartments, 0)
+        AS pipe_subcompartment_ratio,
 
-    -- Opening count features
-    COALESCE(opening_data.total_openings, 0)
-        AS total_openings,
+    comp_counts.n_cargo,
+    comp_counts.n_fuel_oil,
+    comp_counts.n_gas_oil,
+    comp_counts.n_potable_water,
+    comp_counts.n_ballast,
+    comp_counts.n_void,
+    comp_counts.n_cargohold_hatch,
+    comp_counts.n_unknown_content,
 
-    CAST(COALESCE(opening_data.total_openings, 0) AS REAL) /
-        NULLIF(comp_data.total_compartments, 0)
+    CAST(comp_counts.n_cargo AS REAL)
+        / NULLIF(comp_counts.total_compartments, 0)
+        AS cargo_ratio,
+
+    CAST(comp_counts.n_fuel_oil AS REAL)
+        / NULLIF(comp_counts.total_compartments, 0)
+        AS fuel_oil_ratio,
+
+    CAST(comp_counts.n_gas_oil AS REAL)
+        / NULLIF(comp_counts.total_compartments, 0)
+        AS gas_oil_ratio,
+
+    CAST(comp_counts.n_potable_water AS REAL)
+        / NULLIF(comp_counts.total_compartments, 0)
+        AS potable_water_ratio,
+
+    CAST(comp_counts.n_ballast AS REAL)
+        / NULLIF(comp_counts.total_compartments, 0)
+        AS ballast_ratio,
+
+    CAST(comp_counts.n_void AS REAL)
+        / NULLIF(comp_counts.total_compartments, 0)
+        AS void_ratio,
+
+    CAST(comp_counts.n_cargohold_hatch AS REAL)
+        / NULLIF(comp_counts.total_compartments, 0)
+        AS cargohold_hatch_ratio,
+
+    ship_bounds.total_layout_length,
+
+    ship_bounds.total_layout_length
+        / NULLIF(COALESCE(md.lpp, ship_bounds.total_layout_length), 0)
+        AS layout_length_lpp_ratio,
+
+    CAST(comp_counts.total_compartments AS REAL)
+        / NULLIF(COALESCE(md.lpp, ship_bounds.total_layout_length), 0)
+        AS compartments_per_meter,
+
+    COALESCE(opening_data.total_openings, 0) AS total_openings,
+
+    CAST(COALESCE(opening_data.total_openings, 0) AS REAL)
+        / NULLIF(comp_counts.total_compartments, 0)
         AS openings_per_compartment,
 
-    CAST(COALESCE(opening_data.total_openings, 0) AS REAL) /
-        NULLIF(geom.total_layout_length, 0)
-        AS openings_per_length,
+    CAST(COALESCE(opening_data.total_openings, 0) AS REAL)
+        / NULLIF(COALESCE(md.lpp, ship_bounds.total_layout_length), 0)
+        AS openings_per_meter,
 
-    -- Opening geometry features
     opening_data.mean_opening_length,
     opening_data.mean_opening_breadth,
     opening_data.mean_opening_height,
-    opening_data.min_opening_height,
-    opening_data.max_opening_height,
-
     opening_data.mean_opening_area,
     opening_data.max_opening_area,
 
-    opening_data.n_opening_types,
-    opening_data.n_connected_openings,
+    COALESCE(opening_data.n_opening_types, 0) AS n_opening_types,
+    COALESCE(opening_data.n_connected_openings, 0) AS n_connected_openings,
 
-    -- Opening position features
-    opening_data.mean_opening_L,
-    opening_data.mean_opening_B,
-    opening_data.mean_opening_H,
-    opening_data.min_opening_H,
-    opening_data.max_opening_H,
-    opening_data.std_opening_L,
-    opening_data.std_opening_B,
-    opening_data.std_opening_H,
+    COALESCE(zone_data.n_comp_aft, 0) AS n_comp_aft,
+    COALESCE(zone_data.n_comp_mid, 0) AS n_comp_mid,
+    COALESCE(zone_data.n_comp_fwd, 0) AS n_comp_fwd,
+    COALESCE(zone_data.n_comp_unknown_zone, 0) AS n_comp_unknown_zone,
 
-    -- Content type counts
-    comp_data.n_cargo,
-    comp_data.n_fuel_oil,
-    comp_data.n_gas_oil,
-    comp_data.n_potable_water,
-    comp_data.n_ballast,
-    comp_data.n_void,
-    comp_data.n_cargohold_hatch,
+    zone_data.avg_perm_aft,
+    zone_data.avg_perm_mid,
+    zone_data.avg_perm_fwd,
 
-    -- Content type ratios
-    CAST(comp_data.n_cargo AS REAL) /
-        NULLIF(comp_data.total_compartments, 0)
-        AS cargo_ratio,
+    COALESCE(zone_data.n_void_aft, 0) AS n_void_aft,
+    COALESCE(zone_data.n_void_mid, 0) AS n_void_mid,
+    COALESCE(zone_data.n_void_fwd, 0) AS n_void_fwd,
 
-    CAST(comp_data.n_fuel_oil AS REAL) /
-        NULLIF(comp_data.total_compartments, 0)
-        AS fuel_oil_ratio,
+    COALESCE(zone_data.n_ballast_aft, 0) AS n_ballast_aft,
+    COALESCE(zone_data.n_ballast_mid, 0) AS n_ballast_mid,
+    COALESCE(zone_data.n_ballast_fwd, 0) AS n_ballast_fwd,
 
-    CAST(comp_data.n_gas_oil AS REAL) /
-        NULLIF(comp_data.total_compartments, 0)
-        AS gas_oil_ratio,
+    COALESCE(opening_data.n_openings_aft, 0) AS n_openings_aft,
+    COALESCE(opening_data.n_openings_mid, 0) AS n_openings_mid,
+    COALESCE(opening_data.n_openings_fwd, 0) AS n_openings_fwd,
+    COALESCE(opening_data.n_openings_unknown_zone, 0) AS n_openings_unknown_zone,
 
-    CAST(comp_data.n_potable_water AS REAL) /
-        NULLIF(comp_data.total_compartments, 0)
-        AS potable_water_ratio,
+    COALESCE(md.breadth, 0)
+        / NULLIF(COALESCE(md.depth, 0), 0)
+        AS breadth_over_depth,
 
-    CAST(comp_data.n_ballast AS REAL) /
-        NULLIF(comp_data.total_compartments, 0)
-        AS ballast_ratio,
+    t.draft / NULLIF(COALESCE(md.depth, 0), 0)
+        AS draft_over_depth,
 
-    CAST(comp_data.n_void AS REAL) /
-        NULLIF(comp_data.total_compartments, 0)
-        AS void_ratio,
+    t.displacement
+        / NULLIF(COALESCE(md.lpp, ship_bounds.total_layout_length), 0)
+        AS displacement_per_length,
 
-    CAST(comp_data.n_cargohold_hatch AS REAL) /
-        NULLIF(comp_data.total_compartments, 0)
-        AS cargohold_hatch_ratio,
-
-    -- Layout / geometry features
-    geom.total_layout_length,
-    geom.max_layout_breadth,
-    geom.max_layout_height,
-    geom.avg_cross_section,
-    geom.sum_bh_sections,
-    geom.std_breadth,
-    geom.std_height,
-    geom.n_frustum_points,
-    geom.n_shapes,
-    geom.n_shape_sides,
-
-    -- Geometry ratios
-    geom.total_layout_length / NULLIF(geom.max_layout_breadth, 0)
-        AS layout_length_over_breadth,
-
-    geom.max_layout_breadth / NULLIF(t.draft, 0)
-        AS layout_breadth_over_draft,
-
-    geom.max_layout_height / NULLIF(t.draft, 0)
-        AS layout_height_over_draft,
-
-    comp_data.total_compartments / NULLIF(geom.total_layout_length, 0)
-        AS compartments_per_length,
-
-    -- Targets
+    t.required_index,
     t.attained_index AS target_attained_index,
-
-    (t.attained_index - t.required_index)
-        AS target_margin
+    t.attained_index - t.required_index AS target_margin
 
 FROM trim_gm t
 
 JOIN ship_version sv
     ON sv.id = t.ship_version_id
 
-LEFT JOIN main_dims
-    ON main_dims.ship_id = sv.ship_id
+LEFT JOIN comp_counts
+    ON comp_counts.ship_version_id = t.ship_version_id
 
-LEFT JOIN comp_data
-    ON comp_data.ship_version_id = t.ship_version_id
+LEFT JOIN sub_data
+    ON sub_data.ship_version_id = t.ship_version_id
+
+LEFT JOIN ship_bounds
+    ON ship_bounds.ship_version_id = t.ship_version_id
+
+LEFT JOIN main_dims_by_ship md
+    ON md.ship_id = sv.ship_id
+
+LEFT JOIN zone_data
+    ON zone_data.ship_version_id = t.ship_version_id
 
 LEFT JOIN opening_data
     ON opening_data.ship_version_id = t.ship_version_id
 
-LEFT JOIN geom
-    ON geom.ship_version_id = t.ship_version_id
-
-WHERE comp_data.avg_permeability IS NOT NULL
-    AND comp_data.total_compartments IS NOT NULL
+WHERE comp_counts.total_compartments IS NOT NULL
+    AND sub_data.avg_permeability IS NOT NULL
     AND t.attained_index IS NOT NULL
     AND LOWER(t.condition_name) = 'partial'
 
@@ -379,12 +502,10 @@ ORDER BY
 
 def test_entire_table_queries(conn):
     print(pd.read_sql("SELECT COUNT(*) FROM trim_gm", conn))
-    print(pd.read_sql("SELECT COUNT(*) FROM main_dimensions", conn))
     print(pd.read_sql("SELECT COUNT(*) FROM compartment", conn))
     print(pd.read_sql("SELECT COUNT(*) FROM subcompartment", conn))
     print(pd.read_sql("SELECT COUNT(*) FROM subcompartment_shape", conn))
     print(pd.read_sql("SELECT COUNT(*) FROM frustum_point", conn))
-    print(pd.read_sql("SELECT COUNT(*) FROM opening", conn))
 
 
 def test_ctes_query(conn):
@@ -395,7 +516,6 @@ def test_ctes_query(conn):
                 SELECT
                     comp.ship_version_id,
                     COUNT(DISTINCT comp.id) AS total_compartments,
-                    COUNT(DISTINCT sub.id) AS n_subcompartments,
                     AVG(sub.permeability_for_damage_stability) AS avg_permeability
                 FROM compartment comp
                 JOIN subcompartment sub
@@ -416,9 +536,10 @@ def test_geom_query(conn):
             WITH geom AS (
                 SELECT
                     ss.ship_version_id,
-                    COUNT(*) AS n_frustum_points,
-                    MAX(fp.L) - MIN(fp.L) AS total_layout_length
+                    COUNT(*) AS n
                 FROM subcompartment_shape ss
+                JOIN subcompartment sub
+                    ON sub.shape_guid = ss.shape_guid
                 JOIN frustum_point fp
                     ON fp.subcompartment_shape_id = ss.id
                 GROUP BY ss.ship_version_id
@@ -430,42 +551,19 @@ def test_geom_query(conn):
     )
 
 
-def test_opening_query(conn):
-    print(
-        pd.read_sql(
-            """
-            WITH opening_data AS (
-                SELECT
-                    op.ship_version_id,
-                    COUNT(DISTINCT op.id) AS total_openings,
-                    AVG(op.length * op.breadth) AS mean_opening_area,
-                    COUNT(DISTINCT op.opening_type) AS n_opening_types
-                FROM opening op
-                GROUP BY op.ship_version_id
-            )
-            SELECT * FROM opening_data
-            """,
-            conn,
-        )
-    )
-
-
 # Perform test queries.
 test_entire_table_queries(conn)
 test_ctes_query(conn)
 test_geom_query(conn)
-test_opening_query(conn)
 
 # Execute query and load into DataFrame
 df = pd.read_sql_query(query, conn)
 
 # Show results
 print(df.head())
-print(df.shape)
-print(df.columns)
 
 # Optional: save results
-df.to_csv("data/all_ships_partial_v6.csv", index=False)
+df.to_csv("data/all_ships_v7_partial.csv", index=False)
 
 # Close connection
 conn.close()

@@ -7,15 +7,13 @@ from sklearn.model_selection import learning_curve
 from sklearn.metrics import r2_score, mean_absolute_error
 
 # Load Data and Initial Clean
-df = pd.read_csv(
-    "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_all_conditions_v6.csv"
-)
+df = pd.read_csv("data/all_ships_v7.csv")
 cols_to_drop = [
-    # "draft",
-    # "trim",
-    # "mg",
-    # "displacement",
-    # "vcg",
+    "draft",
+    "trim",
+    "mg",
+    "displacement",
+    "vcg",
     "condition_code",
     "target_margin",
     "target_attained_index",
