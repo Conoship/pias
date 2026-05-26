@@ -1,5 +1,5 @@
 # Import third party packages.
-from PySide6.QtWidgets import QWidget, QFileDialog, QLineEdit, QPushButton
+from PySide6.QtWidgets import QFileDialog, QLineEdit, QPushButton, QWidget
 
 
 class ButtonController(object):

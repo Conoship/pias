@@ -1,13 +1,10 @@
-import psycopg
-from pathlib import Path
-import pdfplumber
-import pandas as pd
+# Import standard library packages.
 import re
+from pathlib import Path
 
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
+# Import third party packages.
+import pandas as pd
+import pdfplumber
 
 
 class OpeningsParser(object):
@@ -50,7 +47,7 @@ class OpeningsParser(object):
         except ValueError:
             return None
 
-    def parse_openings(self, pdf_path: str | Path) -> pd.DataFrame:
+    def parse_file(self, pdf_path: str | Path) -> pd.DataFrame:
         pdf_path = Path(pdf_path)
 
         ship, design, version = self._parse_filename(pdf_path)
@@ -119,10 +116,3 @@ class OpeningsParser(object):
 
         self._df = pd.DataFrame(rows)
         return self._df
-
-
-# Testing the parser:
-# parser = OpeningsParser()
-# path = "c:/Users/student01/Documents/Stephanie/Clean/A2994_Concept_v1_ps_Openings.pdf"
-# df = parser.parse_openings(path)
-# print(df)

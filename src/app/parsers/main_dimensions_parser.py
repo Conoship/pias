@@ -1,5 +1,7 @@
-# Import third party packages.
+# Import standard library packages.
 import re
+
+# Import third party packages.
 import pandas as pd
 
 

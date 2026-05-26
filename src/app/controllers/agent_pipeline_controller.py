@@ -2,16 +2,16 @@
 import pandas as pd
 from PySide6.QtCore import QFile
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QWidget, QLabel, QFrame, QVBoxLayout
+from PySide6.QtWidgets import QFrame, QLabel, QVBoxLayout, QWidget
 
 # Import local packages.
 from src.app.backend import run_agent_pipeline
-from src.app.controllers.line_edit_controller import LineEditController
 from src.app.controllers.line_edit_collector_controller import (
     LineEditCollectorController,
 )
-from src.app.parsers.main_dimensions_parser import MainDimensionsParser
+from src.app.controllers.line_edit_controller import LineEditController
 from src.app.parsers.layouts_parser import LayoutsParser
+from src.app.parsers.main_dimensions_parser import MainDimensionsParser
 from src.app.parsers.openings_parser import OpeningsParser
 
 
@@ -118,26 +118,7 @@ class AgentPipelineController(object):
 
         main_dimensions_path, openings_path, layouts_path = file_paths
 
-        # Check if user defined values exist.
-        user_defined_values = self._collector_controller.collect_user_defined_value()
-        if user_defined_values is None:
-            return
-        (
-            subdivision_length,
-            light_service_draft,
-            subdivision_draft,
-            light_gm_value,
-            partial_gm_value,
-            deep_gm_value,
-        ) = user_defined_values
-
-        # Import the data to a csv and pass it to the agent.
-        # Parse the file paths.
-        main_dimensions_df = MainDimensionsParser().parse_file(main_dimensions_path)
-        layouts_df = LayoutsParser().parse_file(layouts_path)
-        openings_df = OpeningsParser().parse_openings(openings_path)
-
-        # Add the UI data to the df.
+        # Columns and data frame for the user defined UI values.
         df_cols = [
             "Subdivision Length",
             "Light Service Draft",
@@ -148,18 +129,44 @@ class AgentPipelineController(object):
             "Deep GM Value",
         ]
         df = pd.DataFrame(columns=df_cols)
-        df["Subdivision Length"] = subdivision_length
-        df["Light Service Draft"] = light_service_draft
-        df["Partial Subdivision"] = (light_service_draft - subdivision_draft) * 0.6
-        df["Subdivision Draft"] = subdivision_draft
-        df["Light GM Value"] = light_gm_value
-        df["Partial GM Value"] = partial_gm_value
-        df["Deep GM Value"] = deep_gm_value
+
+        # Check if user defined values exist.
+        user_defined_values = self._collector_controller.collect_user_defined_value()
+        if user_defined_values is not None:
+            (
+                subdivision_length,
+                light_service_draft,
+                subdivision_draft,
+                light_gm_value,
+                partial_gm_value,
+                deep_gm_value,
+            ) = user_defined_values
+
+            # Add the UI data to the df.
+            df["Subdivision Length"] = subdivision_length
+            df["Light Service Draft"] = light_service_draft
+            df["Partial Subdivision"] = (light_service_draft - subdivision_draft) * 0.6
+            df["Subdivision Draft"] = subdivision_draft
+            df["Light GM Value"] = light_gm_value
+            df["Partial GM Value"] = partial_gm_value
+            df["Deep GM Value"] = deep_gm_value
+
+        # Import the data to a csv and pass it to the agent.
+        # Parse the file paths.
+        main_dimensions_df = MainDimensionsParser().parse_file(main_dimensions_path)
+        layouts_df = LayoutsParser().parse_file(layouts_path)
+        openings_df = OpeningsParser().parse_file(openings_path)
 
         # Combine the Data Frames.
-        df_final = pd.concat([df, main_dimensions_df, layouts_df, openings_df], axis=1)
+        df_final = pd.DataFrame()
+        if user_defined_values is not None:
+            df_final = pd.concat(
+                [df, main_dimensions_df, layouts_df, openings_df], axis=1
+            )
+        else:
+            df_final = pd.concat([main_dimensions_df, layouts_df, openings_df], axis=1)
 
-        # Calculate the pass value using the regular formulae.
+        # Calculate the pass value using the given formulae.
         pass_value = 0
 
         # Run the agent pipeline and collect results.

@@ -2,11 +2,10 @@
 import sys
 
 # Import third party packages.
-from PySide6.QtGui import QIcon
 from PySide6.QtCore import QFile
+from PySide6.QtGui import QGuiApplication, QIcon
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtGui import QGuiApplication
-from PySide6.QtWidgets import QWidget, QApplication, QPushButton
+from PySide6.QtWidgets import QApplication, QPushButton, QWidget
 
 # Import local packages.
 from src.app.controllers.agent_pipeline_controller import AgentPipelineController

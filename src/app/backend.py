@@ -18,11 +18,17 @@ def run_agent_pipeline(
     and return the predicted results.
 
     Args:
-        window (QWidget):
-            The main application window used to locate UI elements
-            where results will be displayed.
-    """
+        pass_value (float):
+            The Required Index (R) value required for the ship to pass according to the SOLAS requirements.
 
+        df_final (pd.DataFrame):
+            The df containing the the concatened data frames from the other parsers and the user defined values.
+
+    Returns:
+        tuple[list[float], float, float, str]:
+            A tuple containing the list of predictions (one per loading condition),
+            the lower and the upper bounds of the 95% CI and lastly the A against R comparison result
+    """
     # If we use just mock data:
     # df = pd.read_csv("./mockdata.csv")
 

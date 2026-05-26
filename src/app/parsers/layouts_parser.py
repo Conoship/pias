@@ -1,6 +1,6 @@
 # Import standard library packages.
-from pathlib import Path
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 # Import third party packages.
 import pandas as pd
@@ -374,9 +374,7 @@ class LayoutsParser(object):
                         ),
                         "sign": self._parse_int(subcompartment.findtext("Sign")),
                         "permeability_for_damage_stability": self._parse_float(
-                            subcompartment.findtext(
-                                "Permeability_for_damage_stability"
-                            )
+                            subcompartment.findtext("Permeability_for_damage_stability")
                         ),
                         "span_b": span_b,
                         "span_h": span_h,
@@ -425,9 +423,7 @@ class LayoutsParser(object):
                 xml_root, base_row
             )
             rows.extend(coordinate_rows)
-            rows.extend(
-                self._parse_compartments(xml_root, base_row, shape_guid_spans)
-            )
+            rows.extend(self._parse_compartments(xml_root, base_row, shape_guid_spans))
 
             self._df = pd.DataFrame(rows, columns=self._cols)
 

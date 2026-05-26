@@ -1,5 +1,5 @@
 # Import third party packages.
-from PySide6.QtWidgets import QMessageBox, QWidget, QLineEdit
+from PySide6.QtWidgets import QLineEdit, QMessageBox, QWidget
 
 
 class LineEditController(object):
