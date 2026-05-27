@@ -10,7 +10,6 @@ from PySide6.QtWidgets import QMessageBox, QWidget
 from src.models.random_forest_baseline import RandomForestBaseline  # noqa: F401
 
 
-# TODO: Modify this function to return one prediction, CI and pass result per loading condition.
 def run_agent_pipeline(
     window: QWidget, required_index: float, df_final: pd.DataFrame
 ) -> tuple[list[float], list[tuple[float, float]], list[str]] | None:
@@ -56,14 +55,20 @@ def run_agent_pipeline(
     feature_cols = saved["feature_cols"]
     engineer_features = saved.get("engineer_features")
 
-    # Feed the data to the model and get the results.
+    # Split the data into each loading condition so we can get model output for each loading condition.
     X = df.select_dtypes(include=["number"])
+    if "condition_code" in X.columns:
+        X = (
+            X[X["condition_code"].isin([0, 1, 2])]
+            .sort_values("condition_code")
+            .drop_duplicates("condition_code", keep="first")
+        )
+    else:
+        X = X.head(3)
+
     if engineer_features is not None:
         X = engineer_features(X)
     X = X[feature_cols]
-
-    # Split the data into light, partial and deepest to get results for each loading condition.
-    X = X.iloc[[0, 1, 2]]
 
     # Predict based on the model type - once a single performing model is selected, this can be narrowed down.
     predictions = []
