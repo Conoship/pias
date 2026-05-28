@@ -1,6 +1,7 @@
 # Import standard library packages.
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from typing import Any
 
 # Import third party packages.
 import pandas as pd
@@ -399,6 +400,54 @@ class LayoutsParser(object):
 
         return rows
 
+    def _is_missing(self, value: Any) -> bool:
+        """
+        Checks if a parsed DataFrame value should be treated as missing.
+
+        Args:
+            value (object):
+                The value to check.
+
+        Returns:
+            bool:
+                `True` if the value is missing, `False` otherwise.
+        """
+        return bool(pd.isna(value) or (isinstance(value, str) and value.strip() == ""))
+
+    def _validate_df(self) -> None:
+        """
+        Method to validate the filled DataFrame before returning it in `parse_file`.
+
+        Raises:
+            Exception:
+                In case the DataFrame is empty, has missing columns, contains an
+                unknown record type, or misses required values for a record type.
+        """
+        if self._df.empty:
+            raise Exception("Parser could not extract any layout records.")
+
+        missing_columns = [col for col in self._cols if col not in self._df.columns]
+        if missing_columns:
+            missing_column_names = ", ".join(missing_columns)
+            raise Exception(
+                "Parser output is missing expected columns: " f"{missing_column_names}."
+            )
+
+        missing_values = []
+
+        for idx, row in self._df.iterrows():
+            record_type_value = row["record_type"]
+            if self._is_missing(record_type_value):
+                missing_values.append(f"row {idx}: record_type")
+                continue
+
+        if missing_values:
+            missing_value_names = ", ".join(missing_values)
+            raise Exception(
+                "Parser could not fill all required layout values, "
+                f"possibly due to missing values for: {missing_value_names}."
+            )
+
     def parse_file(self, file_path: str) -> pd.DataFrame:
         """
         Method to parse the XML file.
@@ -438,5 +487,7 @@ class LayoutsParser(object):
 
         except Exception as e:
             print(f"There was an error parsing the file: {e}")
+
+        self._validate_df()
 
         return self._df
