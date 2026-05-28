@@ -154,6 +154,36 @@ class AgentPipelineController(object):
 
         return required_index
 
+    def _get_layouts_ship_name(self, layouts_df: pd.DataFrame) -> str:
+        """
+        Gets the single ship name from the layouts DataFrame.
+
+        Args:
+            layouts_df (pd.DataFrame):
+                The parsed layouts DataFrame.
+
+        Raises:
+            ValueError:
+                If no ship name or multiple ship names are present.
+
+        Returns:
+            str:
+                The ship name from the layouts DataFrame.
+        """
+        ship_names = layouts_df["ship"].dropna().astype(str).str.strip().unique()
+        ship_names = [ship_name for ship_name in ship_names if ship_name]
+
+        if len(ship_names) == 0:
+            raise ValueError("The Layouts file does not contain a ship name.")
+
+        if len(ship_names) > 1:
+            raise ValueError(
+                "The Layouts file contains multiple ship names: "
+                f"{', '.join(ship_names)}."
+            )
+
+        return ship_names[0]
+
     def handle_agent_pipeline(self) -> None:
         """
         Execute the AI agent pipeline: load data, run the trained model,
@@ -216,8 +246,8 @@ class AgentPipelineController(object):
         try:
             main_dimensions_df = MainDimensionsParser().parse_file(main_dimensions_path)
             layouts_df = LayoutsParser().parse_file(layouts_path)
-            main_dimensions_ship = str(main_dimensions_df["name"])
-            layouts_ship = str(layouts_df["ship"])
+            main_dimensions_ship = str(main_dimensions_df.at[0, "name"]).strip()
+            layouts_ship = self._get_layouts_ship_name(layouts_df)
             if main_dimensions_ship != layouts_ship:
                 raise Exception(
                     f"The files do not target the same ship. Main Dimensions ship: {main_dimensions_ship} Layouts ship: {layouts_ship}"
