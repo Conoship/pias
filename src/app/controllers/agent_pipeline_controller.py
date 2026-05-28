@@ -216,6 +216,12 @@ class AgentPipelineController(object):
         try:
             main_dimensions_df = MainDimensionsParser().parse_file(main_dimensions_path)
             layouts_df = LayoutsParser().parse_file(layouts_path)
+            main_dimensions_ship = str(main_dimensions_df["name"])
+            layouts_ship = str(layouts_df["ship"])
+            if main_dimensions_ship != layouts_ship:
+                raise Exception(
+                    f"The files do not target the same ship. Main Dimensions ship: {main_dimensions_ship} Layouts ship: {layouts_ship}"
+                )
 
         except Exception as e:
             QMessageBox.warning(

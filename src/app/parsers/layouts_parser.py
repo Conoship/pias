@@ -490,4 +490,5 @@ class LayoutsParser(object):
 
         self._validate_df()
 
+        print(self._df)
         return self._df

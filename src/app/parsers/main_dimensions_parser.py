@@ -21,6 +21,7 @@ class MainDimensionsParser(object):
         Parser class for the Main Dimensions RTF file.
         """
         self._cols = [
+            "Project Name",
             "Length between perpendiculars",
             "Length overall",
             "Moulded breadth",
@@ -146,14 +147,22 @@ class MainDimensionsParser(object):
                         if current_col in found_cols:
                             continue
 
-                        # Extract value safely using field-aware regex.
-                        value = self._extract_field_value(line, current_col)
-
-                        if value is None:
+                        # The Ship name has a different format in the .rtf file compared to the other features.
+                        if current_col == "Project Name":
+                            pattern = re.compile(r"Project Name\s*:\s*([A-Za-z0-9]+)")
+                            ship_name = pattern.findall(line)[0]
+                            self._df.loc[0, current_col] = ship_name
                             continue
 
-                        self._df.loc[0, current_col] = self._parse_float(value)
-                        found_cols.add(current_col)
+                        else:
+                            # Extract value safely using field-aware regex.
+                            value = self._extract_field_value(line, current_col)
+
+                            if value is None:
+                                continue
+
+                            self._df.loc[0, current_col] = self._parse_float(value)
+                            found_cols.add(current_col)
 
                     if len(found_cols) == len(self._cols):
                         break
@@ -175,11 +184,12 @@ class MainDimensionsParser(object):
             self._validate_df()
 
             # Before returning the DataFrame, rename the columns to match the ones in the database.
-            renamed_cols = ["lpp", "loa", "breadth", "depth"]
+            renamed_cols = ["name", "lpp", "loa", "breadth", "depth"]
             self._df.rename(
                 columns={old: new for old, new in zip(self._cols, renamed_cols)},
                 inplace=True,
             )
+            print(self._df)
             return self._df
 
         except Exception as e:

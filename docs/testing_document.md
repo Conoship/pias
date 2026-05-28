@@ -107,25 +107,45 @@ The Tests cover:
 | Actual result | |
 | Status | |
 
-### AT-08: Invalid Main Dimensions RTF
+### AT-08a: Invalid Main Dimensions RTF
 
 | Field | Description |
 | ----- | ----------- |
-| Objective | Test behavior when the dimension RTF is malformed or not a PIAS layout file. |
-| Steps | Select an invalid RTF file for the dimension input without the needed tables. |
-| Expected result | The app handles the failure safely and shows a clear error instead of crashing. |
-| Actual result | |
-| Status | |
+| Objective | Test behavior when the Main Dimensions RTF is malformed. |
+| Steps | Select an invalid RTF file for the Main Dimensions input without one or more of the required tables. |
+| Expected result | The app handles the missing Main Dimensions data safely and shows a clear error displayign the missing columns. |
+| Actual result | The app handled the missing Main Dimensions data safely and showed a clear error displaying the missing columns. |
+| Status | Passed |
 
-### AT-09: Invalid Layouts XML
+### AT-08b: Valid Main Dimensions RTF
 
 | Field | Description |
 | ----- | ----------- |
-| Objective | Test behavior when the Layouts XML does not contain the expected table. |
-| Steps | Select an XML without the needed layout tables for the layouts input. |
-| Expected result | The app handles the missing Layouts data safely and shows a clear error or empty-data result. |
-| Actual result | |
-| Status | |
+| Objective | Test behavior when the Main Dimensions RTF is not malformed. |
+| Steps | Select a valid RTF file for the Main Dimensions with all of the required tables. |
+| Expected result | The app moves on to Layouts parsing. |
+| Actual result | The app moved on to Layouts parsing. |
+| Status | Passed |
+
+### AT-09a: Invalid Layouts XML
+
+| Field | Description |
+| ----- | ----------- |
+| Objective | Test behavior when the Layouts XML does not contain the required table. |
+| Steps | Select an invalid XML file for the Layouts input without one or more of the required tables. |
+| Expected result | The app handles the missing Layouts data safely and shows a clear error displaying the missing columns. |
+| Actual result | The app handled the missing Layouts data safely and showed a clear error displaying the missing columns. |
+| Status | Passed |
+
+### AT-09b: Valid Layouts XML
+
+| Field | Description |
+| ----- | ----------- |
+| Objective | Test behavior when the Layouts XML contains the expected table. |
+| Steps | Select a valid XML with all of the required tables. |
+| Expected result | The app moves on to user defined values validation. |
+| Actual result | The app moved on to the user defined values validation |
+| Status | Passed |
 
 ### AT-10: Missing Model File
 
@@ -207,17 +227,7 @@ The Tests cover:
 | Actual result | The pipeline completes and the result is recalculated for the changed input. |
 | Status | Passed |
 
-### AT-18: Empty Parsed Data Handling
-
-| Field | Description |
-| ----- | ----------- |
-| Objective | Test behavior when one parser returns no usable rows. |
-| Steps | Use a file that contains no usable data for one parser and click Run. |
-| Expected result | The app stops safely and displays a message. |
-| Actual result | |
-| Status | |
-
-### AT-19: Model Result Formatting
+### AT-18: Model Result Formatting
 
 | Field | Description |
 | ----- | ----------- |
@@ -227,13 +237,23 @@ The Tests cover:
 | Actual result | |
 | Status | |
 
-### AT-20: Extreme Numeric Values
+### AT-19: Extreme Numeric Values
 
 | Field | Description |
 | ----- | ----------- |
 | Objective | Test that the model pipeline handles unusually high inputs safely. |
 | Steps | Enter  numeric values for draft, GM, or subdivision length and click Run. |
 | Expected result | The app either produces a result or shows a clear validation error without crashing. |
+| Actual result | |
+| Status | |
+
+### AT-20: RTF and XML files are for the same ship
+
+| Field | Description |
+| ----- | ----------- |
+| Objective | Test that the app checks if the two files are for the same ship. |
+| Steps | Enter a XML and a RTF file from two different ship designs and click Run. |
+| Expected result | The app should warn the user that there is a mismatch between the ships described by the files. |
 | Actual result | |
 | Status | |
 
@@ -247,5 +267,5 @@ The Tests cover:
 
 | Result | Count |
 | ------ | ----- |
-| Passed |  13   |
+| Passed |  17   |
 | Failed |       |
