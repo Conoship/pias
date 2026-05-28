@@ -83,16 +83,47 @@ def fill_missing_breadth(points: pd.DataFrame) -> pd.DataFrame:
     missing_b = points["B"].isna()
     half_breadth = pd.to_numeric(points["half_breadth"], errors="coerce")
 
-    # Use port side as negative, otherwise positive.
-    port_side = points["side"].eq("ps_only")
+    group_cols = [
+        "ship_version_id",
+        "compartment_id",
+        "subcompartment_id",
+    ]
 
-    signed_shell_breadth = np.where(
-        port_side,
-        -half_breadth,
-        half_breadth,
+    def infer_shell_sign(known_b: pd.Series) -> float:
+        known_b = known_b.dropna()
+
+        if known_b.empty:
+            return np.nan
+
+        shell_b = known_b.loc[known_b.abs().idxmax()]
+
+        if shell_b == 0:
+            return np.nan
+
+        return float(np.sign(shell_b))
+
+    inferred_sign = points.groupby(group_cols)["B"].transform(infer_shell_sign)
+
+    side_sign = np.select(
+        [
+            points["side"].eq("ps_only"),
+            points["side"].eq("sb_only"),
+        ],
+        [
+            -1.0,
+            1.0,
+        ],
+        default=np.nan,
     )
 
-    points.loc[missing_b, "B"] = signed_shell_breadth[missing_b]
+    final_sign = np.where(
+        np.isnan(side_sign),
+        inferred_sign,
+        side_sign,
+    )
+
+    final_sign = pd.Series(final_sign, index=points.index).fillna(1.0)
+    points.loc[missing_b, "B"] = final_sign[missing_b] * half_breadth[missing_b]
 
     return points
 
