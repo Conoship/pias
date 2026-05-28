@@ -526,8 +526,6 @@ def run_agent_pipeline(
     if engineer_features is not None:
         X = engineer_features(X)
 
-    print(X)
-    print(feature_cols)
     X = X[feature_cols]
 
     # Predict based on the model type - once a single performing model is selected, this can be narrowed down.
