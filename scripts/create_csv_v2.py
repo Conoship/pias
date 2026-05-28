@@ -492,7 +492,6 @@ LEFT JOIN opening_data
 WHERE comp_counts.total_compartments IS NOT NULL
     AND sub_data.avg_permeability IS NOT NULL
     AND t.attained_index IS NOT NULL
-    AND LOWER(t.condition_name) = 'partial'
 
 ORDER BY
     t.ship_version_id,
@@ -563,7 +562,7 @@ df = pd.read_sql_query(query, conn)
 print(df.head())
 
 # Optional: save results
-df.to_csv("data/all_ships_v7_partial.csv", index=False)
+df.to_csv("data/all_ships_v7.csv", index=False)
 
 # Close connection
 conn.close()

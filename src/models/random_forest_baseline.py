@@ -33,7 +33,7 @@ class RandomForestBaseline(object):
     _Y_LABEL = "target_attained_index"
 
     # The column by which we create the groups for K-Fold Cross-Validation.
-    _GROUP_BY = "ship_version_id"
+    _GROUP_BY = "ship_id"
 
     # The number of splits for K-Fold Cross-Validation
     _K_FOLD_CROSS_SPLITS = 5
@@ -104,7 +104,7 @@ class RandomForestBaseline(object):
             feature_cols (list[str]):
                 A list of all the columns the model is using as features to train on.
         """
-        with open("model.pkl", "wb") as file:
+        with open("models/model.pkl", "wb") as file:
             pickle.dump(
                 {
                     "model_type": "Random Forest Regressor",
@@ -181,8 +181,8 @@ class RandomForestBaseline(object):
         self.fold_results.clear()
 
         # Filter out low impact features.
-        X = self._engineer_features(X)
-        X = self._filter_low_impact_features(X, Y)
+        # X = self._engineer_features(X)
+        # X = self._filter_low_impact_features(X, Y)
 
         # Cross-validation.
         gkf = GroupKFold(n_splits=self._K_FOLD_CROSS_SPLITS)
@@ -430,8 +430,8 @@ class RandomForestBaseline(object):
 if __name__ == "__main__":
     random_forest_model = RandomForestBaseline(
         path_to_config="config.yaml",
-        path_to_data="C:/Users/student01/Desktop/data/all_ships_partial_v4.csv",
+        path_to_data="data/all_ships_v7.csv",
     )
     random_forest_model.train()
-    random_forest_model.evaluate(print_results=True)
+    random_forest_model.evaluate(print_results=True, save_best_model=True)
     random_forest_model.plot_all(save=False)

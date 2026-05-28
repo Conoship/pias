@@ -18,18 +18,15 @@ from src.models.random_forest_baseline import RandomForestBaseline
 
 
 class _FeatureEngineer(Protocol):
-    def __call__(self, X: pd.DataFrame) -> pd.DataFrame:
-        ...
+    def __call__(self, X: pd.DataFrame) -> pd.DataFrame: ...
 
 
 class _IntervalPredictor(Protocol):
-    def predict_interval(self, X: pd.DataFrame) -> tuple[Any, Any]:
-        ...
+    def predict_interval(self, X: pd.DataFrame) -> tuple[Any, Any]: ...
 
 
 class _TreeEstimator(Protocol):
-    def predict(self, X: Any) -> Any:
-        ...
+    def predict(self, X: Any) -> Any: ...
 
 
 class _ForestPredictor(Protocol):
@@ -186,9 +183,11 @@ def _insert_layout_data(
                 ship_version_id,
                 row["xml_compartment_id"],
                 str(xml_guid),
-                row["compartment_name"]
-                if not _is_missing(row["compartment_name"])
-                else "",
+                (
+                    row["compartment_name"]
+                    if not _is_missing(row["compartment_name"])
+                    else ""
+                ),
                 int(bool(row["selected_for_output"])),
                 row["design_content_id_number"],
             ),
@@ -242,9 +241,11 @@ def _insert_layout_data(
             (
                 ship_version_id,
                 compartment_id,
-                row["opening_description"]
-                if not _is_missing(row["opening_description"])
-                else "",
+                (
+                    row["opening_description"]
+                    if not _is_missing(row["opening_description"])
+                    else ""
+                ),
                 row["opening_type"] if not _is_missing(row["opening_type"]) else "",
                 row["L"],
                 row["B"],
@@ -519,6 +520,9 @@ def run_agent_pipeline(
 
     if engineer_features is not None:
         X = engineer_features(X)
+
+    print(X)
+    print(feature_cols)
     X = X[feature_cols]
 
     # Predict based on the model type - once a single performing model is selected, this can be narrowed down.
