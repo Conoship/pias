@@ -69,7 +69,7 @@ class MainDimensionsParser(object):
         Extracts the project name from an RTF line.
 
         The project name is formatted differently than the numeric dimensions,
-        for example: `{Project Name : A30333}`.
+        for example: `{Project name : A30333}`.
 
         Args:
             line (str):
@@ -79,7 +79,7 @@ class MainDimensionsParser(object):
             str | None:
                 The parsed project name, or `None` when the line does not contain it.
         """
-        match = re.search(r"\{?\s*Project Name\s*:\s*([^}\s]+)", line)
+        match = re.search(r"\{?\s*Project name\s*:\s*([^}\s]+)", line)
         if match is None:
             return None
 
