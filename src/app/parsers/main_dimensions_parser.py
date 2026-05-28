@@ -64,6 +64,27 @@ class MainDimensionsParser(object):
 
         return None
 
+    def _extract_project_name(self, line: str) -> str | None:
+        """
+        Extracts the project name from an RTF line.
+
+        The project name is formatted differently than the numeric dimensions,
+        for example: `{Project Name : A30333}`.
+
+        Args:
+            line (str):
+                The line being parsed in the RTF file.
+
+        Returns:
+            str | None:
+                The parsed project name, or `None` when the line does not contain it.
+        """
+        match = re.search(r"\{?\s*Project Name\s*:\s*([^}\s]+)", line)
+        if match is None:
+            return None
+
+        return match.group(1).strip()
+
     def _parse_float(self, value: str) -> float:
         """
         Converts a parsed RTF field value to a float.
@@ -138,6 +159,12 @@ class MainDimensionsParser(object):
             with open(file_path, "r", encoding="utf-8") as file:
                 found_cols: set[str] = set()
                 for idx, line in enumerate(file):
+                    if "Project Name" not in found_cols:
+                        project_name = self._extract_project_name(line)
+                        if project_name is not None:
+                            self._df.loc[0, "Project Name"] = project_name
+                            found_cols.add("Project Name")
+
                     if idx < self._GENERAL_PARTICULARS_START:
                         continue
                     if idx > self._FRAME_SPACING_DEFS_START:
@@ -146,23 +173,17 @@ class MainDimensionsParser(object):
                     for current_col in self._cols:
                         if current_col in found_cols:
                             continue
-
-                        # The Ship name has a different format in the .rtf file compared to the other features.
                         if current_col == "Project Name":
-                            pattern = re.compile(r"Project Name\s*:\s*([A-Za-z0-9]+)")
-                            ship_name = pattern.findall(line)[0]
-                            self._df.loc[0, current_col] = ship_name
                             continue
 
-                        else:
-                            # Extract value safely using field-aware regex.
-                            value = self._extract_field_value(line, current_col)
+                        # Extract value safely using field-aware regex.
+                        value = self._extract_field_value(line, current_col)
 
-                            if value is None:
-                                continue
+                        if value is None:
+                            continue
 
-                            self._df.loc[0, current_col] = self._parse_float(value)
-                            found_cols.add(current_col)
+                        self._df.loc[0, current_col] = self._parse_float(value)
+                        found_cols.add(current_col)
 
                     if len(found_cols) == len(self._cols):
                         break
@@ -189,7 +210,6 @@ class MainDimensionsParser(object):
                 columns={old: new for old, new in zip(self._cols, renamed_cols)},
                 inplace=True,
             )
-            print(self._df)
             return self._df
 
         except Exception as e:
