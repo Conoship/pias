@@ -253,9 +253,9 @@ The Tests cover:
 | ----- | ----------- |
 | Objective | Test that the app checks if the two files are for the same ship. |
 | Steps | Enter a XML and a RTF file from two different ship designs and click Run. |
-| Expected result | The app should warn the user that there is a mismatch between the ships described by the files. |
-| Actual result | |
-| Status | |
+| Expected result | The app warns the user that there is a mismatch between the ships described by the files and does not run the pipeline. |
+| Actual result | The app warned the user that there is a mismatch between the ships described by the files and did not run the pipeline. |
+| Status | Passed |
 
 ## 6. Defects Found
 
@@ -267,5 +267,5 @@ The Tests cover:
 
 | Result | Count |
 | ------ | ----- |
-| Passed |  17   |
+| Passed |  18   |
 | Failed |       |
