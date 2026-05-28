@@ -63,6 +63,24 @@ class MainDimensionsParser(object):
 
         return None
 
+    def _parse_float(self, value: str) -> float:
+        """
+        Converts a parsed RTF field value to a float.
+
+        Args:
+            value (str):
+                The parsed RTF field value.
+
+        Raises:
+            ValueError:
+                If the parsed value cannot be converted to a float.
+
+        Returns:
+            float:
+                The parsed float value.
+        """
+        return float(value.replace(",", "."))
+
     def _validate_df(self) -> None:
         """
         Method to validate the filled DataFrame before returning it in `parse_file` for missing values.
@@ -131,7 +149,7 @@ class MainDimensionsParser(object):
                     value = self._extract_field_value(line, current_col)
 
                     if value is not None:
-                        self._df.loc[0, current_col] = value
+                        self._df.loc[0, current_col] = self._parse_float(value)
 
                         # Move to next column only when value is found.
                         if column_searching < len(self._cols) - 1:

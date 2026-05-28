@@ -1,3 +1,6 @@
+# Import standard library packages.
+from typing import cast
+
 # Import third party packages.
 import pandas as pd
 from PySide6.QtCore import QFile
@@ -229,7 +232,8 @@ class AgentPipelineController(object):
 
         # Calculate the Required Index (R) using the given formulae.
         try:
-            required_index = self._calculate_required_index(main_dimensions_df["loa"])
+            ship_length = cast(float, main_dimensions_df.at[0, "loa"])
+            required_index = self._calculate_required_index(ship_length)
 
         except ValueError as error:
             QMessageBox.warning(self._window, "Invalid Ship Length", str(error))
