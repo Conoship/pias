@@ -76,7 +76,7 @@ class TestLoadData:
     def test_load_data_no_nulls_in_y(self):
         model = make_model()
         df, X, Y = model._load_data()
-        assert Y.isnull().sum().sum() == 0, "Y contains null values"
+        assert Y.isnull().sum() == 0, "Y contains null values"
 
 
 class TestLoadConfig:
