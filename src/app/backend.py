@@ -507,8 +507,13 @@ def run_agent_pipeline(
         )
         return
 
+    # Keep the exact model feature columns and coerce them to numeric. Some SQL
+    # features can come back as object dtype when their values are NULL.
+    X = features_df.copy()
+    for col in feature_cols:
+        X[col] = pd.to_numeric(X[col], errors="coerce")
+
     # Split the data into each loading condition so we can get model output for each loading condition.
-    X = features_df.select_dtypes(include=["number"])
     if "condition_code" in X.columns:
         X = (
             X[X["condition_code"].isin([0, 1, 2])]
