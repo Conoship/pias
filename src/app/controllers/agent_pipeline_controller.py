@@ -81,7 +81,7 @@ class AgentPipelineController(object):
             light_ci = confidence_intervals[0]
             partial_ci = confidence_intervals[1]
             deepest_ci = confidence_intervals[2]
-            confidence_intervals_text = f"[{round(light_ci[0], 3)}, {round(light_ci[1]), 3}], [{round(partial_ci[0], 3)}, {round(partial_ci[1], 3)}], [{round(deepest_ci[0], 3)}, {round(deepest_ci[1], 3)}]"
+            confidence_intervals_text = f"[{round(light_ci[0], 3)}, {round(light_ci[1], 3)}], [{round(partial_ci[0], 3)}, {round(partial_ci[1], 3)}], [{round(deepest_ci[0], 3)}, {round(deepest_ci[1], 3)}]"
             confidence_intervals_label.setText(confidence_intervals_text)
 
         if pass_results_label:
