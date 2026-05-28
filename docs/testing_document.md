@@ -234,8 +234,8 @@ The Tests cover:
 | Objective | Test that model results are readable in the UI. |
 | Steps | Run a successful prediction. |
 | Expected result | The prediction is rounded, the confidence intervals are displayed as `[lower, upper]` and the pass results and overall summary are clearly readable. |
-| Actual result | |
-| Status | |
+| Actual result | The prediction was rounded, the confidence intervals were displayed as `[lower, upper]` and the pass results and overall summary were clearly readable |
+| Status | Passed |
 
 ### AT-19: Extreme Numeric Values
 
@@ -267,5 +267,5 @@ The Tests cover:
 
 | Result | Count |
 | ------ | ----- |
-| Passed |  18   |
+| Passed |  19   |
 | Failed |       |
