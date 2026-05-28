@@ -10,9 +10,8 @@ from PySide6.QtWidgets import QMessageBox, QWidget
 from src.models.random_forest_baseline import RandomForestBaseline  # noqa: F401
 
 
-# TODO: Modify this function to return one prediction, CI and pass result per loading condition.
 def run_agent_pipeline(
-    window: QWidget, required_index: float, df_final: pd.DataFrame
+    window: QWidget, required_index: float, df: pd.DataFrame
 ) -> tuple[list[float], list[tuple[float, float]], list[str]] | None:
     """
     Execute the AI agent pipeline: load data, run the trained model,
@@ -32,12 +31,6 @@ def run_agent_pipeline(
         tuple[list[float], list[tuple[float, float]], list[str]]:
             A tuple containing the lists of predictions, 95% CIs and the A against R comparison result (one element per loading condition)
     """
-    # If we use just mock data:
-    # df = pd.read_csv("./mockdata.csv")
-
-    # If we use user input:
-    df = df_final
-
     # Load the model.
     try:
         with open("models/model.pkl", "rb") as file:

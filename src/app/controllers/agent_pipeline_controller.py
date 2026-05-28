@@ -2,7 +2,7 @@
 import pandas as pd
 from PySide6.QtCore import QFile
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QFrame, QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QLabel, QMessageBox, QVBoxLayout, QWidget
 
 # Import local packages.
 from src.app.backend import run_agent_pipeline
@@ -121,6 +121,36 @@ class AgentPipelineController(object):
                             widget.deleteLater()
                 layout.addWidget(results_widget)
 
+    def _calculate_required_index(self, ship_length: float) -> float:
+        """
+        Method to calculate the Required Index (R), according to the SOLAS requirements.
+
+        Args:
+            ship_length (float):
+                The length of the ship.
+
+        Raises:
+            ValueError:
+                If `ship_length` is less than 80.
+
+        Returns:
+            required_index (float):
+                The Required Index (R).
+        """
+        required_index = 0.0
+        if ship_length < 80:
+            raise ValueError(
+                "SOLAS Subdivision requirements apply to ships that are >= 80 m"
+            )
+
+        if ship_length > 100:
+            required_index = 1 - (128 / (ship_length + 152))
+        else:
+            r_0 = 1 - (128 / (ship_length + 152))
+            required_index = 1 - (1 / ((ship_length / 100) * (r_0 / (1 - r_0))))
+
+        return required_index
+
     def handle_agent_pipeline(self) -> None:
         """
         Execute the AI agent pipeline: load data, run the trained model,
@@ -134,7 +164,7 @@ class AgentPipelineController(object):
         main_dimensions_path, layouts_path = file_paths
 
         # Columns and data frame for the user defined UI values.
-        df_cols = [
+        user_df_cols = [
             "Subdivision Length",
             "Light Service Draft",
             "Partial Subdivision",
@@ -143,7 +173,7 @@ class AgentPipelineController(object):
             "Partial GM Value",
             "Deep GM Value",
         ]
-        df = pd.DataFrame(columns=df_cols)
+        user_df = pd.DataFrame(columns=user_df_cols)
 
         # Collect the user defined values from the UI.
         user_defined_values = self._collector_controller.collect_user_defined_value()
@@ -168,31 +198,45 @@ class AgentPipelineController(object):
             ) = user_defined_values
 
             # Add the UI data to the df.
-            df["Subdivision Length"] = subdivision_length
-            df["Light Service Draft"] = light_service_draft
-            df["Partial Subdivision"] = (light_service_draft - subdivision_draft) * 0.6
-            df["Subdivision Draft"] = subdivision_draft
-            df["Light GM Value"] = light_gm_value
-            df["Partial GM Value"] = partial_gm_value
-            df["Deep GM Value"] = deep_gm_value
+            user_df["Subdivision Length"] = subdivision_length
+            user_df["Light Service Draft"] = light_service_draft
+            user_df["Partial Subdivision"] = (
+                light_service_draft - subdivision_draft
+            ) * 0.6
+            user_df["Subdivision Draft"] = subdivision_draft
+            user_df["Light GM Value"] = light_gm_value
+            user_df["Partial GM Value"] = partial_gm_value
+            user_df["Deep GM Value"] = deep_gm_value
 
         # Import the data to a csv and pass it to the agent.
-        # Parse the file paths.
-        main_dimensions_df = MainDimensionsParser().parse_file(main_dimensions_path)
-        layouts_df = LayoutsParser().parse_file(layouts_path)
+        # Parse the file paths - if the parsing process raises an Exception show it to the user.
+        try:
+            main_dimensions_df = MainDimensionsParser().parse_file(main_dimensions_path)
+            layouts_df = LayoutsParser().parse_file(layouts_path)
+
+        except Exception as e:
+            QMessageBox.warning(
+                self._window, "There was an error parsing one of the files", str(e)
+            )
+            return
 
         # Combine the Data Frames.
-        df_final = pd.DataFrame()
+        df = pd.DataFrame()
         if user_defined_values is not None:
-            df_final = pd.concat([df, main_dimensions_df, layouts_df], axis=1)
+            df = pd.concat([user_df, main_dimensions_df, layouts_df], axis=1)
         else:
-            df_final = pd.concat([main_dimensions_df, layouts_df], axis=1)
+            df = pd.concat([main_dimensions_df, layouts_df], axis=1)
 
         # Calculate the Required Index (R) using the given formulae.
-        required_index = 0
+        try:
+            required_index = self._calculate_required_index(main_dimensions_df["loa"])
+
+        except ValueError as error:
+            QMessageBox.warning(self._window, "Invalid Ship Length", str(error))
+            return
 
         # Run the agent pipeline and collect results.
-        agent_result = run_agent_pipeline(self._window, required_index, df_final)
+        agent_result = run_agent_pipeline(self._window, required_index, df)
         if agent_result:
             predictions, confidence_intervals, pass_results = agent_result
 

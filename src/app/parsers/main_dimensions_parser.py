@@ -12,6 +12,10 @@ class MainDimensionsParser(object):
     # The number of the line where the Frame Spacing Definitions start.
     _FRAME_SPACING_DEFS_START = 47
 
+    # List of all columns that we accept being missing in the RTF file.
+    # TODO: Implement this.
+    _ACCEPT_MISSING_COLS = ()
+
     def __init__(self) -> None:
         """
         Parser class for the Main Dimensions RTF file.
@@ -59,6 +63,20 @@ class MainDimensionsParser(object):
 
         return None
 
+    def _validate_df(self) -> None:
+        """
+        Method to validate the filled DataFrame before returning it in `parse_file` for missing values.
+
+        Raises:
+            Exception:
+                In case a column, that is not in `_ACCEPT_MISSING_COLS` does not have a value.
+        """
+        for col in self._df.columns:
+            if not self._df[col] and col not in self._ACCEPT_MISSING_COLS:
+                raise Exception(
+                    f"Parser could not fill all columns of the DataFrame, possibly due to value of {col} being missing."
+                )
+
     def parse_file(self, file_path: str) -> pd.DataFrame:
         """
         Method to parse the RTF file.
@@ -67,6 +85,9 @@ class MainDimensionsParser(object):
             file_path (str):
                 The path to the `.rtf` file to parse
 
+        Raises:
+            Exception:
+                In case `self._df` fails validation.
         Returns:
             pd.DataFrame:
                 The resulting pandas DataFrame
@@ -108,11 +129,17 @@ class MainDimensionsParser(object):
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
 
-        # Before returning the DataFrame, rename the columns to match the ones in the database.
-        renamed_cols = ["lpp", "loa", "breadth", "depth"]
-        self._df.rename(
-            columns={old: new for old, new in zip(self._cols, renamed_cols)},
-            inplace=True,
-        )
+        try:
+            # Validate the DataFrame.
+            self._validate_df()
 
-        return self._df
+            # Before returning the DataFrame, rename the columns to match the ones in the database.
+            renamed_cols = ["lpp", "loa", "breadth", "depth"]
+            self._df.rename(
+                columns={old: new for old, new in zip(self._cols, renamed_cols)},
+                inplace=True,
+            )
+            return self._df
+
+        except Exception as e:
+            raise e
