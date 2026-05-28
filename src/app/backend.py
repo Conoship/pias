@@ -7,7 +7,19 @@ import pandas as pd
 from PySide6.QtWidgets import QMessageBox, QWidget
 
 # Import local packages.
-from src.models.random_forest_baseline import RandomForestBaseline  # noqa: F401
+from src.models.random_forest_baseline import RandomForestBaseline
+
+
+class _ModelUnpickler(pickle.Unpickler):
+    """
+    Unpickler that maps legacy model pickles created from script execution.
+    """
+
+    def find_class(self, module: str, name: str) -> object:
+        if module == "__main__" and name == "RandomForestBaseline":
+            return RandomForestBaseline
+
+        return super().find_class(module, name)
 
 
 def run_agent_pipeline(
@@ -34,13 +46,21 @@ def run_agent_pipeline(
     # Load the model.
     try:
         with open("models/model.pkl", "rb") as file:
-            saved = pickle.load(file)
+            saved = _ModelUnpickler(file).load()
 
     except FileNotFoundError:
         QMessageBox.warning(
             window,
             "File not found",
             "The ML model .pkl file could not be found.",
+        )
+        return
+
+    except (AttributeError, EOFError, pickle.UnpicklingError) as error:
+        QMessageBox.warning(
+            window,
+            "Invalid model file",
+            f"The ML model .pkl file could not be loaded: {error}",
         )
         return
 
