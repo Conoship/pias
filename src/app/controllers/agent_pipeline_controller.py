@@ -98,7 +98,7 @@ class AgentPipelineController(object):
             weighted_attained_index = (
                 0.2 * predictions[0] + 0.4 * predictions[1] + 0.4 * predictions[1]
             )
-            overall_summary_text = f"Attained Index (A): {weighted_attained_index} Required Index (R): {required_index}"
+            overall_summary_text = f"Attained Index (A): {round(weighted_attained_index, 3)} Required Index (R): {round(required_index), 3}"
             if weighted_attained_index >= required_index:
                 overall_summary_text += " PASSED"
             else:
