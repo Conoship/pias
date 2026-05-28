@@ -102,8 +102,7 @@ class MainDimensionsParser(object):
             values = self._df[col]
             has_value = values.apply(
                 lambda value: not (
-                    pd.isna(value)
-                    or (isinstance(value, str) and value.strip() == "")
+                    pd.isna(value) or (isinstance(value, str) and value.strip() == "")
                 )
             ).any()
 
