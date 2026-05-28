@@ -71,11 +71,33 @@ class MainDimensionsParser(object):
             Exception:
                 In case a column, that is not in `_ACCEPT_MISSING_COLS` does not have a value.
         """
-        for col in self._df.columns:
-            if not self._df[col] and col not in self._ACCEPT_MISSING_COLS:
-                raise Exception(
-                    f"Parser could not fill all columns of the DataFrame, possibly due to value of {col} being missing."
+        missing_cols = []
+
+        for col in self._cols:
+            if col in self._ACCEPT_MISSING_COLS:
+                continue
+
+            if col not in self._df.columns or self._df.empty:
+                missing_cols.append(col)
+                continue
+
+            values = self._df[col]
+            has_value = values.apply(
+                lambda value: not (
+                    pd.isna(value)
+                    or (isinstance(value, str) and value.strip() == "")
                 )
+            ).any()
+
+            if not has_value:
+                missing_cols.append(col)
+
+        if missing_cols:
+            missing_col_names = ", ".join(missing_cols)
+            raise Exception(
+                "Parser could not fill all required columns of the DataFrame, "
+                f"possibly due to missing values for: {missing_col_names}."
+            )
 
     def parse_file(self, file_path: str) -> pd.DataFrame:
         """
