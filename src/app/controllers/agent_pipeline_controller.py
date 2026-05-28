@@ -98,11 +98,11 @@ class AgentPipelineController(object):
             weighted_attained_index = (
                 0.2 * predictions[0] + 0.4 * predictions[1] + 0.4 * predictions[1]
             )
-            overall_summary_text = f"Attained Index (A): {round(weighted_attained_index, 3)} Required Index (R): {round(required_index), 3}"
+            overall_summary_text = f"Attained Index (A): {round(weighted_attained_index, 3)} Required Index (R): {round(required_index, 3)}"
             if weighted_attained_index >= required_index:
-                overall_summary_text += " PASSED"
+                overall_summary_text += " Ship PASSED"
             else:
-                overall_summary_text += " FAILED"
+                overall_summary_text += " Ship FAILED"
             overall_summary_label.setText(overall_summary_text)
 
         # Put the widget to the Results Frame in the Main Window.
