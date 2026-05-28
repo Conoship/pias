@@ -135,26 +135,28 @@ class MainDimensionsParser(object):
         """
         try:
             with open(file_path, "r", encoding="utf-8") as file:
-                column_searching = 0
+                found_cols: set[str] = set()
                 for idx, line in enumerate(file):
                     if idx < self._GENERAL_PARTICULARS_START:
                         continue
                     if idx > self._FRAME_SPACING_DEFS_START:
                         break
 
-                    current_col = self._cols[column_searching]
+                    for current_col in self._cols:
+                        if current_col in found_cols:
+                            continue
 
-                    # Extract value safely using field-aware regex.
-                    value = self._extract_field_value(line, current_col)
+                        # Extract value safely using field-aware regex.
+                        value = self._extract_field_value(line, current_col)
 
-                    if value is not None:
+                        if value is None:
+                            continue
+
                         self._df.loc[0, current_col] = self._parse_float(value)
+                        found_cols.add(current_col)
 
-                        # Move to next column only when value is found.
-                        if column_searching < len(self._cols) - 1:
-                            column_searching += 1
-                        else:
-                            break
+                    if len(found_cols) == len(self._cols):
+                        break
 
         except FileNotFoundError:
             print(f"Error: The file '{file_path}' was not found.")
