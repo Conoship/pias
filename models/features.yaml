@@ -1,0 +1,39 @@
+feature_sets:
+  volume_ratios:
+    - condition_code
+    - mg
+    - vcg
+    - trim
+    - draft_over_depth
+    - displacement_per_length
+    - total_compartment_volume
+    - cargo_volume_ratio
+    - fuel_oil_volume_ratio
+    - gas_oil_volume_ratio
+    - potable_water_volume_ratio
+    - ballast_volume_ratio
+    - void_volume_ratio
+    - cargohold_hatch_volume_ratio
+
+  volume_totals:
+    - condition_code
+    - mg
+    - vcg
+    - trim
+    - draft_over_depth
+    - displacement_per_length
+    - cargo_volume_total
+    - fuel_oil_volume_total
+    - gas_oil_volume_total
+    - potable_water_volume_total
+    - ballast_volume_total
+    - void_volume_total
+    - cargohold_hatch_volume_total
+
+  loading_only:
+    - condition_code
+    - mg
+    - vcg
+    - trim
+    - draft_over_depth
+    - displacement_per_length

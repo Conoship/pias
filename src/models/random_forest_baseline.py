@@ -12,6 +12,11 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score, mean_absolute_error
 from sklearn.model_selection import GroupKFold, learning_curve
 
+from src.features.feature_sets import (
+    DEFAULT_FEATURE_SET,
+    select_feature_columns,
+)
+
 
 class RandomForestBaseline(object):
     # The name of the target hyperparameter configuration.
@@ -31,6 +36,9 @@ class RandomForestBaseline(object):
 
     # The column of the dataset to use as label (Y).
     _Y_LABEL = "target_attained_index"
+
+    # The YAML feature set to use when models/features.yaml is present.
+    _FEATURE_SET_NAME = DEFAULT_FEATURE_SET
 
     # The column by which we create the groups for K-Fold Cross-Validation.
     _GROUP_BY = "ship_id"
@@ -69,9 +77,12 @@ class RandomForestBaseline(object):
             df, X, Y (tuple): A tuple containing the Pandas DataFrame, X and Y
         """
         df = pd.read_csv(self.path_to_data)
-        X = df.select_dtypes(include=["number"]).drop(
-            columns=self._COLS_TO_DROP, errors="ignore"
+        feature_cols = select_feature_columns(
+            df,
+            feature_set_name=self._FEATURE_SET_NAME,
+            fallback_drop_columns=self._COLS_TO_DROP,
         )
+        X = df[feature_cols]
         Y = df[self._Y_LABEL]
 
         return df, X, Y

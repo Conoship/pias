@@ -10,6 +10,11 @@ from sklearn.model_selection import GroupKFold
 from mapie.regression import SplitConformalRegressor
 from sklearn.metrics import r2_score, mean_absolute_error
 
+from src.features.feature_sets import (
+    DEFAULT_FEATURE_SET,
+    select_feature_columns,
+)
+
 
 class MapieXGBRegressor(object):
     # The name of the target hyperparameter configuration.
@@ -50,6 +55,9 @@ class MapieXGBRegressor(object):
     # The column of the dataset to use as label (Y).
     _Y_LABEL = "target_attained_index"
 
+    # The YAML feature set to use when models/features.yaml is present.
+    _FEATURE_SET_NAME = DEFAULT_FEATURE_SET
+
     # The column by which we create the groups for K-Fold Cross-Validation.
     _GROUP_BY = "ship_id"
 
@@ -80,6 +88,7 @@ class MapieXGBRegressor(object):
         self.r2_scores = []
         self.mae_scores = []
         self.fold_results = []
+        self._feature_cols = self._X_FEATURES
 
     def _load_data(self) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series]:
         """
@@ -89,7 +98,13 @@ class MapieXGBRegressor(object):
             df, X, Y (tuple): A tuple containing the Pandas DataFrame, X and Y.
         """
         df = pd.read_csv(self.path_to_data)
-        X = df[self._X_FEATURES]
+        feature_cols = select_feature_columns(
+            df,
+            feature_set_name=self._FEATURE_SET_NAME,
+            fallback_features=self._X_FEATURES,
+        )
+        self._feature_cols = feature_cols
+        X = df[feature_cols]
         Y = df[self._Y_LABEL]
 
         return df, X, Y
@@ -117,7 +132,7 @@ class MapieXGBRegressor(object):
                 {
                     "model_type": "MAPIE XGB Regressor",
                     "model": mapie_model,
-                    "feature_cols": self._X_FEATURES,
+                    "feature_cols": self._feature_cols,
                     "engineer_features": None,
                 },
                 file,

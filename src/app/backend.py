@@ -342,6 +342,11 @@ def _extract_feature_query(script_path: Path) -> str:
             if isinstance(node.value.value, str):
                 return node.value.value
 
+    namespace = _load_feature_script_namespace(script_path)
+    imported_query = namespace.get("query")
+    if isinstance(imported_query, str):
+        return imported_query
+
     raise ValueError(f"No query string found in {script_path}.")
 
 

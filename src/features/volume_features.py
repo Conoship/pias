@@ -128,6 +128,78 @@ def fill_missing_breadth(points: pd.DataFrame) -> pd.DataFrame:
     return points
 
 
+def fill_missing_length(points: pd.DataFrame) -> pd.DataFrame:
+    """
+    Fill missing L at the longitudinal end points.
+
+    Assumptions:
+    - NULL L on forward/front points means the forward perpendicular.
+    - If LPP is missing, the known forward layout end is used.
+    - NULL L on aft points means the aft fallback station at -3.
+    - NULL L on midship points means the full cargo-hold span.
+    """
+    points = points.copy()
+
+    missing_l = points["L"].isna()
+    aftfwd = points["aftfwd_and_num"].fillna("").astype(str).str.lower()
+    lpp = pd.to_numeric(points["lpp"], errors="coerce")
+    ship_max_l = pd.to_numeric(points["ship_max_l"], errors="coerce")
+    cargo_min_l = pd.to_numeric(points["cargo_min_l"], errors="coerce")
+    cargo_max_l = pd.to_numeric(points["cargo_max_l"], errors="coerce")
+
+    forward_point = aftfwd.str.contains("fwd|fore|front", regex=True)
+    aft_point = aftfwd.str.contains("aft", regex=False)
+    midship_point = aftfwd.str.contains("mid|middle", regex=True)
+
+    forward_l = lpp.fillna(ship_max_l)
+    points.loc[missing_l & forward_point, "L"] = forward_l[
+        missing_l & forward_point
+    ]
+    points.loc[missing_l & aft_point, "L"] = -3.0
+
+    midship_rows = points[missing_l & midship_point]
+    if not midship_rows.empty:
+        cargo_start = midship_rows.copy()
+        cargo_end = midship_rows.copy()
+
+        cargo_start["L"] = cargo_min_l.loc[midship_rows.index]
+        cargo_end["L"] = cargo_max_l.loc[midship_rows.index]
+
+        points = points.drop(index=midship_rows.index)
+        points = pd.concat([points, cargo_start, cargo_end], ignore_index=True)
+
+    return points
+
+
+def fill_missing_height(points: pd.DataFrame) -> pd.DataFrame:
+    """
+    Fill missing H from the frustum point vertical position.
+
+    Assumptions:
+    - Aft/Fwd 1 and 2 are bottom points.
+    - Aft/Fwd 3 and 4 are top points.
+    - Missing bottom H is 0.
+    - Missing top H is depth in midship and depth + 1 at aft/fwd ends.
+    """
+    points = points.copy()
+
+    missing_h = points["H"].isna()
+    aftfwd = points["aftfwd_and_num"].fillna("").astype(str).str.lower()
+    depth = pd.to_numeric(points["depth"], errors="coerce")
+
+    bottom_point = aftfwd.str.contains(r"[12]\s*$", regex=True)
+    top_point = aftfwd.str.contains(r"[34]\s*$", regex=True)
+    end_point = aftfwd.str.contains("aft|fwd|fore|front", regex=True)
+
+    top_height = np.where(end_point, depth + 1.0, depth)
+    top_height = pd.Series(top_height, index=points.index)
+
+    points.loc[missing_h & bottom_point, "H"] = 0.0
+    points.loc[missing_h & top_point, "H"] = top_height[missing_h & top_point]
+
+    return points
+
+
 def derive_compartment_volume_by_type(conn: object) -> pd.DataFrame:
     """
     Derive compartment volume per type for each ship_version_id.
@@ -136,6 +208,36 @@ def derive_compartment_volume_by_type(conn: object) -> pd.DataFrame:
     #  Load geometry points from database
     points = pd.read_sql_query(
         """
+        WITH geometry_bounds AS (
+            SELECT
+                comp.ship_version_id,
+                MIN(CASE
+                    WHEN comp.design_content_id_number IN (1, 12)
+                    THEN fp.L
+                END) AS cargo_min_l,
+                MAX(CASE
+                    WHEN comp.design_content_id_number IN (1, 12)
+                    THEN fp.L
+                END) AS cargo_max_l,
+                MAX(fp.L) AS ship_max_l
+
+            FROM compartment comp
+
+            JOIN subcompartment sub
+                ON sub.compartment_id = comp.id
+
+            JOIN subcompartment_shape ss
+                ON ss.shape_guid = sub.shape_guid
+               AND ss.ship_version_id = comp.ship_version_id
+
+            JOIN frustum_point fp
+                ON fp.subcompartment_shape_id = ss.id
+
+            WHERE fp.L IS NOT NULL
+
+            GROUP BY comp.ship_version_id
+        )
+
         SELECT
             comp.ship_version_id,
             comp.id AS compartment_id,
@@ -146,10 +248,16 @@ def derive_compartment_volume_by_type(conn: object) -> pd.DataFrame:
             ss.side,
 
             md.breadth / 2.0 AS half_breadth,
+            md.depth,
+            md.lpp,
+            gb.cargo_min_l,
+            gb.cargo_max_l,
+            gb.ship_max_l,
 
+            fp.aftfwd_and_num,
             fp.L,
             fp.B,
-            COALESCE(fp.H, 0) AS H
+            fp.H
 
         FROM compartment comp
 
@@ -166,7 +274,8 @@ def derive_compartment_volume_by_type(conn: object) -> pd.DataFrame:
         LEFT JOIN main_dimensions md
             ON md.ship_version_id = comp.ship_version_id
 
-        WHERE fp.L IS NOT NULL
+        LEFT JOIN geometry_bounds gb
+            ON gb.ship_version_id = comp.ship_version_id
         """,
         conn,
     )
@@ -174,7 +283,14 @@ def derive_compartment_volume_by_type(conn: object) -> pd.DataFrame:
     if points.empty:
         return pd.DataFrame(columns=["ship_version_id"])
 
+    points = fill_missing_length(points)
+    points = points.dropna(subset=["L"])
+
+    if points.empty:
+        return pd.DataFrame(columns=["ship_version_id"])
+
     points = fill_missing_breadth(points)
+    points = fill_missing_height(points)
 
     #  Calculate volume for each subcompartment
     subcompartment_rows = []
