@@ -55,7 +55,7 @@ class MapieXGBRegressor(object):
     # The column of the dataset to use as label (Y).
     _Y_LABEL = "target_attained_index"
 
-    # The YAML feature set to use when models/features.yaml is present.
+    # The YAML feature set to use when src/models/features.yaml is present.
     _FEATURE_SET_NAME = DEFAULT_FEATURE_SET
 
     # The column by which we create the groups for K-Fold Cross-Validation.
@@ -253,7 +253,7 @@ class MapieXGBRegressor(object):
 
 if __name__ == "__main__":
     xgb_model = MapieXGBRegressor(
-        path_to_config="config.yaml",
+        path_to_config="src/models/config.yaml",
         path_to_data="C:/Users/student01/Desktop/rug-project/pias/data/all_ships_all_conditions_v5.csv",
     )
     xgb_model.train()

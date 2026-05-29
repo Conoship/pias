@@ -6,6 +6,7 @@ env/
 *pyc
 utils/report.pdf
 config.yaml
+!src/models/config.yaml
 *.pkl
 localhost.db
 mockdata/
