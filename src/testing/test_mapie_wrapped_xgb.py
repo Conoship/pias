@@ -1,13 +1,15 @@
+# Import standard library packages.
 import os
 import pickle
 
+# Import third party packages.
 import numpy as np
 import pandas as pd
 import pytest
 from mapie.regression import SplitConformalRegressor
 
-from mapie_xgb_regressor import MapieXGBRegressor
-
+# Import local packages.
+from src.models.mapie_wrapped_xgb import MapieXGBRegressor
 
 CONFIG_PATH = ""
 DATA_PATH = ""
@@ -15,6 +17,7 @@ DATA_PATH = ""
 
 def make_model() -> MapieXGBRegressor:
     return MapieXGBRegressor(path_to_config=CONFIG_PATH, path_to_data=DATA_PATH)
+
 
 class TestInit:
     def test_class_instantiates(self):
@@ -48,6 +51,7 @@ class TestInit:
     def test_fold_results_starts_empty(self):
         model = make_model()
         assert model.fold_results == []
+
 
 class TestLoadData:
     def test_load_data_returns_tuple(self):
@@ -111,6 +115,7 @@ class TestLoadData:
         df, X, Y = model._load_data()
         assert Y.isnull().sum() == 0, "Y contains null values"
 
+
 class TestLoadConfig:
     def test_load_config_returns_dict(self):
         model = make_model()
@@ -136,6 +141,7 @@ class TestLoadConfig:
         model = MapieXGBRegressor(path_to_config="", path_to_data=DATA_PATH)
         with pytest.raises((KeyError, FileNotFoundError)):
             model._load_config()
+
 
 class TestTrain:
     def test_train_runs_without_error(self):
@@ -201,6 +207,7 @@ class TestTrain:
         model.train()
         second_run = len(model.fold_results)
         assert first_run == second_run, "fold_results not cleared between runs"
+
 
 class TestEvaluate:
     def test_evaluate_runs_without_error(self):
@@ -269,6 +276,7 @@ class TestEvaluate:
         model.train()
         model.evaluate(print_results=True)
         assert "MAE" in capsys.readouterr().out
+
 
 class TestSaveModel:
     def test_save_model_creates_file(self, tmp_path, monkeypatch):
