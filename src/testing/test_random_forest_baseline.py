@@ -5,7 +5,7 @@ from unittest.mock import patch
 from src.models.random_forest_baseline import RandomForestBaseline
 
 # Paths
-CONFIG_PATH = "C:/Users/student01/Desktop/rug-project/pias/config.yaml"
+CONFIG_PATH = "src/models/config.yaml"
 DATA_PATH = "C:/Users/student01/Desktop/data/all_ships_partial_v4.csv"
 
 

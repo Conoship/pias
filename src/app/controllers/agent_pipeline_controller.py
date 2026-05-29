@@ -96,7 +96,7 @@ class AgentPipelineController(object):
         if overall_summary_label:
             # A = 0.2 * LIGHT_A + 0.4 * PARTIAL_A + 0.4 * DEEPEST_A.
             weighted_attained_index = (
-                0.2 * predictions[0] + 0.4 * predictions[1] + 0.4 * predictions[1]
+                0.2 * predictions[0] + 0.4 * predictions[1] + 0.4 * predictions[2]
             )
             overall_summary_text = f"Attained Index (A): {round(weighted_attained_index, 3)} Required Index (R): {round(required_index, 3)}"
             if weighted_attained_index >= required_index:

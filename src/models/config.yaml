@@ -1,0 +1,32 @@
+# This YAML configuration file stores hyperparameters and settings for
+# machine learning models and experiments in this project.
+
+# Configuration for the following files implementing a XGB Regressor:
+# xbg_model_fustrum_features.py
+# xgb_stability_baseline.py
+XGBRegressorBaseline:
+  n_estimators: 100
+  learning_rate: 0.1
+  max_depth: 6
+  random_state: 42
+
+# Configuration for the following file implementing a XGB Regressor:
+# model_leave_one_out.py
+XGBRegressorLeaveOneOut:
+  n_estimators: 100
+  learning_rate: 0.1
+  max_depth: 3
+  random_state: 42
+
+# Configuration for the following files implementing a Random Forest Regressor:
+# random_forest_baseline.py
+# random_forest_leave_one_out_baseline.py
+LowImpactRandomForestRegressor:
+  n_estimators: 100
+  random_state: 42
+
+# Configuration for the following file implementing a Random Forest Regressor:
+# random_forest_baseline.py
+RandomForestRegressor:
+  n_estimators: 200
+  random_state: 42

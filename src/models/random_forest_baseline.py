@@ -37,7 +37,7 @@ class RandomForestBaseline(object):
     # The column of the dataset to use as label (Y).
     _Y_LABEL = "target_attained_index"
 
-    # The YAML feature set to use when models/features.yaml is present.
+    # The YAML feature set to use when src/models/features.yaml is present.
     _FEATURE_SET_NAME = DEFAULT_FEATURE_SET
 
     # The column by which we create the groups for K-Fold Cross-Validation.
@@ -440,7 +440,7 @@ class RandomForestBaseline(object):
 
 if __name__ == "__main__":
     random_forest_model = RandomForestBaseline(
-        path_to_config="config.yaml",
+        path_to_config="src/models/config.yaml",
         path_to_data="data/all_ships_v7.csv",
     )
     random_forest_model.train()
