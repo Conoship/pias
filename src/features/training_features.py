@@ -4,7 +4,6 @@ import pandas as pd
 
 from src.features.volume_features import derive_compartment_volume_by_type
 
-
 TRAINING_FEATURE_QUERY = """
 WITH
 ship_bounds AS (
@@ -88,15 +87,8 @@ def build_training_features(
     conn: sqlite3.Connection,
     verbose: bool = False,
 ) -> pd.DataFrame:
-    if verbose:
-        print("Building base training features...", flush=True)
 
     features_df = pd.read_sql_query(TRAINING_FEATURE_QUERY, conn)
-
-    if verbose:
-        print(f"Base feature rows: {len(features_df)}", flush=True)
-        print("Building volume features...", flush=True)
-
     ship_version_ids = features_df["ship_version_id"].dropna().astype(int).unique()
 
     def print_progress(

@@ -12,11 +12,12 @@ from src.features.training_features import (
     build_training_features,
 )
 
-DB_PATH = ROOT_DIR / "data" / "mockdata.db"
-OUTPUT_PATH = ROOT_DIR / "data" / "all_ships_v8.csv"
+DB_PATH = "localhost.db"
+OUTPUT_PATH = "data/all_ships_v8.csv"
 
 
-def main(db_path: Path = DB_PATH, output_path: Path = OUTPUT_PATH) -> None:
+def main(db_path: str = DB_PATH, output_path: str = OUTPUT_PATH) -> None:
+    conn = sqlite3.connect(db_path)
     start = time.perf_counter()
     print("Creating CSV v3...", flush=True)
     print(f"Opening database: {db_path}", flush=True)
@@ -27,7 +28,6 @@ def main(db_path: Path = DB_PATH, output_path: Path = OUTPUT_PATH) -> None:
         df = build_training_features(conn, verbose=True)
         print(df.head())
         print(f"Writing CSV: {output_path}", flush=True)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
         df.to_csv(output_path, index=False)
         seconds = time.perf_counter() - start
         print(f"Done: {len(df)} rows in {seconds:.1f}s", flush=True)
