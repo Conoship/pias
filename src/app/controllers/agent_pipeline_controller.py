@@ -204,10 +204,13 @@ class AgentPipelineController(object):
             "Subdivision Draft",
             "Light GM Value",
             "Partial GM Value",
-            "Deep GM Value",
+            "Deepest GM Value",
             "Light Displacement",
             "Partial Displacement",
             "Deepest Displacement",
+            "Light Trim",
+            "Partial Trim",
+            "Deepest Trim",
         ]
 
         # Collect the user defined values from the UI.
@@ -235,17 +238,17 @@ class AgentPipelineController(object):
                 {
                     "Subdivision Length": subdivision_length,
                     "Light Service Draft": light_service_draft,
-                    "Partial Subdivision": (
-                        light_service_draft - subdivision_draft
-                    )
+                    "Partial Subdivision": (light_service_draft - subdivision_draft)
                     * 0.6,
                     "Subdivision Draft": subdivision_draft,
                     "Light GM Value": light_gm_value,
                     "Partial GM Value": partial_gm_value,
-                    "Deep GM Value": deep_gm_value,
+                    "Deepest GM Value": deep_gm_value,
                     "Light Displacement": light_displacement,
                     "Partial Displacement": partial_displacement,
-                    "Deepest Displacement": deepest_displacement,
+                    "Light Trim": 0,
+                    "Partial Trim": 0,
+                    "Deepest Trim": 0,
                 }
             ],
             columns=user_df_cols,
