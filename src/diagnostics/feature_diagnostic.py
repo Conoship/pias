@@ -7,7 +7,9 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score, mean_absolute_error
 
 datasets = {
-    "all": "data/all_ships_v8.csv",
+    "light": "data/all_ships_v8_light.csv",
+    "partial": "data/all_ships_v8_partial.csv",
+    "deepest": "data/all_ships_v8_deepest.csv",
 }
 
 

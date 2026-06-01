@@ -12,6 +12,8 @@ from src.features.training_features import (
     build_training_features,
 )
 
+# py -c "import pandas as pd; df=pd.read_csv('data/all_ships_v8.csv'); df[df['condition_code']==0].to_csv('data/all_ships_v8_light.csv', index=False); df[df['condition_code']==1].to_csv('data/all_ships_v8_partial.csv', index=False); df[df['condition_code']==2].to_csv('data/all_ships_v8_deepest.csv', index=False)"
+
 DB_PATH = "localhost.db"
 OUTPUT_PATH = "data/all_ships_v8.csv"
 
