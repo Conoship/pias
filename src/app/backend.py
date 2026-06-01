@@ -276,6 +276,7 @@ def _insert_loading_data(
         (
             "light",
             _first_value(df, "Light Service Draft"),
+            _first_value(df, "Light Trim", 0.0),
             _first_value(df, "Light GM Value"),
             _first_value(df, "Light Displacement", _first_value(df, "displacement")),
         ),
@@ -284,18 +285,20 @@ def _insert_loading_data(
             _first_value(
                 df, "Partial Subdivision", _first_value(df, "Subdivision Draft")
             ),
+            _first_value(df, "Partial Trim", 0.0),
             _first_value(df, "Partial GM Value"),
             _first_value(df, "Partial Displacement", _first_value(df, "displacement")),
         ),
         (
             "deepest",
             _first_value(df, "Subdivision Draft"),
-            _first_value(df, "Deep GM Value"),
+            _first_value(df, "Deepest Trim", 0.0),
+            _first_value(df, "Deepest GM Value", _first_value(df, "Deep GM Value")),
             _first_value(df, "Deepest Displacement", _first_value(df, "displacement")),
         ),
     ]
 
-    for condition_name, draft, mg, displacement in loading_rows:
+    for condition_name, draft, trim, mg, displacement in loading_rows:
         cur.execute(
             """
             INSERT INTO trim_gm
@@ -314,7 +317,7 @@ def _insert_loading_data(
                 ship_version_id,
                 condition_name,
                 draft,
-                _first_value(df, "trim"),
+                trim,
                 _first_value(df, "vcg"),
                 mg,
                 displacement,
