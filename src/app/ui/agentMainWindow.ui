@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>746</width>
-    <height>698</height>
+    <height>817</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,8 +17,8 @@
    <widget class="QPushButton" name="runBtn">
     <property name="geometry">
      <rect>
-      <x>270</x>
-      <y>380</y>
+      <x>280</x>
+      <y>490</y>
       <width>181</width>
       <height>31</height>
      </rect>
@@ -33,7 +33,7 @@
       <x>10</x>
       <y>10</y>
       <width>721</width>
-      <height>151</height>
+      <height>141</height>
      </rect>
     </property>
     <property name="frameShape">
@@ -111,7 +111,7 @@
       <rect>
        <x>10</x>
        <y>0</y>
-       <width>171</width>
+       <width>181</width>
        <height>41</height>
       </rect>
      </property>
@@ -121,17 +121,17 @@
       </font>
      </property>
      <property name="text">
-      <string>Enter the required files</string>
+      <string>Enter required files:</string>
      </property>
     </widget>
    </widget>
-   <widget class="QFrame" name="valuesFrame">
+   <widget class="QFrame" name="mandatoryValuesFrame">
     <property name="geometry">
      <rect>
       <x>10</x>
       <y>170</y>
       <width>721</width>
-      <height>201</height>
+      <height>191</height>
      </rect>
     </property>
     <property name="frameShape">
@@ -231,10 +231,10 @@
       </font>
      </property>
      <property name="text">
-      <string>Enter the required values</string>
+      <string>Enter required values:</string>
      </property>
     </widget>
-    <widget class="QLineEdit" name="deepGMLineEdit">
+    <widget class="QLineEdit" name="deepestGMLineEdit">
      <property name="geometry">
       <rect>
        <x>420</x>
@@ -247,7 +247,7 @@
       <bool>false</bool>
      </property>
      <property name="placeholderText">
-      <string>Enter Deep GM (m)</string>
+      <string>Enter Deepest GM (m)</string>
      </property>
      <property name="clearButtonEnabled">
       <bool>true</bool>
@@ -277,7 +277,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>420</y>
+      <y>540</y>
       <width>721</width>
       <height>221</height>
      </rect>
@@ -288,6 +288,97 @@
     <property name="frameShadow">
      <enum>QFrame::Raised</enum>
     </property>
+   </widget>
+   <widget class="QFrame" name="optionalValuesFrame">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>380</y>
+      <width>721</width>
+      <height>91</height>
+     </rect>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+    <widget class="QLineEdit" name="lightDisplacementLineEdit">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>40</y>
+       <width>201</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="readOnly">
+      <bool>false</bool>
+     </property>
+     <property name="placeholderText">
+      <string>Enter Light Displacement (m)</string>
+     </property>
+     <property name="clearButtonEnabled">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_3">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>0</y>
+       <width>211</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Enter optional values:</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="deepestDisplacementLineEdit">
+     <property name="geometry">
+      <rect>
+       <x>490</x>
+       <y>40</y>
+       <width>221</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="readOnly">
+      <bool>false</bool>
+     </property>
+     <property name="placeholderText">
+      <string>Enter Deepest Displacement (m)</string>
+     </property>
+     <property name="clearButtonEnabled">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="partialDisplacementLineEdit">
+     <property name="geometry">
+      <rect>
+       <x>240</x>
+       <y>40</y>
+       <width>221</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="readOnly">
+      <bool>false</bool>
+     </property>
+     <property name="placeholderText">
+      <string>Enter Partial Displacement (m)</string>
+     </property>
+     <property name="clearButtonEnabled">
+      <bool>true</bool>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">

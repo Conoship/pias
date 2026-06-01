@@ -1,6 +1,3 @@
-# Import local packages.
-from typing import Tuple, Union
-
 # Import third party packages.
 from PySide6.QtWidgets import QMessageBox, QWidget
 
@@ -44,9 +41,109 @@ class LineEditCollectorController(object):
 
         return main_dims_path, layouts_path
 
+    def _collect_required_user_defined_values(
+        self,
+    ) -> tuple[float, float, float, float, float, float] | int:
+        """
+        Collect the required user defined values from the UI.
+
+        Returns:
+            tuple[float, float, float, float, float, float]:
+                A tuple containing the collected values.
+
+            int (-1):
+                If one or more required values are empty.
+        """
+        subdivision_length = self._line_edit_controller.get_value_from_line_edit(
+            "subdivLenLineEdit"
+        )
+        light_service_draft = self._line_edit_controller.get_value_from_line_edit(
+            "lightServiceDraftLineEdit"
+        )
+        subdivision_draft = self._line_edit_controller.get_value_from_line_edit(
+            "subdivDraftLineEdit"
+        )
+        light_gm_value = self._line_edit_controller.get_value_from_line_edit(
+            "lightGMLineEdit"
+        )
+        partial_gm_value = self._line_edit_controller.get_value_from_line_edit(
+            "partialGMLineEdit"
+        )
+        deepest_gm_value = self._line_edit_controller.get_value_from_line_edit(
+            "deepestGMLineEdit"
+        )
+
+        empty_required_value = (
+            subdivision_length is None
+            or light_service_draft is None
+            or subdivision_draft is None
+            or light_gm_value is None
+            or partial_gm_value is None
+            or deepest_gm_value is None
+        )
+
+        if empty_required_value:
+            QMessageBox.warning(
+                self._window,
+                "Missing required value",
+                "Please input all required user defined values.",
+            )
+            return -1
+
+        assert subdivision_length is not None
+        assert light_service_draft is not None
+        assert subdivision_draft is not None
+        assert light_gm_value is not None
+        assert partial_gm_value is not None
+        assert deepest_gm_value is not None
+
+        return (
+            subdivision_length,
+            light_service_draft,
+            subdivision_draft,
+            light_gm_value,
+            partial_gm_value,
+            deepest_gm_value,
+        )
+
+    def _collect_optional_user_defined_values(
+        self,
+    ) -> tuple[float | None, float | None, float | None]:
+        """
+        Collect the optional user defined displacement values from the UI.
+
+        Returns:
+            tuple[float | None, float | None, float | None]:
+                A tuple containing the collected optional values. Empty fields are returned as None.
+        """
+        light_displacement = self._line_edit_controller.get_value_from_line_edit(
+            "lightDisplacementLineEdit"
+        )
+        partial_displacement = self._line_edit_controller.get_value_from_line_edit(
+            "partialDisplacementLineEdit"
+        )
+        deepest_displacement = self._line_edit_controller.get_value_from_line_edit(
+            "deepestDisplacementLineEdit"
+        )
+
+        return light_displacement, partial_displacement, deepest_displacement
+
     def collect_user_defined_value(
         self,
-    ) -> Union[Tuple[float, float, float, float, float, float], int, None]:
+    ) -> (
+        tuple[
+            float,
+            float,
+            float,
+            float,
+            float,
+            float,
+            float | None,
+            float | None,
+            float | None,
+        ]
+        | int
+    ):
         """
         Collect the user defined values:
         - Subdivision Length
@@ -55,77 +152,26 @@ class LineEditCollectorController(object):
         - Light GM
         - Partial GM
         - Deep GM
+        - Light Displacement
+        - Partial Displacement
+        - Deepest Displacement
 
         Returns:
-            tuple[float, float, float, float, float, float]:
+            tuple[float, float, float, float, float, float, float | None, float | None, float | None]:
                 A tuple containing the collected values.
 
             int (-1):
-                If the user said that the do not wish to leave one or more features empty or there was an invalid value inputted.
-
-            None:
-                If the user said that they wish to leave one or more features empty.
+                If one or more required values are empty or there was an invalid value inputted.
         """
         # Try to retrieve the values, unless the LineEditController raised a ValueError.
         try:
-            subdivision_length = self._line_edit_controller.get_value_from_line_edit(
-                "subdivLenLineEdit"
-            )
-            light_service_draft = self._line_edit_controller.get_value_from_line_edit(
-                "lightServiceDraftLineEdit"
-            )
-            subdivision_draft = self._line_edit_controller.get_value_from_line_edit(
-                "subdivDraftLineEdit"
-            )
-            light_gm_value = self._line_edit_controller.get_value_from_line_edit(
-                "lightGMLineEdit"
-            )
-            partial_gm_value = self._line_edit_controller.get_value_from_line_edit(
-                "partialGMLineEdit"
-            )
-            deep_gm_value = self._line_edit_controller.get_value_from_line_edit(
-                "deepGMLineEdit"
-            )
-            empty_feature = (
-                not subdivision_length
-                or not light_service_draft
-                or not subdivision_draft
-                or not light_gm_value
-                or not partial_gm_value
-                or not deep_gm_value
-            )
+            required_values = self._collect_required_user_defined_values()
+            if isinstance(required_values, int):
+                return required_values
 
-            # If any of the Line Edits are empty, ensure that this was intended behaviour by the user.
-            if empty_feature:
-                reply = QMessageBox.question(
-                    self._window,
-                    "Confirm Empty Value",
-                    "Are you sure you want to leave the value of a feature blank and use the RTF file values instead?",
-                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                    QMessageBox.StandardButton.No,
-                )
-                if reply == QMessageBox.StandardButton.Yes:
-                    return None
+            optional_values = self._collect_optional_user_defined_values()
 
-                else:
-                    return -1
-            else:
-                # At this point we've already checked for empties, so narrow types for the return.
-                assert subdivision_length is not None
-                assert light_service_draft is not None
-                assert subdivision_draft is not None
-                assert light_gm_value is not None
-                assert partial_gm_value is not None
-                assert deep_gm_value is not None
-
-                return (
-                    subdivision_length,
-                    light_service_draft,
-                    subdivision_draft,
-                    light_gm_value,
-                    partial_gm_value,
-                    deep_gm_value,
-                )
+            return required_values + optional_values
 
         except ValueError:
             QMessageBox.information(

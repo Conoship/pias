@@ -205,8 +205,10 @@ class AgentPipelineController(object):
             "Light GM Value",
             "Partial GM Value",
             "Deep GM Value",
+            "Light Displacement",
+            "Partial Displacement",
+            "Deepest Displacement",
         ]
-        user_df = pd.DataFrame(columns=user_df_cols)
 
         # Collect the user defined values from the UI.
         user_defined_values = self._collector_controller.collect_user_defined_value()
@@ -215,31 +217,39 @@ class AgentPipelineController(object):
         if isinstance(user_defined_values, int):
             return
 
-        # If the user confirmed that they prefer to use the RTF defined values.
-        if user_defined_values is None:
-            pass
+        (
+            subdivision_length,
+            light_service_draft,
+            subdivision_draft,
+            light_gm_value,
+            partial_gm_value,
+            deep_gm_value,
+            light_displacement,
+            partial_displacement,
+            deepest_displacement,
+        ) = user_defined_values
 
-        # No blanks where left.
-        else:
-            (
-                subdivision_length,
-                light_service_draft,
-                subdivision_draft,
-                light_gm_value,
-                partial_gm_value,
-                deep_gm_value,
-            ) = user_defined_values
-
-            # Add the UI data to the df.
-            user_df["Subdivision Length"] = subdivision_length
-            user_df["Light Service Draft"] = light_service_draft
-            user_df["Partial Subdivision"] = (
-                light_service_draft - subdivision_draft
-            ) * 0.6
-            user_df["Subdivision Draft"] = subdivision_draft
-            user_df["Light GM Value"] = light_gm_value
-            user_df["Partial GM Value"] = partial_gm_value
-            user_df["Deep GM Value"] = deep_gm_value
+        # Add the UI data to the df.
+        user_df = pd.DataFrame(
+            [
+                {
+                    "Subdivision Length": subdivision_length,
+                    "Light Service Draft": light_service_draft,
+                    "Partial Subdivision": (
+                        light_service_draft - subdivision_draft
+                    )
+                    * 0.6,
+                    "Subdivision Draft": subdivision_draft,
+                    "Light GM Value": light_gm_value,
+                    "Partial GM Value": partial_gm_value,
+                    "Deep GM Value": deep_gm_value,
+                    "Light Displacement": light_displacement,
+                    "Partial Displacement": partial_displacement,
+                    "Deepest Displacement": deepest_displacement,
+                }
+            ],
+            columns=user_df_cols,
+        )
 
         # Import the data to a csv and pass it to the agent.
         # Parse the file paths - if the parsing process raises an Exception show it to the user.
@@ -260,11 +270,7 @@ class AgentPipelineController(object):
             return
 
         # Combine the Data Frames.
-        df = pd.DataFrame()
-        if user_defined_values is not None:
-            df = pd.concat([user_df, main_dimensions_df, layouts_df], axis=1)
-        else:
-            df = pd.concat([main_dimensions_df, layouts_df], axis=1)
+        df = pd.concat([user_df, main_dimensions_df, layouts_df], axis=1)
 
         # Calculate the Required Index (R) using the given formulae.
         try:
