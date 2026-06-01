@@ -1,6 +1,5 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 from pathlib import Path
 import numpy as np
 
@@ -101,7 +100,20 @@ for condition_name, csv_path in datasets.items():
     )
 
     plt.figure(figsize=(8, 6))
-    sns.heatmap(dist_df, annot=True, cmap="viridis", fmt=".2f")
+    plt.imshow(dist_df, cmap="viridis")
+    plt.colorbar(label="Distance")
+    plt.xticks(range(len(dist_df.columns)), dist_df.columns)
+    plt.yticks(range(len(dist_df.index)), dist_df.index)
+    for row_idx, row_label in enumerate(dist_df.index):
+        for col_idx, col_label in enumerate(dist_df.columns):
+            plt.text(
+                col_idx,
+                row_idx,
+                f"{dist_df.loc[row_label, col_label]:.2f}",
+                ha="center",
+                va="center",
+                color="white",
+            )
     plt.title(f"{condition_name.capitalize()}: Pairwise Ship Distance")
     plt.xlabel("Ship ID")
     plt.ylabel("Ship ID")
@@ -125,7 +137,10 @@ for condition_name, csv_path in datasets.items():
     isolation_df = isolation_df.sort_values("mean_distance_to_others", ascending=False)
 
     plt.figure(figsize=(9, 5))
-    sns.barplot(data=isolation_df, x="ship_id", y="mean_distance_to_others")
+    plt.bar(
+        isolation_df["ship_id"].astype(str),
+        isolation_df["mean_distance_to_others"],
+    )
     plt.title(f"{condition_name.capitalize()}: Ship Isolation Score")
     plt.xlabel("Ship ID")
     plt.ylabel("Mean distance to other ships")
@@ -139,7 +154,10 @@ for condition_name, csv_path in datasets.items():
     profile_df = X_scaled_df[top_profile_features]
 
     plt.figure(figsize=(14, 7))
-    sns.heatmap(profile_df, annot=True, cmap="coolwarm", center=0, fmt=".2f")
+    plt.imshow(profile_df, cmap="coolwarm", aspect="auto")
+    plt.colorbar(label="Scaled value")
+    plt.xticks(range(len(profile_df.columns)), profile_df.columns, rotation=45, ha="right")
+    plt.yticks(range(len(profile_df.index)), profile_df.index)
     plt.title(f"{condition_name.capitalize()}: Ship Feature Profile")
     plt.xlabel("Feature")
     plt.ylabel("Ship ID")
@@ -160,7 +178,7 @@ for condition_name, csv_path in datasets.items():
         )
 
         plt.figure(figsize=(8, 6))
-        sns.scatterplot(data=pca_df, x="PC1", y="PC2", s=130)
+        plt.scatter(pca_df["PC1"], pca_df["PC2"], s=130)
 
         for _, row in pca_df.iterrows():
             plt.text(
