@@ -268,9 +268,7 @@ class AgentPipelineController(object):
                 )
 
         except Exception as e:
-            QMessageBox.warning(
-                self._window, "Input file problem", str(e)
-            )
+            QMessageBox.warning(self._window, "Input file problem", str(e))
             return
 
         # Use the user defined subdivision length as the ship length when provided.
