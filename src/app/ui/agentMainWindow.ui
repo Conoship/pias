@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>746</width>
-    <height>874</height>
+    <height>771</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,8 +17,8 @@
    <widget class="QPushButton" name="runBtn">
     <property name="geometry">
      <rect>
-      <x>280</x>
-      <y>540</y>
+      <x>550</x>
+      <y>440</y>
       <width>181</width>
       <height>31</height>
      </rect>
@@ -33,7 +33,7 @@
       <x>10</x>
       <y>10</y>
       <width>721</width>
-      <height>141</height>
+      <height>91</height>
      </rect>
     </property>
     <property name="frameShape">
@@ -47,7 +47,7 @@
       <rect>
        <x>10</x>
        <y>40</y>
-       <width>461</width>
+       <width>321</width>
        <height>31</height>
       </rect>
      </property>
@@ -64,9 +64,9 @@
     <widget class="QLineEdit" name="layoutsLineEdit">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>90</y>
-       <width>461</width>
+       <x>390</x>
+       <y>40</y>
+       <width>321</width>
        <height>31</height>
       </rect>
      </property>
@@ -83,27 +83,27 @@
     <widget class="QPushButton" name="mainDimsBtn">
      <property name="geometry">
       <rect>
-       <x>490</x>
+       <x>240</x>
        <y>40</y>
-       <width>211</width>
+       <width>91</width>
        <height>31</height>
       </rect>
      </property>
      <property name="text">
-      <string>Browse Main Dimensions RTF</string>
+      <string>Browse</string>
      </property>
     </widget>
     <widget class="QPushButton" name="layoutsBtn">
      <property name="geometry">
       <rect>
-       <x>490</x>
-       <y>90</y>
-       <width>211</width>
+       <x>620</x>
+       <y>40</y>
+       <width>91</width>
        <height>31</height>
       </rect>
      </property>
      <property name="text">
-      <string>Browse Layouts XML</string>
+      <string>Browse</string>
      </property>
     </widget>
     <widget class="QLabel" name="label">
@@ -121,7 +121,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Enter required files:</string>
+      <string>INPUT FILES</string>
      </property>
     </widget>
    </widget>
@@ -129,7 +129,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>170</y>
+      <y>120</y>
       <width>721</width>
       <height>191</height>
      </rect>
@@ -149,17 +149,20 @@
        <height>31</height>
       </rect>
      </property>
+     <property name="text">
+      <string/>
+     </property>
      <property name="readOnly">
       <bool>false</bool>
      </property>
      <property name="placeholderText">
-      <string>Enter Light GM (m)</string>
+      <string>Light GM</string>
      </property>
      <property name="clearButtonEnabled">
       <bool>true</bool>
      </property>
     </widget>
-    <widget class="QLabel" name="label_2">
+    <widget class="QLabel" name="gmValuesLabel">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -174,7 +177,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Enter required values:</string>
+      <string>GM VALUES (M)</string>
      </property>
     </widget>
     <widget class="QLineEdit" name="deepestGMLineEdit">
@@ -190,7 +193,7 @@
       <bool>false</bool>
      </property>
      <property name="placeholderText">
-      <string>Enter Deepest GM (m)</string>
+      <string>Deepest GM</string>
      </property>
      <property name="clearButtonEnabled">
       <bool>true</bool>
@@ -209,7 +212,7 @@
       <bool>false</bool>
      </property>
      <property name="placeholderText">
-      <string>Enter Partial GM (m)</string>
+      <string>Partial GM</string>
      </property>
      <property name="clearButtonEnabled">
       <bool>true</bool>
@@ -218,7 +221,7 @@
     <widget class="QLineEdit" name="subdivDraftLineEdit">
      <property name="geometry">
       <rect>
-       <x>350</x>
+       <x>340</x>
        <y>90</y>
        <width>351</width>
        <height>31</height>
@@ -228,7 +231,7 @@
       <bool>false</bool>
      </property>
      <property name="placeholderText">
-      <string>Enter Subdivision Draft (m)</string>
+      <string>Subdivision Draft</string>
      </property>
      <property name="clearButtonEnabled">
       <bool>true</bool>
@@ -237,7 +240,7 @@
     <widget class="QLineEdit" name="lightServiceDraftLineEdit">
      <property name="geometry">
       <rect>
-       <x>350</x>
+       <x>340</x>
        <y>40</y>
        <width>351</width>
        <height>31</height>
@@ -247,10 +250,28 @@
       <bool>false</bool>
      </property>
      <property name="placeholderText">
-      <string>Enter Light Service Draft (m)</string>
+      <string>Light Service Draft</string>
      </property>
      <property name="clearButtonEnabled">
       <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="draftValuesLabel">
+     <property name="geometry">
+      <rect>
+       <x>340</x>
+       <y>0</y>
+       <width>211</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>DRAFT VALUES (M)</string>
      </property>
     </widget>
    </widget>
@@ -258,7 +279,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>590</y>
+      <y>490</y>
       <width>721</width>
       <height>221</height>
      </rect>
@@ -274,9 +295,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>380</y>
+      <y>330</y>
       <width>721</width>
-      <height>141</height>
+      <height>91</height>
      </rect>
     </property>
     <property name="frameShape">
@@ -290,7 +311,7 @@
       <rect>
        <x>10</x>
        <y>40</y>
-       <width>201</width>
+       <width>151</width>
        <height>31</height>
       </rect>
      </property>
@@ -298,7 +319,7 @@
       <bool>false</bool>
      </property>
      <property name="placeholderText">
-      <string>Enter Light Displacement (m)</string>
+      <string>Light Displacement</string>
      </property>
      <property name="clearButtonEnabled">
       <bool>true</bool>
@@ -319,15 +340,15 @@
       </font>
      </property>
      <property name="text">
-      <string>Enter optional values:</string>
+      <string>OPTIONAL VALUES (M)</string>
      </property>
     </widget>
     <widget class="QLineEdit" name="deepestDisplacementLineEdit">
      <property name="geometry">
       <rect>
-       <x>490</x>
+       <x>370</x>
        <y>40</y>
-       <width>221</width>
+       <width>161</width>
        <height>31</height>
       </rect>
      </property>
@@ -335,7 +356,7 @@
       <bool>false</bool>
      </property>
      <property name="placeholderText">
-      <string>Enter Deepest Displacement (m)</string>
+      <string>Deepest Displacement</string>
      </property>
      <property name="clearButtonEnabled">
       <bool>true</bool>
@@ -344,9 +365,9 @@
     <widget class="QLineEdit" name="partialDisplacementLineEdit">
      <property name="geometry">
       <rect>
-       <x>240</x>
+       <x>190</x>
        <y>40</y>
-       <width>221</width>
+       <width>151</width>
        <height>31</height>
       </rect>
      </property>
@@ -354,7 +375,7 @@
       <bool>false</bool>
      </property>
      <property name="placeholderText">
-      <string>Enter Partial Displacement (m)</string>
+      <string>Partial Displacement</string>
      </property>
      <property name="clearButtonEnabled">
       <bool>true</bool>
@@ -363,9 +384,9 @@
     <widget class="QLineEdit" name="subdivLenLineEdit">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>90</y>
-       <width>201</width>
+       <x>560</x>
+       <y>40</y>
+       <width>141</width>
        <height>31</height>
       </rect>
      </property>
@@ -373,7 +394,7 @@
       <bool>false</bool>
      </property>
      <property name="placeholderText">
-      <string>Enter Subdivision Length (m)</string>
+      <string>Subdivision Length</string>
      </property>
      <property name="clearButtonEnabled">
       <bool>true</bool>
