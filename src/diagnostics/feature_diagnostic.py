@@ -10,6 +10,7 @@ datasets = {
     "light": "data/all_ships_v8_light.csv",
     "partial": "data/all_ships_v8_partial.csv",
     "deepest": "data/all_ships_v8_deepest.csv",
+    "all": "data/all_ships_v8.csv",
 }
 
 
@@ -232,11 +233,7 @@ def evaluate_leave_one_ship_out(df, features, target, group_col):
     else:
         pooled_r2 = np.nan
 
-    pooled_mae = (
-        mean_absolute_error(all_y_true, all_y_pred)
-        if all_y_true
-        else np.nan
-    )
+    pooled_mae = mean_absolute_error(all_y_true, all_y_pred) if all_y_true else np.nan
 
     return {
         "features_used": features,

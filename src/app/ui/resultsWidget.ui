@@ -6,138 +6,139 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>750</width>
-    <height>229</height>
+    <width>837</width>
+    <height>215</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QLabel" name="attainedIndicesLabel">
+  <widget class="QTableWidget" name="resultsTable">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>30</y>
-     <width>491</width>
-     <height>41</height>
+     <x>10</x>
+     <y>10</y>
+     <width>811</width>
+     <height>181</height>
     </rect>
    </property>
-   <property name="font">
-    <font>
-     <pointsize>14</pointsize>
-    </font>
+   <property name="showGrid">
+    <bool>true</bool>
    </property>
-   <property name="text">
-    <string>Attained Indices for Light, Partial and Deepest:</string>
+   <property name="gridStyle">
+    <enum>Qt::SolidLine</enum>
    </property>
-  </widget>
-  <widget class="QLabel" name="confidenceIntervalsLabel">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>70</y>
-     <width>491</width>
-     <height>51</height>
-    </rect>
+   <property name="sortingEnabled">
+    <bool>false</bool>
    </property>
-   <property name="font">
-    <font>
-     <pointsize>14</pointsize>
-    </font>
+   <property name="cornerButtonEnabled">
+    <bool>true</bool>
    </property>
-   <property name="text">
-    <string>95% CI for each Prediction:</string>
+   <property name="rowCount">
+    <number>4</number>
    </property>
-  </widget>
-  <widget class="QLabel" name="attainedIndices">
-   <property name="geometry">
-    <rect>
-     <x>510</x>
-     <y>30</y>
-     <width>201</width>
-     <height>41</height>
-    </rect>
+   <property name="columnCount">
+    <number>4</number>
    </property>
-   <property name="font">
-    <font>
-     <pointsize>14</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>A</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="confidenceIntervals">
-   <property name="geometry">
-    <rect>
-     <x>330</x>
-     <y>70</y>
-     <width>411</width>
-     <height>51</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>14</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>C</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="passResultsLabel">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>110</y>
-     <width>491</width>
-     <height>51</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>14</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>Pass Result for Light, Partial and Deepest:</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="passResults">
-   <property name="geometry">
-    <rect>
-     <x>460</x>
-     <y>110</y>
-     <width>201</width>
-     <height>51</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>14</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>P</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="overallSummary">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>160</y>
-     <width>711</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>14</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>Overall Summary</string>
-   </property>
+   <attribute name="horizontalHeaderCascadingSectionResizes">
+    <bool>true</bool>
+   </attribute>
+   <attribute name="horizontalHeaderMinimumSectionSize">
+    <number>200</number>
+   </attribute>
+   <attribute name="horizontalHeaderStretchLastSection">
+    <bool>true</bool>
+   </attribute>
+   <attribute name="verticalHeaderVisible">
+    <bool>false</bool>
+   </attribute>
+   <attribute name="verticalHeaderCascadingSectionResizes">
+    <bool>true</bool>
+   </attribute>
+   <attribute name="verticalHeaderDefaultSectionSize">
+    <number>37</number>
+   </attribute>
+   <attribute name="verticalHeaderHighlightSections">
+    <bool>true</bool>
+   </attribute>
+   <attribute name="verticalHeaderShowSortIndicator" stdset="0">
+    <bool>false</bool>
+   </attribute>
+   <attribute name="verticalHeaderStretchLastSection">
+    <bool>true</bool>
+   </attribute>
+   <row>
+    <property name="text">
+     <string>Light</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>Partial</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>Deepest</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>Overall Pass/Fail</string>
+    </property>
+   </row>
+   <column>
+    <property name="text">
+     <string>Loading Condition</string>
+    </property>
+    <property name="textAlignment">
+     <set>AlignCenter</set>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Attained Index</string>
+    </property>
+    <property name="textAlignment">
+     <set>AlignCenter</set>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>95% Confidence Interval</string>
+    </property>
+    <property name="textAlignment">
+     <set>AlignCenter</set>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Pass/Fail</string>
+    </property>
+    <property name="textAlignment">
+     <set>AlignCenter</set>
+    </property>
+   </column>
+   <item row="0" column="0">
+    <property name="text">
+     <string>Light</string>
+    </property>
+   </item>
+   <item row="1" column="0">
+    <property name="text">
+     <string>Partial</string>
+    </property>
+   </item>
+   <item row="2" column="0">
+    <property name="text">
+     <string>Deepest</string>
+    </property>
+   </item>
+   <item row="3" column="0">
+    <property name="text">
+     <string>Overall</string>
+    </property>
+   </item>
   </widget>
  </widget>
  <resources/>

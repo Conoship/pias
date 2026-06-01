@@ -3,9 +3,16 @@ from typing import cast
 
 # Import third party packages.
 import pandas as pd
-from PySide6.QtCore import QFile
+from PySide6.QtCore import QFile, Qt
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QFrame, QLabel, QMessageBox, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QFrame,
+    QMessageBox,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 
 # Import local packages.
 from src.app.backend import run_agent_pipeline
@@ -38,18 +45,18 @@ class AgentPipelineController(object):
         required_index: float,
     ) -> None:
         """
-        Load the results widget UI, update its labels with prediction data,
-        and display it inside the results frame of the main window.
+        Method to display the results in the table.
 
         Args:
             predictions (list[float]):
-                A list of the model's predictions per loading condition.
+                A list of all the model's predictions for the Attained Index (A) per loading condition.
 
             confidence_intervals (list[tuple]):
-                A list of the 95% CI per loading condition.
+                A list of all the model's 95% CIs for the Attained Index (A) per loading condition.
 
             pass_results (list[str]):
-                A list of whether the model passed or failed the A vs R comparison at each loading condition.
+                A list of all the pass results for the Attained Index (A) and Required Index (R) per loading condition comparisons.
+                If A_LC >= 0.5 * R, where A_LC is the attained index at any Loading Condition then the value is Pass, else Fail.
 
             required_index (float):
                 The value of the Required Index (R).
@@ -61,51 +68,57 @@ class AgentPipelineController(object):
         results_widget = loader.load(file)
         file.close()
 
-        # Get the target labels.
-        attained_indices_label = results_widget.findChild(QLabel, "attainedIndices")
-        confidence_intervals_label = results_widget.findChild(
-            QLabel, "confidenceIntervals"
-        )
-        pass_results_label = results_widget.findChild(QLabel, "passResults")
-        overall_summary_label = results_widget.findChild(QLabel, "overallSummary")
+        # Get the results table.
+        results_table = results_widget.findChild(QTableWidget, "resultsTable")
 
-        # Modify the content of the placeholder to be the actual values.
-        if attained_indices_label:
-            light_prediction = predictions[0]
-            partial_prediction = predictions[1]
-            deepest_prediction = predictions[2]
-            attained_indices_text = f"{round(light_prediction, 3)}, {round(partial_prediction, 3)}, {round(deepest_prediction, 3)}"
-            attained_indices_label.setText(attained_indices_text)
+        if results_table:
+            # Row names.
+            row_names = ["Light", "Partial", "Deepest", "Overall Pass/Fail"]
+            for row, name in enumerate(row_names):
+                item = QTableWidgetItem(name)
+                item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                item.setFlags(Qt.ItemFlag.ItemIsEnabled)
+                results_table.setItem(row, 0, item)
 
-        if confidence_intervals_label:
-            light_ci = confidence_intervals[0]
-            partial_ci = confidence_intervals[1]
-            deepest_ci = confidence_intervals[2]
-            confidence_intervals_text = f"[{round(light_ci[0], 3)}, {round(light_ci[1], 3)}], [{round(partial_ci[0], 3)}, {round(partial_ci[1], 3)}], [{round(deepest_ci[0], 3)}, {round(deepest_ci[1], 3)}]"
-            confidence_intervals_label.setText(confidence_intervals_text)
+            # Attained indices.
+            for row, prediction in enumerate(predictions):
+                item = QTableWidgetItem(str(round(prediction, 3)))
+                item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                item.setFlags(Qt.ItemFlag.ItemIsEnabled)
+                results_table.setItem(row, 1, item)
 
-        if pass_results_label:
-            light_pass_result = pass_results[0]
-            partial_pass_result = pass_results[1]
-            deepest_pass_result = pass_results[2]
-            pass_results_text = (
-                f"{light_pass_result}, {partial_pass_result}, {deepest_pass_result}"
-            )
-            pass_results_label.setText(pass_results_text)
+            # Confidence intervals.
+            for row, ci in enumerate(confidence_intervals):
+                ci_text = f"[{round(ci[0], 3)}, {round(ci[1], 3)}]"
+                item = QTableWidgetItem(ci_text)
+                item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                item.setFlags(Qt.ItemFlag.ItemIsEnabled)
+                results_table.setItem(row, 2, item)
 
-        if overall_summary_label:
-            # A = 0.2 * LIGHT_A + 0.4 * PARTIAL_A + 0.4 * DEEPEST_A.
+            # Pass/Fail results.
+            for row, pass_result in enumerate(pass_results):
+                item = QTableWidgetItem(pass_result)
+                item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                item.setFlags(Qt.ItemFlag.ItemIsEnabled)
+                results_table.setItem(row, 3, item)
+
+            # Overall Pass/Fail row (row 3) — spans cols 1-3.
+            # A = 20% * A_LIGHT + 40% * A_PARTIAL + 40% * A_DEEPEST
             weighted_attained_index = (
                 0.2 * predictions[0] + 0.4 * predictions[1] + 0.4 * predictions[2]
             )
-            overall_summary_text = f"Attained Index (A): {round(weighted_attained_index, 3)} Required Index (R): {round(required_index, 3)}"
-            if weighted_attained_index >= required_index:
-                overall_summary_text += " Ship PASSED"
-            else:
-                overall_summary_text += " Ship FAILED"
-            overall_summary_label.setText(overall_summary_text)
+            overall_text = (
+                f"A: {round(weighted_attained_index, 3)}  |  "
+                f"R: {round(required_index, 3)}  |  "
+                f"{'PASSED' if weighted_attained_index >= required_index else 'FAILED'}"
+            )
+            results_table.setSpan(3, 1, 1, 3)
+            item = QTableWidgetItem(overall_text)
+            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            item.setFlags(Qt.ItemFlag.ItemIsEnabled)
+            results_table.setItem(3, 1, item)
 
-        # Put the widget to the Results Frame in the Main Window.
+        # Put the widget in the Results Frame.
         results_frame = self._window.findChild(QFrame, "resultsFrame")
         if results_frame:
             if results_frame.layout() is None:
@@ -115,7 +128,6 @@ class AgentPipelineController(object):
                 layout = results_frame.layout()
 
             if layout:
-                # Clear previous widgets.
                 while layout.count():
                     item = layout.takeAt(0)
                     if item:

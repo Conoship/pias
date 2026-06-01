@@ -127,7 +127,7 @@ class MapieXGBRegressor(object):
             mapie_model (SplitConformalRegressor):
                 The fitted and conformalized MAPIE model to save.
         """
-        with open("model.pkl", "wb") as file:
+        with open("model_deepest.pkl", "wb") as file:
             pickle.dump(
                 {
                     "model_type": "MAPIE XGB Regressor",
@@ -253,8 +253,8 @@ class MapieXGBRegressor(object):
 
 if __name__ == "__main__":
     xgb_model = MapieXGBRegressor(
-        path_to_config="src/models/config.yaml",
-        path_to_data="C:/Users/student01/Desktop/rug-project/pias/data/all_ships_all_conditions_v5.csv",
+        path_to_config="config.yaml",
+        path_to_data="data/all_ships_v8_deepest.csv",
     )
     xgb_model.train()
-    xgb_model.evaluate(print_results=True)
+    xgb_model.evaluate(print_results=True, save_best_model=True)

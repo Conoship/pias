@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>746</width>
+    <width>884</width>
     <height>771</height>
    </rect>
   </property>
@@ -17,7 +17,7 @@
    <widget class="QPushButton" name="runBtn">
     <property name="geometry">
      <rect>
-      <x>550</x>
+      <x>690</x>
       <y>440</y>
       <width>181</width>
       <height>31</height>
@@ -32,7 +32,7 @@
      <rect>
       <x>10</x>
       <y>10</y>
-      <width>721</width>
+      <width>861</width>
       <height>91</height>
      </rect>
     </property>
@@ -47,7 +47,7 @@
       <rect>
        <x>10</x>
        <y>40</y>
-       <width>321</width>
+       <width>311</width>
        <height>31</height>
       </rect>
      </property>
@@ -64,9 +64,9 @@
     <widget class="QLineEdit" name="layoutsLineEdit">
      <property name="geometry">
       <rect>
-       <x>390</x>
+       <x>450</x>
        <y>40</y>
-       <width>321</width>
+       <width>311</width>
        <height>31</height>
       </rect>
      </property>
@@ -83,7 +83,7 @@
     <widget class="QPushButton" name="mainDimsBtn">
      <property name="geometry">
       <rect>
-       <x>240</x>
+       <x>320</x>
        <y>40</y>
        <width>91</width>
        <height>31</height>
@@ -96,7 +96,7 @@
     <widget class="QPushButton" name="layoutsBtn">
      <property name="geometry">
       <rect>
-       <x>620</x>
+       <x>760</x>
        <y>40</y>
        <width>91</width>
        <height>31</height>
@@ -130,7 +130,7 @@
      <rect>
       <x>10</x>
       <y>120</y>
-      <width>721</width>
+      <width>861</width>
       <height>191</height>
      </rect>
     </property>
@@ -177,7 +177,7 @@
       </font>
      </property>
      <property name="text">
-      <string>GM VALUES (M)</string>
+      <string>GM VALUES (METRES)</string>
      </property>
     </widget>
     <widget class="QLineEdit" name="deepestGMLineEdit">
@@ -221,7 +221,7 @@
     <widget class="QLineEdit" name="subdivDraftLineEdit">
      <property name="geometry">
       <rect>
-       <x>340</x>
+       <x>490</x>
        <y>90</y>
        <width>351</width>
        <height>31</height>
@@ -240,7 +240,7 @@
     <widget class="QLineEdit" name="lightServiceDraftLineEdit">
      <property name="geometry">
       <rect>
-       <x>340</x>
+       <x>490</x>
        <y>40</y>
        <width>351</width>
        <height>31</height>
@@ -259,7 +259,7 @@
     <widget class="QLabel" name="draftValuesLabel">
      <property name="geometry">
       <rect>
-       <x>340</x>
+       <x>490</x>
        <y>0</y>
        <width>211</width>
        <height>41</height>
@@ -271,7 +271,7 @@
       </font>
      </property>
      <property name="text">
-      <string>DRAFT VALUES (M)</string>
+      <string>DRAFT VALUES (METRES)</string>
      </property>
     </widget>
    </widget>
@@ -280,7 +280,7 @@
      <rect>
       <x>10</x>
       <y>490</y>
-      <width>721</width>
+      <width>861</width>
       <height>221</height>
      </rect>
     </property>
@@ -296,7 +296,7 @@
      <rect>
       <x>10</x>
       <y>330</y>
-      <width>721</width>
+      <width>861</width>
       <height>91</height>
      </rect>
     </property>
@@ -311,7 +311,7 @@
       <rect>
        <x>10</x>
        <y>40</y>
-       <width>151</width>
+       <width>191</width>
        <height>31</height>
       </rect>
      </property>
@@ -330,7 +330,7 @@
       <rect>
        <x>10</x>
        <y>0</y>
-       <width>211</width>
+       <width>231</width>
        <height>41</height>
       </rect>
      </property>
@@ -340,15 +340,15 @@
       </font>
      </property>
      <property name="text">
-      <string>OPTIONAL VALUES (M)</string>
+      <string>OPTIONAL VALUES (METRES)</string>
      </property>
     </widget>
     <widget class="QLineEdit" name="deepestDisplacementLineEdit">
      <property name="geometry">
       <rect>
-       <x>370</x>
+       <x>450</x>
        <y>40</y>
-       <width>161</width>
+       <width>191</width>
        <height>31</height>
       </rect>
      </property>
@@ -365,9 +365,9 @@
     <widget class="QLineEdit" name="partialDisplacementLineEdit">
      <property name="geometry">
       <rect>
-       <x>190</x>
+       <x>230</x>
        <y>40</y>
-       <width>151</width>
+       <width>191</width>
        <height>31</height>
       </rect>
      </property>
@@ -384,9 +384,9 @@
     <widget class="QLineEdit" name="subdivLenLineEdit">
      <property name="geometry">
       <rect>
-       <x>560</x>
+       <x>670</x>
        <y>40</y>
-       <width>141</width>
+       <width>181</width>
        <height>31</height>
       </rect>
      </property>
@@ -407,7 +407,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>746</width>
+     <width>884</width>
      <height>26</height>
     </rect>
    </property>
