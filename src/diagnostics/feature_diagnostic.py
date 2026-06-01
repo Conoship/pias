@@ -9,10 +9,7 @@ from xgboost import XGBRegressor
 from sklearn.metrics import r2_score, mean_absolute_error
 
 datasets = {
-    "light": "data/all_ships_v7_light.csv",
-    "partial": "data/all_ships_v7_partial.csv",
-    "deepest": "data/all_ships_v7_deepest.csv",
-    "all": "data/all_ships_v7.csv",
+    "all": "data/all_ships_v8.csv",
 }
 
 
@@ -27,12 +24,22 @@ group_col = "ship_id"
 
 feature_groups = {
     "loading_features": [
-        "draft",
+        "condition_code",
         "trim",
         "mg",
-        "displacement",
         "vcg",
-        # "condition_code",
+        "draft_over_depth",
+        "displacement_per_length",
+    ],
+    "v3_geometry_features": [
+        "total_compartment_volume",
+        "cargo_volume_ratio",
+        "fuel_oil_volume_ratio",
+        "gas_oil_volume_ratio",
+        "potable_water_volume_ratio",
+        "ballast_volume_ratio",
+        "void_volume_ratio",
+        "cargohold_hatch_volume_ratio",
     ],
     "main_dimension_features": [
         "lpp",
@@ -110,6 +117,10 @@ feature_groups = {
 
 feature_sets = {
     "loading_only": feature_groups["loading_features"],
+    "v3_geometry_only": feature_groups["v3_geometry_features"],
+    "loading_plus_v3_geometry": (
+        feature_groups["loading_features"] + feature_groups["v3_geometry_features"]
+    ),
     "main_dimensions_only": feature_groups["main_dimension_features"],
     "compartments_only": (
         feature_groups["compartment_features"] + feature_groups["content_features"]
@@ -253,11 +264,20 @@ for condition_name, csv_path in datasets.items():
 summary_df = pd.DataFrame(summary_rows)
 summary_df = summary_df.sort_values(["condition", "mean_r2"], ascending=[True, False])
 
+loading_mae = summary_df[summary_df["feature_set"] == "loading_only"][
+    ["condition", "mean_mae"]
+].rename(columns={"mean_mae": "loading_only_mae"})
+summary_df = summary_df.merge(loading_mae, on="condition", how="left")
+summary_df["delta_mae_vs_loading"] = (
+    summary_df["mean_mae"] - summary_df["loading_only_mae"]
+)
+
 print("\n\nFinal feature-set comparison:")
 print(summary_df)
 
-plots_dir = Path("C:/Users/student01/Desktop/rug-project/pias/plots/diagnostics")
+plots_dir = Path("plots/diagnostics")
 plots_dir.mkdir(parents=True, exist_ok=True)
+summary_df.to_csv(plots_dir / "feature_set_summary.csv", index=False)
 
 
 plt.figure(figsize=(12, 6))

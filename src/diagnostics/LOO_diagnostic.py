@@ -9,12 +9,10 @@ from sklearn.decomposition import PCA
 from sklearn.metrics import pairwise_distances
 
 datasets = {
-    "light": "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_light_v5.csv",
-    "partial": "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_partial_v5.csv",
-    "deepest": "C:/Users/student01/Desktop/rug-project/pias/data/all_ships_deepest_v5.csv",
+    "all": "data/all_ships_v8.csv",
 }
 
-base_output_dir = Path("C:/Users/student01/Desktop/rug-project/pias/plots/diagnostics")
+base_output_dir = Path("plots/diagnostics")
 base_output_dir.mkdir(parents=True, exist_ok=True)
 
 
@@ -47,6 +45,14 @@ similarity_features = [
     "std_breadth",
     "std_height",
     "n_frustum_points",
+    "total_compartment_volume",
+    "cargo_volume_ratio",
+    "fuel_oil_volume_ratio",
+    "gas_oil_volume_ratio",
+    "potable_water_volume_ratio",
+    "ballast_volume_ratio",
+    "void_volume_ratio",
+    "cargohold_hatch_volume_ratio",
 ]
 
 

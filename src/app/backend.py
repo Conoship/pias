@@ -539,6 +539,13 @@ def run_agent_pipeline(
         X = engineer_features(X)
 
     X = X[feature_cols]
+    print("=========================")
+    print("Original DataFrame Given:")
+    print(df)
+    print("=========================")
+    print("Engineered Features based on the DataFrame:")
+    print(X)
+    print("=========================")
 
     # Predict based on the model type - once a single performing model is selected, this can be narrowed down.
     predictions: list[float] = []
