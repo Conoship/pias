@@ -1,22 +1,22 @@
 import pandas as pd
 import numpy as np
-import yaml
 from pathlib import Path
 import matplotlib.pyplot as plt
-import seaborn as sns
 
-from xgboost import XGBRegressor
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score, mean_absolute_error
 
 datasets = {
-    "all": "data/all_ships_v8.csv",
+    "light": "data/all_ships_v8_light.csv",
+    "partial": "data/all_ships_v8_partial.csv",
+    "deepest": "data/all_ships_v8_deepest.csv",
 }
 
 
-with open("src/models/config.yaml", "r") as f:
-    config = yaml.safe_load(f)
-
-xgb_params = config["XGBRegressorLeaveOneOut"]
+model_params = {
+    "n_estimators": 100,
+    "random_state": 42,
+}
 
 target = "target_attained_index"
 group_col = "ship_id"
@@ -166,7 +166,7 @@ def evaluate_leave_one_ship_out(df, features, target, group_col):
         print("Missing features skipped:", missing_features)
 
     if len(features) == 0:
-        raise ValueError("No valid features found in this dataframe.")
+        return None
 
     X = df[features].copy()
     y = df[target]
@@ -187,7 +187,10 @@ def evaluate_leave_one_ship_out(df, features, target, group_col):
         X_test = X[test_mask]
         y_test = y[test_mask]
 
-        model = XGBRegressor(**xgb_params)
+        if X_train.empty or X_test.empty:
+            continue
+
+        model = RandomForestRegressor(**model_params)
         model.fit(X_train, y_train)
 
         preds = model.predict(X_test)
@@ -218,7 +221,11 @@ def evaluate_leave_one_ship_out(df, features, target, group_col):
     else:
         pooled_r2 = np.nan
 
-    pooled_mae = mean_absolute_error(all_y_true, all_y_pred)
+    pooled_mae = (
+        mean_absolute_error(all_y_true, all_y_pred)
+        if all_y_true
+        else np.nan
+    )
 
     return {
         "features_used": features,
@@ -240,6 +247,10 @@ for condition_name, csv_path in datasets.items():
             target=target,
             group_col=group_col,
         )
+
+        if result is None:
+            print(f"\nSkipping {set_name}: no valid features found.")
+            continue
 
         summary_rows.append(
             {
@@ -281,7 +292,11 @@ summary_df.to_csv(plots_dir / "feature_set_summary.csv", index=False)
 
 
 plt.figure(figsize=(12, 6))
-sns.barplot(data=summary_df, x="feature_set", y="mean_r2", hue="condition")
+summary_df.pivot(
+    index="feature_set",
+    columns="condition",
+    values="mean_r2",
+).plot(kind="bar", ax=plt.gca())
 plt.axhline(0, linestyle="--", color="black")
 plt.title("Pooled Leave-One-Ship-Out R2 by Feature Set and Condition")
 plt.xlabel("Feature Set")
@@ -292,7 +307,11 @@ plt.savefig(plots_dir / "feature_set_pooled_r2_by_condition.png")
 plt.close()
 
 plt.figure(figsize=(12, 6))
-sns.barplot(data=summary_df, x="feature_set", y="mean_mae", hue="condition")
+summary_df.pivot(
+    index="feature_set",
+    columns="condition",
+    values="mean_mae",
+).plot(kind="bar", ax=plt.gca())
 plt.title("Pooled Leave-One-Ship-Out MAE by Feature Set and Condition")
 plt.xlabel("Feature Set")
 plt.ylabel("Pooled MAE")

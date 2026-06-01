@@ -4,7 +4,6 @@ import pandas as pd
 
 from src.features.volume_features import derive_compartment_volume_by_type
 
-
 TRAINING_FEATURE_QUERY = """
 WITH
 ship_bounds AS (
@@ -84,9 +83,38 @@ ORDER BY
 """
 
 
-def build_training_features(conn: sqlite3.Connection) -> pd.DataFrame:
+def build_training_features(
+    conn: sqlite3.Connection,
+    verbose: bool = False,
+) -> pd.DataFrame:
+
     features_df = pd.read_sql_query(TRAINING_FEATURE_QUERY, conn)
-    volume_features = derive_compartment_volume_by_type(conn)
+    ship_version_ids = features_df["ship_version_id"].dropna().astype(int).unique()
+
+    def print_progress(
+        done: int,
+        total: int,
+        ship_id: int,
+        rows_loaded: int,
+        load_seconds: float,
+        batch_seconds: float,
+    ) -> None:
+        if verbose:
+            print(
+                f"Processed volume features up to ship_version_id={ship_id} "
+                f"({done}/{total}); loaded {rows_loaded} rows in "
+                f"{load_seconds:.1f}s, batch {batch_seconds:.1f}s",
+                flush=True,
+            )
+
+    volume_features = derive_compartment_volume_by_type(
+        conn,
+        ship_version_ids=ship_version_ids,
+        progress_callback=print_progress if verbose else None,
+    )
+
+    if verbose:
+        print(f"Volume feature rows: {len(volume_features)}", flush=True)
 
     return features_df.merge(
         volume_features,

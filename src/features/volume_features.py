@@ -1,25 +1,31 @@
-# Import third party packages.
+import time
+
 import numpy as np
 import pandas as pd
 
 
-def cross_section_area(section_points: pd.DataFrame) -> float:
+CONTENT_TYPES = {
+    1: "cargo",
+    2: "fuel_oil",
+    3: "gas_oil",
+    4: "potable_water",
+    6: "ballast",
+    8: "void",
+    12: "cargohold_hatch",
+}
+
+
+def cross_section_area(section: pd.DataFrame) -> float:
     """
-    Calculate area of one cross-section using B-H points.
+    Calculate the B-H polygon area for one L station.
     """
-    points = section_points[["B", "H"]].dropna().drop_duplicates().to_numpy()
+    points = section[["B", "H"]].dropna().drop_duplicates().to_numpy()
 
     if len(points) < 3:
         return 0.0
 
     center = points.mean(axis=0)
-
-    # Sort points around the centre so polygon area works.
-    angles = np.arctan2(
-        points[:, 1] - center[1],
-        points[:, 0] - center[0],
-    )
-
+    angles = np.arctan2(points[:, 1] - center[1], points[:, 0] - center[0])
     points = points[np.argsort(angles)]
 
     b = points[:, 0]
@@ -32,115 +38,52 @@ def cross_section_area(section_points: pd.DataFrame) -> float:
     return float(area)
 
 
-def calculate_subcompartment_volume(sub_points: pd.DataFrame) -> float:
+def subcompartment_volume(points: pd.DataFrame) -> float:
     """
-    Calculate one subcompartment volume.
-
-    1. Group points by L station.
-    2. Calculate B-H area at each L.
-    3. Integrate areas along L.
+    Calculate one subcompartment volume by integrating section areas over L.
     """
-    sub_points = sub_points.copy()
-    sub_points["L_round"] = sub_points["L"].round(6)
-
     areas = []
+    points = points.copy()
+    points["L_round"] = points["L"].round(6)
 
-    for L_value, section in sub_points.groupby("L_round"):
-        area = cross_section_area(section)
-
+    for l_value, section in points.groupby("L_round", sort=True):
         areas.append(
             {
-                "L": L_value,
-                "area": area,
+                "L": float(l_value),
+                "area": cross_section_area(section),
             }
         )
 
-    areas_df = pd.DataFrame(areas).sort_values("L")
-
-    if len(areas_df) < 2:
+    if len(areas) < 2:
         return 0.0
 
-    volume = np.trapezoid(
-        areas_df["area"],
-        areas_df["L"],
-    )
+    areas_df = pd.DataFrame(areas).sort_values("L")
+
+    if hasattr(np, "trapezoid"):
+        volume = np.trapezoid(areas_df["area"], areas_df["L"])
+    else:
+        volume = np.trapz(areas_df["area"], areas_df["L"])
 
     return float(abs(volume))
 
 
-def fill_missing_breadth(points: pd.DataFrame) -> pd.DataFrame:
-    """
-    Fill missing B as the outside shell boundary.
-
-    Assumptions:
-    - B = 0 is centreline.
-    - B can be positive or negative.
-    - NULL B means outside shell.
-    - Outside shell is approximated as +/- breadth / 2.
-    """
-    points = points.copy()
-
-    missing_b = points["B"].isna()
-    half_breadth = pd.to_numeric(points["half_breadth"], errors="coerce")
-
-    group_cols = [
-        "ship_version_id",
-        "compartment_id",
-        "subcompartment_id",
-    ]
-
-    def infer_shell_sign(known_b: pd.Series) -> float:
-        known_b = known_b.dropna()
-
-        if known_b.empty:
-            return np.nan
-
-        shell_b = known_b.loc[known_b.abs().idxmax()]
-
-        if shell_b == 0:
-            return np.nan
-
-        return float(np.sign(shell_b))
-
-    inferred_sign = points.groupby(group_cols)["B"].transform(infer_shell_sign)
-
-    side_sign = np.select(
-        [
-            points["side"].eq("ps_only"),
-            points["side"].eq("sb_only"),
-        ],
-        [
-            -1.0,
-            1.0,
-        ],
-        default=np.nan,
-    )
-
-    final_sign = np.where(
-        np.isnan(side_sign),
-        inferred_sign,
-        side_sign,
-    )
-
-    final_sign = pd.Series(final_sign, index=points.index).fillna(1.0)
-    points.loc[missing_b, "B"] = final_sign[missing_b] * half_breadth[missing_b]
-
-    return points
-
-
 def fill_missing_length(points: pd.DataFrame) -> pd.DataFrame:
     """
-    Fill missing L at the longitudinal end points.
+    Fill missing L values.
 
     Assumptions:
-    - NULL L on forward/front points means the forward perpendicular.
-    - If LPP is missing, the known forward layout end is used.
-    - NULL L on aft points means the aft fallback station at -3.
-    - NULL L on midship points means the full cargo-hold span.
+    - Missing forward/front L is the forward perpendicular, using LPP when available.
+    - If LPP is missing, use the largest known layout L value.
+    - Missing aft L is set to -3.0.
+    - Missing midship L represents the cargo area, so the row is copied to both
+      cargo_min_l and cargo_max_l.
     """
     points = points.copy()
 
     missing_l = points["L"].isna()
+    if not missing_l.any():
+        return points
+
     aftfwd = points["aftfwd_and_num"].fillna("").astype(str).str.lower()
     lpp = pd.to_numeric(points["lpp"], errors="coerce")
     ship_max_l = pd.to_numeric(points["ship_max_l"], errors="coerce")
@@ -152,9 +95,7 @@ def fill_missing_length(points: pd.DataFrame) -> pd.DataFrame:
     midship_point = aftfwd.str.contains("mid|middle", regex=True)
 
     forward_l = lpp.fillna(ship_max_l)
-    points.loc[missing_l & forward_point, "L"] = forward_l[
-        missing_l & forward_point
-    ]
+    points.loc[missing_l & forward_point, "L"] = forward_l[missing_l & forward_point]
     points.loc[missing_l & aft_point, "L"] = -3.0
 
     midship_rows = points[missing_l & midship_point]
@@ -171,19 +112,69 @@ def fill_missing_length(points: pd.DataFrame) -> pd.DataFrame:
     return points
 
 
-def fill_missing_height(points: pd.DataFrame) -> pd.DataFrame:
+def fill_missing_breadth(points: pd.DataFrame) -> pd.DataFrame:
     """
-    Fill missing H from the frustum point vertical position.
+    Fill missing B values.
 
     Assumptions:
-    - Aft/Fwd 1 and 2 are bottom points.
-    - Aft/Fwd 3 and 4 are top points.
+    - B = 0 is the centreline.
+    - Missing B means the point is on the outside shell.
+    - The outside shell is approximated as +/- half_breadth.
+    - The sign comes from the shape side when possible, otherwise from the
+      largest known B value in the same subcompartment.
+    """
+    points = points.copy()
+
+    missing_b = points["B"].isna()
+    if not missing_b.any():
+        return points
+
+    group_cols = ["ship_version_id", "compartment_id", "subcompartment_id"]
+    half_breadth = pd.to_numeric(points["half_breadth"], errors="coerce")
+
+    def infer_sign(values: pd.Series) -> float:
+        values = values.dropna()
+        if values.empty:
+            return np.nan
+
+        outer_b = values.loc[values.abs().idxmax()]
+        if outer_b == 0:
+            return np.nan
+
+        return float(np.sign(outer_b))
+
+    inferred_sign = points.groupby(group_cols, sort=False)["B"].transform(infer_sign)
+
+    side_sign = np.select(
+        [points["side"].eq("ps_only"), points["side"].eq("sb_only")],
+        [-1.0, 1.0],
+        default=np.nan,
+    )
+
+    final_sign = np.where(np.isnan(side_sign), inferred_sign, side_sign)
+    final_sign = pd.Series(final_sign, index=points.index).fillna(1.0)
+
+    points.loc[missing_b, "B"] = final_sign[missing_b] * half_breadth[missing_b]
+
+    return points
+
+
+def fill_missing_height(points: pd.DataFrame) -> pd.DataFrame:
+    """
+    Fill missing H values.
+
+    Assumptions:
+    - Aft/Fwd points ending in 1 or 2 are bottom points.
+    - Aft/Fwd points ending in 3 or 4 are top points.
     - Missing bottom H is 0.
-    - Missing top H is depth in midship and depth + 1 at aft/fwd ends.
+    - Missing top H is depth, or depth + 1.0 at aft/fwd ends.
     """
     points = points.copy()
 
     missing_h = points["H"].isna()
+    if not missing_h.any():
+        return points
+
     aftfwd = points["aftfwd_and_num"].fillna("").astype(str).str.lower()
     depth = pd.to_numeric(points["depth"], errors="coerce")
 
@@ -191,8 +182,7 @@ def fill_missing_height(points: pd.DataFrame) -> pd.DataFrame:
     top_point = aftfwd.str.contains(r"[34]\s*$", regex=True)
     end_point = aftfwd.str.contains("aft|fwd|fore|front", regex=True)
 
-    top_height = np.where(end_point, depth + 1.0, depth)
-    top_height = pd.Series(top_height, index=points.index)
+    top_height = pd.Series(np.where(end_point, depth + 1.0, depth), index=points.index)
 
     points.loc[missing_h & bottom_point, "H"] = 0.0
     points.loc[missing_h & top_point, "H"] = top_height[missing_h & top_point]
@@ -200,14 +190,32 @@ def fill_missing_height(points: pd.DataFrame) -> pd.DataFrame:
     return points
 
 
-def derive_compartment_volume_by_type(conn: object) -> pd.DataFrame:
-    """
-    Derive compartment volume per type for each ship_version_id.
-    """
+def clean_points(points: pd.DataFrame) -> pd.DataFrame:
+    points = fill_missing_length(points)
+    points = points.dropna(subset=["L"])
 
-    #  Load geometry points from database
-    points = pd.read_sql_query(
-        """
+    points = fill_missing_breadth(points)
+    points = fill_missing_height(points)
+    points = points.dropna(subset=["L", "B", "H"])
+
+    return points
+
+
+def read_points_for_ship_versions(
+    conn: object,
+    ship_version_ids: list[int],
+) -> pd.DataFrame:
+    """
+    Read frustum points for a batch of ship versions.
+    """
+    if not ship_version_ids:
+        return pd.DataFrame()
+
+    content_ids = tuple(CONTENT_TYPES.keys())
+    placeholders = ", ".join("?" for _ in content_ids)
+    ship_placeholders = ", ".join("?" for _ in ship_version_ids)
+
+    query = f"""
         WITH geometry_bounds AS (
             SELECT
                 comp.ship_version_id,
@@ -234,6 +242,7 @@ def derive_compartment_volume_by_type(conn: object) -> pd.DataFrame:
                 ON fp.subcompartment_shape_id = ss.id
 
             WHERE fp.L IS NOT NULL
+              AND comp.ship_version_id IN ({ship_placeholders})
 
             GROUP BY comp.ship_version_id
         )
@@ -242,18 +251,15 @@ def derive_compartment_volume_by_type(conn: object) -> pd.DataFrame:
             comp.ship_version_id,
             comp.id AS compartment_id,
             comp.design_content_id_number AS content_id,
-
             sub.id AS subcompartment_id,
             COALESCE(sub.sign, 1) AS sign,
             ss.side,
-
             md.breadth / 2.0 AS half_breadth,
             md.depth,
             md.lpp,
             gb.cargo_min_l,
             gb.cargo_max_l,
             gb.ship_max_l,
-
             fp.aftfwd_and_num,
             fp.L,
             fp.B,
@@ -276,25 +282,26 @@ def derive_compartment_volume_by_type(conn: object) -> pd.DataFrame:
 
         LEFT JOIN geometry_bounds gb
             ON gb.ship_version_id = comp.ship_version_id
-        """,
-        conn,
-    )
 
-    if points.empty:
-        return pd.DataFrame(columns=["ship_version_id"])
+        WHERE comp.ship_version_id IN ({ship_placeholders})
+          AND comp.design_content_id_number IN ({placeholders})
+    """
 
-    points = fill_missing_length(points)
-    points = points.dropna(subset=["L"])
+    params = (*ship_version_ids, *ship_version_ids, *content_ids)
+    return pd.read_sql_query(query, conn, params=params)
 
-    if points.empty:
-        return pd.DataFrame(columns=["ship_version_id"])
 
-    points = fill_missing_breadth(points)
-    points = fill_missing_height(points)
+def read_points_for_ship(conn: object, ship_version_id: int) -> pd.DataFrame:
+    """
+    Read frustum points for one ship version.
+    """
+    return read_points_for_ship_versions(conn, [ship_version_id])
 
-    #  Calculate volume for each subcompartment
-    subcompartment_rows = []
 
+def calculate_compartment_volumes(points: pd.DataFrame) -> pd.DataFrame:
+    """
+    Return one volume row per compartment.
+    """
     group_cols = [
         "ship_version_id",
         "compartment_id",
@@ -303,14 +310,15 @@ def derive_compartment_volume_by_type(conn: object) -> pd.DataFrame:
         "sign",
     ]
 
-    for keys, group in points.groupby(group_cols, dropna=False):
-        ship_version_id, compartment_id, content_id, sub_id, sign = keys
+    rows = []
 
-        volume = calculate_subcompartment_volume(group)
+    for keys, group in points.groupby(group_cols, sort=False, dropna=False):
+        ship_version_id, compartment_id, content_id, _sub_id, sign = keys
 
-        signed_volume = volume * float(sign)
+        volume = subcompartment_volume(group)
+        signed_volume = volume * float(sign if pd.notna(sign) else 1.0)
 
-        subcompartment_rows.append(
+        rows.append(
             {
                 "ship_version_id": ship_version_id,
                 "compartment_id": compartment_id,
@@ -319,79 +327,150 @@ def derive_compartment_volume_by_type(conn: object) -> pd.DataFrame:
             }
         )
 
-    sub_df = pd.DataFrame(subcompartment_rows)
+    if not rows:
+        return pd.DataFrame(
+            columns=[
+                "ship_version_id",
+                "compartment_id",
+                "content_id",
+                "compartment_volume",
+            ]
+        )
 
-    #  Sum subcompartment volumes into compartment volumes
+    sub_df = pd.DataFrame(rows)
     comp_df = (
         sub_df
         .groupby(
             ["ship_version_id", "compartment_id", "content_id"],
             as_index=False,
+            sort=False,
         )
-        .agg(
-            compartment_volume=("subcompartment_volume", "sum")
-        )
+        .agg(compartment_volume=("subcompartment_volume", "sum"))
     )
 
-    comp_df["compartment_volume"] = comp_df["compartment_volume"].clip(lower=0)
+    comp_df["compartment_volume"] = comp_df["compartment_volume"].clip(lower=0.0)
 
-    #  Sum compartment volumes by type
-    ship_ids = sorted(comp_df["ship_version_id"].unique())
+    return comp_df
+
+
+def aggregate_volume_features(comp_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Turn compartment volumes into one feature row per ship version.
+    """
+    volume_cols = [f"{name}_volume_total" for name in CONTENT_TYPES.values()]
+    ratio_cols = [f"{name}_volume_ratio" for name in CONTENT_TYPES.values()]
+    count_cols = [f"{name}_compartment_count" for name in CONTENT_TYPES.values()]
+
+    all_cols = [
+        "ship_version_id",
+        *volume_cols,
+        "total_compartment_volume",
+        *ratio_cols,
+    ]
+
+    if comp_df.empty:
+        return pd.DataFrame(columns=all_cols)
+
+    comp_df = comp_df.copy()
+    comp_df["content_name"] = comp_df["content_id"].map(CONTENT_TYPES)
+    comp_df = comp_df.dropna(subset=["content_name"])
 
     output = pd.DataFrame(
         {
-            "ship_version_id": ship_ids,
+            "ship_version_id": sorted(comp_df["ship_version_id"].unique()),
         }
     )
 
-    content_types = {
-        1: "cargo",
-        2: "fuel_oil",
-        3: "gas_oil",
-        4: "potable_water",
-        6: "ballast",
-        8: "void",
-        12: "cargohold_hatch",
-    }
+    for content_id, content_name in CONTENT_TYPES.items():
+        content_df = comp_df[comp_df["content_id"] == content_id]
 
-    for content_id, content_name in content_types.items():
-        type_volume = (
-            comp_df[comp_df["content_id"] == content_id]
+        volume = (
+            content_df
             .groupby("ship_version_id")["compartment_volume"]
             .sum()
-            .reset_index()
+            .reset_index(name=f"{content_name}_volume_total")
         )
+        output = output.merge(volume, on="ship_version_id", how="left")
 
-        type_volume = type_volume.rename(
-            columns={
-                "compartment_volume": f"{content_name}_volume_total"
-            }
-        )
+    output[volume_cols] = output[volume_cols].fillna(0.0)
+    output["total_compartment_volume"] = output[volume_cols].sum(axis=1)
 
-        output = output.merge(
-            type_volume,
-            on="ship_version_id",
-            how="left",
-        )
-
-    # Replace missing type volumes with zero (check if needed)
-    volume_total_cols = [
-        col for col in output.columns
-        if col.endswith("_volume_total")
-    ]
-
-    output[volume_total_cols] = output[volume_total_cols].fillna(0.0)
-
-    #  Total volume and volume ratios
-    output["total_compartment_volume"] = output[volume_total_cols].sum(axis=1)
-
-    for col in volume_total_cols:
-        base_name = col.replace("_volume_total", "")
-
-        output[f"{base_name}_volume_ratio"] = np.where(
+    for content_name in CONTENT_TYPES.values():
+        total_col = f"{content_name}_volume_total"
+        ratio_col = f"{content_name}_volume_ratio"
+        output[ratio_col] = np.where(
             output["total_compartment_volume"] > 0,
-            output[col] / output["total_compartment_volume"],
+            output[total_col] / output["total_compartment_volume"],
             0.0,
         )
 
-    return output
+    return output[all_cols]
+
+
+def volume_features_for_ship(conn: object, ship_version_id: int) -> pd.DataFrame:
+    points = read_points_for_ship(conn, ship_version_id)
+
+    if points.empty:
+        return pd.DataFrame(columns=["ship_version_id"])
+
+    points = clean_points(points)
+
+    if points.empty:
+        return pd.DataFrame(columns=["ship_version_id"])
+
+    comp_df = calculate_compartment_volumes(points)
+
+    return aggregate_volume_features(comp_df)
+
+
+def derive_compartment_volume_by_type(
+    conn: object,
+    ship_version_ids: list[int] | np.ndarray | None = None,
+    progress_callback: object | None = None,
+    batch_size: int = 25,
+) -> pd.DataFrame:
+    """
+    Calculate volume features for each requested ship version.
+    """
+    if ship_version_ids is None:
+        ship_ids_df = pd.read_sql_query(
+            "SELECT DISTINCT ship_version_id FROM compartment ORDER BY ship_version_id",
+            conn,
+        )
+        ship_version_ids = ship_ids_df["ship_version_id"].dropna().astype(int).tolist()
+    else:
+        ship_version_ids = [int(ship_id) for ship_id in ship_version_ids]
+
+    outputs = []
+    total = len(ship_version_ids)
+
+    for start in range(0, total, batch_size):
+        batch_start = time.perf_counter()
+        batch = ship_version_ids[start: start + batch_size]
+
+        load_start = time.perf_counter()
+        points = read_points_for_ship_versions(conn, batch)
+        load_seconds = time.perf_counter() - load_start
+
+        if not points.empty:
+            points = clean_points(points)
+            comp_df = calculate_compartment_volumes(points)
+            features = aggregate_volume_features(comp_df)
+            outputs.append(features)
+
+        if progress_callback is not None:
+            done = min(start + batch_size, total)
+            batch_seconds = time.perf_counter() - batch_start
+            progress_callback(
+                done,
+                total,
+                batch[-1],
+                len(points),
+                load_seconds,
+                batch_seconds,
+            )
+
+    if not outputs:
+        return pd.DataFrame(columns=["ship_version_id"])
+
+    return pd.concat(outputs, ignore_index=True)
