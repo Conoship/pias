@@ -409,9 +409,7 @@ def _run_feature_script_query(
     namespace = _load_feature_script_namespace(script_path)
     feature_builder = namespace.get("build_training_features")
     if callable(feature_builder):
-        return cast(Callable[[sqlite3.Connection], pd.DataFrame], feature_builder)(
-            conn
-        )
+        return cast(Callable[[sqlite3.Connection], pd.DataFrame], feature_builder)(conn)
 
     query = _extract_feature_query(script_path)
     features_df = pd.read_sql_query(query, conn)
