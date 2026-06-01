@@ -43,20 +43,17 @@ class LineEditCollectorController(object):
 
     def _collect_required_user_defined_values(
         self,
-    ) -> tuple[float, float, float, float, float, float] | int:
+    ) -> tuple[float, float, float, float, float] | int:
         """
         Collect the required user defined values from the UI.
 
         Returns:
-            tuple[float, float, float, float, float, float]:
+            tuple[float, float, float, float, float]:
                 A tuple containing the collected values.
 
             int (-1):
                 If one or more required values are empty.
         """
-        subdivision_length = self._line_edit_controller.get_value_from_line_edit(
-            "subdivLenLineEdit"
-        )
         light_service_draft = self._line_edit_controller.get_value_from_line_edit(
             "lightServiceDraftLineEdit"
         )
@@ -74,8 +71,7 @@ class LineEditCollectorController(object):
         )
 
         empty_required_value = (
-            subdivision_length is None
-            or light_service_draft is None
+            light_service_draft is None
             or subdivision_draft is None
             or light_gm_value is None
             or partial_gm_value is None
@@ -90,7 +86,6 @@ class LineEditCollectorController(object):
             )
             return -1
 
-        assert subdivision_length is not None
         assert light_service_draft is not None
         assert subdivision_draft is not None
         assert light_gm_value is not None
@@ -98,7 +93,6 @@ class LineEditCollectorController(object):
         assert deepest_gm_value is not None
 
         return (
-            subdivision_length,
             light_service_draft,
             subdivision_draft,
             light_gm_value,
@@ -108,14 +102,20 @@ class LineEditCollectorController(object):
 
     def _collect_optional_user_defined_values(
         self,
-    ) -> tuple[float | None, float | None, float | None]:
+    ) -> tuple[float | None, float | None, float | None, float | None] | int:
         """
-        Collect the optional user defined displacement values from the UI.
+        Collect the optional user defined values from the UI.
 
         Returns:
-            tuple[float | None, float | None, float | None]:
+            tuple[float | None, float | None, float | None, float | None]:
                 A tuple containing the collected optional values. Empty fields are returned as None.
+
+            int (-1):
+                If the user does not confirm leaving one or more optional values empty.
         """
+        subdivision_length = self._line_edit_controller.get_value_from_line_edit(
+            "subdivLenLineEdit"
+        )
         light_displacement = self._line_edit_controller.get_value_from_line_edit(
             "lightDisplacementLineEdit"
         )
@@ -126,7 +126,29 @@ class LineEditCollectorController(object):
             "deepestDisplacementLineEdit"
         )
 
-        return light_displacement, partial_displacement, deepest_displacement
+        empty_optional_value = (
+            light_displacement is None
+            or partial_displacement is None
+            or deepest_displacement is None
+        )
+
+        if empty_optional_value:
+            reply = QMessageBox.warning(
+                self._window,
+                "Confirm Empty Displacement Values",
+                "Are you sure you want to leave the displacement values empty? This will negatively affect the accuracy of the prediction.",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if reply == QMessageBox.StandardButton.No:
+                return -1
+
+        return (
+            subdivision_length,
+            light_displacement,
+            partial_displacement,
+            deepest_displacement,
+        )
 
     def collect_user_defined_value(
         self,
@@ -137,7 +159,7 @@ class LineEditCollectorController(object):
             float,
             float,
             float,
-            float,
+            float | None,
             float | None,
             float | None,
             float | None,
@@ -146,18 +168,18 @@ class LineEditCollectorController(object):
     ):
         """
         Collect the user defined values:
-        - Subdivision Length
         - Light Service Draft
         - Subdivision Draft
         - Light GM
         - Partial GM
         - Deep GM
+        - Subdivision Length
         - Light Displacement
         - Partial Displacement
         - Deepest Displacement
 
         Returns:
-            tuple[float, float, float, float, float, float, float | None, float | None, float | None]:
+            tuple[float, float, float, float, float, float | None, float | None, float | None, float | None]:
                 A tuple containing the collected values.
 
             int (-1):
@@ -170,13 +192,15 @@ class LineEditCollectorController(object):
                 return required_values
 
             optional_values = self._collect_optional_user_defined_values()
+            if isinstance(optional_values, int):
+                return optional_values
 
             return required_values + optional_values
 
         except ValueError:
             QMessageBox.information(
                 self._window,
-                "Invalid value inputted",
-                "All values must be positive floating point numbers.\nMake sure you did not input any letters or negative numbers.",
+                "Invalid value",
+                "All values must be positive decimal values.\nUse a dot for decimals, for example 12.5 instead of 12,5.\nMake sure you did not enter any letters or negative numbers.",
             )
             return -1

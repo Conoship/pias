@@ -204,10 +204,13 @@ class AgentPipelineController(object):
             "Subdivision Draft",
             "Light GM Value",
             "Partial GM Value",
-            "Deep GM Value",
+            "Deepest GM Value",
             "Light Displacement",
             "Partial Displacement",
             "Deepest Displacement",
+            "Light Trim",
+            "Partial Trim",
+            "Deepest Trim",
         ]
 
         # Collect the user defined values from the UI.
@@ -218,12 +221,12 @@ class AgentPipelineController(object):
             return
 
         (
-            subdivision_length,
             light_service_draft,
             subdivision_draft,
             light_gm_value,
             partial_gm_value,
-            deep_gm_value,
+            deepest_gm_value,
+            subdivision_length,
             light_displacement,
             partial_displacement,
             deepest_displacement,
@@ -235,17 +238,18 @@ class AgentPipelineController(object):
                 {
                     "Subdivision Length": subdivision_length,
                     "Light Service Draft": light_service_draft,
-                    "Partial Subdivision": (
-                        light_service_draft - subdivision_draft
-                    )
+                    "Partial Subdivision": (light_service_draft - subdivision_draft)
                     * 0.6,
                     "Subdivision Draft": subdivision_draft,
                     "Light GM Value": light_gm_value,
                     "Partial GM Value": partial_gm_value,
-                    "Deep GM Value": deep_gm_value,
+                    "Deepest GM Value": deepest_gm_value,
                     "Light Displacement": light_displacement,
                     "Partial Displacement": partial_displacement,
                     "Deepest Displacement": deepest_displacement,
+                    "Light Trim": 0,
+                    "Partial Trim": 0,
+                    "Deepest Trim": 0,
                 }
             ],
             columns=user_df_cols,
@@ -260,14 +264,16 @@ class AgentPipelineController(object):
             layouts_ship = self._get_layouts_ship_name(layouts_df)
             if main_dimensions_ship != layouts_ship:
                 raise Exception(
-                    f"The files do not target the same ship. Main Dimensions ship: {main_dimensions_ship} Layouts ship: {layouts_ship}"
+                    f"The selected files appear to be for different ships. Main Dimensions RTF ship: {main_dimensions_ship}. Layouts XML ship: {layouts_ship}."
                 )
 
         except Exception as e:
-            QMessageBox.warning(
-                self._window, "There was an error parsing one of the files", str(e)
-            )
+            QMessageBox.warning(self._window, "Input file problem", str(e))
             return
+
+        # Use the user defined subdivision length as the ship length when provided.
+        if subdivision_length is not None:
+            main_dimensions_df["loa"] = subdivision_length
 
         # Combine the Data Frames.
         df = pd.concat([user_df, main_dimensions_df, layouts_df], axis=1)

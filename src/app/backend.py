@@ -276,17 +276,13 @@ def _insert_loading_data(
                 df, "Partial Subdivision", _first_value(df, "Subdivision Draft")
             ),
             _first_value(df, "Partial GM Value"),
-            _first_value(
-                df, "Partial Displacement", _first_value(df, "displacement")
-            ),
+            _first_value(df, "Partial Displacement", _first_value(df, "displacement")),
         ),
         (
             "deepest",
             _first_value(df, "Subdivision Draft"),
             _first_value(df, "Deep GM Value"),
-            _first_value(
-                df, "Deepest Displacement", _first_value(df, "displacement")
-            ),
+            _first_value(df, "Deepest Displacement", _first_value(df, "displacement")),
         ),
     ]
 
@@ -443,14 +439,14 @@ def _prepare_model_features(
             ]
             if missing_cols:
                 errors.append(
-                    f"{script_path.name}: missing columns {', '.join(missing_cols)}"
+                    f"{script_path.name}: missing prediction values {', '.join(missing_cols)}"
                 )
                 continue
 
             return features_df
 
         raise ValueError(
-            "Could not find a compatible feature query script for the saved model. "
+            "The AI agent needs values that could not be prepared from the selected files. "
             f"Checked: {'; '.join(errors)}"
         )
 
@@ -487,16 +483,16 @@ def run_agent_pipeline(
     except FileNotFoundError:
         QMessageBox.warning(
             window,
-            "File not found",
-            "The ML model .pkl file could not be found.",
+            "Prediction model missing",
+            "The application could not find the prediction model file. Please make sure models/model.pkl is available before running a prediction.",
         )
         return
 
     except (AttributeError, EOFError, pickle.UnpicklingError) as error:
         QMessageBox.warning(
             window,
-            "Invalid model file",
-            f"The ML model .pkl file could not be loaded: {error}",
+            "Prediction model problem",
+            f"The prediction model file could not be opened correctly. Please check that models/model.pkl is the correct file.\nDetails: {error}",
         )
         return
 
@@ -514,8 +510,8 @@ def run_agent_pipeline(
     except Exception as error:
         QMessageBox.warning(
             window,
-            "Feature generation failed",
-            str(error),
+            "Prediction input problem",
+            f"The application could not prepare the values needed for the prediction.\n{error}",
         )
         return
 

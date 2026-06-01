@@ -134,8 +134,8 @@ class MainDimensionsParser(object):
         if missing_cols:
             missing_col_names = ", ".join(missing_cols)
             raise Exception(
-                "Parser could not fill all required columns of the DataFrame, "
-                f"possibly due to missing values for: {missing_col_names}."
+                f"RTF Value Missing: {missing_col_names}. "
+                "Please check that these values are present in the selected Main Dimensions RTF file."
             )
 
     def parse_file(self, file_path: str) -> pd.DataFrame:

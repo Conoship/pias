@@ -104,8 +104,8 @@ The Tests cover:
 | Objective | Test the message when predicted A is above or equal to R. |
 | Steps | Enter a required index R lower than or equal to the expected prediction. |
 | Expected result | The results should correctly display that the ship passes the damage stability calculation. |
-| Actual result | |
-| Status | |
+| Actual result | The results correctly displayed that the ship passed the damage stability calculation. |
+| Status | Passed |
 
 ### AT-08a: Invalid Main Dimensions RTF
 
@@ -174,7 +174,7 @@ The Tests cover:
 | Objective | Test that the input dataframe contains all features expected by the saved model. |
 | Steps | Run the pipeline with valid input files and values. |
 | Expected result | The pipeline selects the model feature columns without a missing-column error. |
-| Actual result | |
+| Actual result | The pipeline selected the model feature columns without a missing-column error. |
 | Status | |
 
 ### AT-13: Engineered Features Are Applied
@@ -184,8 +184,8 @@ The Tests cover:
 | Objective | Test that the engineered features are derived sucessfully . |
 | Steps | Run the pipeline using a model file. |
 | Expected result | The engineered features are created before prediction. |
-| Actual result | |
-| Status | |
+| Actual result | The engineered features were created before prediction. |
+| Status | Passed |
 
 ### AT-14: Confidence Interval Is Valid
 
@@ -243,9 +243,9 @@ The Tests cover:
 | ----- | ----------- |
 | Objective | Test that the model pipeline handles unusually high inputs safely. |
 | Steps | Enter  numeric values for draft, GM, or subdivision length and click Run. |
-| Expected result | The app either produces a result or shows a clear validation error without crashing. |
-| Actual result | |
-| Status | |
+| Expected result | The app produces a result without crashing. |
+| Actual result | The app produced a result without crashing. |
+| Status | Passed (With extreme values, that were not used in the training process, the model always produces a PASS result) |
 
 ### AT-20: RTF and XML files are for the same ship
 
@@ -267,5 +267,5 @@ The Tests cover:
 
 | Result | Count |
 | ------ | ----- |
-| Passed |  19   |
-| Failed |       |
+| Passed |  23   |
+| Failed |   0   |
