@@ -264,12 +264,12 @@ class AgentPipelineController(object):
             layouts_ship = self._get_layouts_ship_name(layouts_df)
             if main_dimensions_ship != layouts_ship:
                 raise Exception(
-                    f"The files do not target the same ship. Main Dimensions ship: {main_dimensions_ship} Layouts ship: {layouts_ship}"
+                    f"The selected files appear to be for different ships. Main Dimensions RTF ship: {main_dimensions_ship}. Layouts XML ship: {layouts_ship}."
                 )
 
         except Exception as e:
             QMessageBox.warning(
-                self._window, "There was an error parsing one of the files", str(e)
+                self._window, "Input file problem", str(e)
             )
             return
 

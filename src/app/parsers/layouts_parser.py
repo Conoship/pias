@@ -424,13 +424,17 @@ class LayoutsParser(object):
                 unknown record type, or misses required values for a record type.
         """
         if self._df.empty:
-            raise Exception("Parser could not extract any layout records.")
+            raise Exception(
+                "XML Value Missing: no usable layout data was found. "
+                "Please check that the selected Layouts XML file contains compartments, shapes, or openings."
+            )
 
         missing_columns = [col for col in self._cols if col not in self._df.columns]
         if missing_columns:
             missing_column_names = ", ".join(missing_columns)
             raise Exception(
-                "Parser output is missing expected columns: " f"{missing_column_names}."
+                f"XML Value Missing: {missing_column_names}. "
+                "Please check that these values are present in the selected Layouts XML file."
             )
 
         missing_values = []
@@ -438,14 +442,14 @@ class LayoutsParser(object):
         for idx, row in self._df.iterrows():
             record_type_value = row["record_type"]
             if self._is_missing(record_type_value):
-                missing_values.append(f"row {idx}: record_type")
+                missing_values.append(f"layout item {idx}: type")
                 continue
 
         if missing_values:
             missing_value_names = ", ".join(missing_values)
             raise Exception(
-                "Parser could not fill all required layout values, "
-                f"possibly due to missing values for: {missing_value_names}."
+                f"XML Value Missing: {missing_value_names}. "
+                "Please check that these values are present in the selected Layouts XML file."
             )
 
     def parse_file(self, file_path: str) -> pd.DataFrame:

@@ -200,7 +200,7 @@ class LineEditCollectorController(object):
         except ValueError:
             QMessageBox.information(
                 self._window,
-                "Invalid value inputted",
-                "All values must be positive floating point numbers.\nMake sure you did not input any letters or negative numbers.",
+                "Invalid value",
+                "All values must be positive decimal values.\nUse a dot for decimals, for example 12.5 instead of 12,5.\nMake sure you did not enter any letters or negative numbers.",
             )
             return -1

@@ -15,15 +15,15 @@ class LineEditController(object):
 
     def _is_number(self, text: str) -> bool:
         """
-        Method to check if a piece of text represents a floating point number.
+        Method to check if a piece of text represents a decimal value.
 
         Args:
             text (str):
-                The text to check if it is a floating point number or not.
+                The text to check if it is a decimal value or not.
 
         Returns:
             bool:
-                `True` if the text represents a floating point number, `False` otherwise.
+                `True` if the text represents a decimal value, `False` otherwise.
         """
         try:
             float(text)
