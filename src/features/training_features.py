@@ -99,11 +99,19 @@ def build_training_features(
 
     ship_version_ids = features_df["ship_version_id"].dropna().astype(int).unique()
 
-    def print_progress(done: int, total: int, ship_id: int) -> None:
+    def print_progress(
+        done: int,
+        total: int,
+        ship_id: int,
+        rows_loaded: int,
+        load_seconds: float,
+        batch_seconds: float,
+    ) -> None:
         if verbose:
             print(
                 f"Processed volume features up to ship_version_id={ship_id} "
-                f"({done}/{total})",
+                f"({done}/{total}); loaded {rows_loaded} rows in "
+                f"{load_seconds:.1f}s, batch {batch_seconds:.1f}s",
                 flush=True,
             )
 

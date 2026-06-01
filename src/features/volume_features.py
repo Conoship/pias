@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 import pandas as pd
 
@@ -443,8 +445,12 @@ def derive_compartment_volume_by_type(
     total = len(ship_version_ids)
 
     for start in range(0, total, batch_size):
+        batch_start = time.perf_counter()
         batch = ship_version_ids[start: start + batch_size]
+
+        load_start = time.perf_counter()
         points = read_points_for_ship_versions(conn, batch)
+        load_seconds = time.perf_counter() - load_start
 
         if not points.empty:
             points = clean_points(points)
@@ -454,7 +460,15 @@ def derive_compartment_volume_by_type(
 
         if progress_callback is not None:
             done = min(start + batch_size, total)
-            progress_callback(done, total, batch[-1])
+            batch_seconds = time.perf_counter() - batch_start
+            progress_callback(
+                done,
+                total,
+                batch[-1],
+                len(points),
+                load_seconds,
+                batch_seconds,
+            )
 
     if not outputs:
         return pd.DataFrame(columns=["ship_version_id"])
