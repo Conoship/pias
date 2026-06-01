@@ -84,9 +84,36 @@ ORDER BY
 """
 
 
-def build_training_features(conn: sqlite3.Connection) -> pd.DataFrame:
+def build_training_features(
+    conn: sqlite3.Connection,
+    verbose: bool = False,
+) -> pd.DataFrame:
+    if verbose:
+        print("Building base training features...", flush=True)
+
     features_df = pd.read_sql_query(TRAINING_FEATURE_QUERY, conn)
-    volume_features = derive_compartment_volume_by_type(conn)
+
+    if verbose:
+        print(f"Base feature rows: {len(features_df)}", flush=True)
+        print("Building volume features...", flush=True)
+
+    ship_version_ids = features_df["ship_version_id"].dropna().astype(int).unique()
+
+    def print_progress(done: int, total: int, ship_id: int) -> None:
+        if verbose:
+            print(
+                f"Processed volume ship_version_id={ship_id} ({done}/{total})",
+                flush=True,
+            )
+
+    volume_features = derive_compartment_volume_by_type(
+        conn,
+        ship_version_ids=ship_version_ids,
+        progress_callback=print_progress if verbose else None,
+    )
+
+    if verbose:
+        print(f"Volume feature rows: {len(volume_features)}", flush=True)
 
     return features_df.merge(
         volume_features,
