@@ -199,12 +199,19 @@ def clean_points(points: pd.DataFrame) -> pd.DataFrame:
     return points
 
 
-def read_points_for_ship(conn: object, ship_version_id: int) -> pd.DataFrame:
+def read_points_for_ship_versions(
+    conn: object,
+    ship_version_ids: list[int],
+) -> pd.DataFrame:
     """
-    Read frustum points for one ship version.
+    Read frustum points for a batch of ship versions.
     """
+    if not ship_version_ids:
+        return pd.DataFrame()
+
     content_ids = tuple(CONTENT_TYPES.keys())
     placeholders = ", ".join("?" for _ in content_ids)
+    ship_placeholders = ", ".join("?" for _ in ship_version_ids)
 
     query = f"""
         WITH geometry_bounds AS (
@@ -233,7 +240,7 @@ def read_points_for_ship(conn: object, ship_version_id: int) -> pd.DataFrame:
                 ON fp.subcompartment_shape_id = ss.id
 
             WHERE fp.L IS NOT NULL
-              AND comp.ship_version_id = ?
+              AND comp.ship_version_id IN ({ship_placeholders})
 
             GROUP BY comp.ship_version_id
         )
@@ -274,12 +281,19 @@ def read_points_for_ship(conn: object, ship_version_id: int) -> pd.DataFrame:
         LEFT JOIN geometry_bounds gb
             ON gb.ship_version_id = comp.ship_version_id
 
-        WHERE comp.ship_version_id = ?
+        WHERE comp.ship_version_id IN ({ship_placeholders})
           AND comp.design_content_id_number IN ({placeholders})
     """
 
-    params = (ship_version_id, ship_version_id, *content_ids)
+    params = (*ship_version_ids, *ship_version_ids, *content_ids)
     return pd.read_sql_query(query, conn, params=params)
+
+
+def read_points_for_ship(conn: object, ship_version_id: int) -> pd.DataFrame:
+    """
+    Read frustum points for one ship version.
+    """
+    return read_points_for_ship_versions(conn, [ship_version_id])
 
 
 def calculate_compartment_volumes(points: pd.DataFrame) -> pd.DataFrame:
@@ -411,6 +425,7 @@ def derive_compartment_volume_by_type(
     conn: object,
     ship_version_ids: list[int] | np.ndarray | None = None,
     progress_callback: object | None = None,
+    batch_size: int = 25,
 ) -> pd.DataFrame:
     """
     Calculate volume features for each requested ship version.
@@ -427,14 +442,19 @@ def derive_compartment_volume_by_type(
     outputs = []
     total = len(ship_version_ids)
 
-    for done, ship_version_id in enumerate(ship_version_ids, start=1):
-        features = volume_features_for_ship(conn, ship_version_id)
+    for start in range(0, total, batch_size):
+        batch = ship_version_ids[start: start + batch_size]
+        points = read_points_for_ship_versions(conn, batch)
 
-        if not features.empty:
+        if not points.empty:
+            points = clean_points(points)
+            comp_df = calculate_compartment_volumes(points)
+            features = aggregate_volume_features(comp_df)
             outputs.append(features)
 
         if progress_callback is not None:
-            progress_callback(done, total, ship_version_id)
+            done = min(start + batch_size, total)
+            progress_callback(done, total, batch[-1])
 
     if not outputs:
         return pd.DataFrame(columns=["ship_version_id"])

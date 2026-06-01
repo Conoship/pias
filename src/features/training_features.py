@@ -102,7 +102,8 @@ def build_training_features(
     def print_progress(done: int, total: int, ship_id: int) -> None:
         if verbose:
             print(
-                f"Processed volume ship_version_id={ship_id} ({done}/{total})",
+                f"Processed volume features up to ship_version_id={ship_id} "
+                f"({done}/{total})",
                 flush=True,
             )
 
