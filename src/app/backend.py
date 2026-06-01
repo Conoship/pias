@@ -477,8 +477,14 @@ def run_agent_pipeline(
     """
     # Load the model.
     try:
-        with open("models/model.pkl", "rb") as file:
-            saved = _ModelUnpickler(file).load()
+        with open("models/model_light.pkl", "rb") as file:
+            light_saved = _ModelUnpickler(file).load()
+
+        with open("models/model_partial.pkl", "rb") as file:
+            partial_saved = _ModelUnpickler(file).load()
+
+        with open("models/model_deepest.pkl", "rb") as file:
+            deepest_saved = _ModelUnpickler(file).load()
 
     except FileNotFoundError:
         QMessageBox.warning(
@@ -496,12 +502,19 @@ def run_agent_pipeline(
         )
         return
 
-    saved_model = cast(dict[str, Any], saved)
-    model_type = str(saved_model["model_type"])
-    model = saved_model["model"]
-    feature_cols = cast(list[str], saved_model["feature_cols"])
+    light_saved_model = cast(dict[str, Any], light_saved)
+    partial_saved_model = cast(dict[str, Any], partial_saved)
+    deepest_saved_model = cast(dict[str, Any], deepest_saved)
+
+    model_type = str(light_saved_model["model_type"])
+
+    light_model = light_saved_model["model"]
+    partial_model = partial_saved_model["model"]
+    deepest_model = deepest_saved_model["model"]
+
+    feature_cols = cast(list[str], light_saved_model["feature_cols"])
     engineer_features = cast(
-        _FeatureEngineer | None, saved_model.get("engineer_features")
+        _FeatureEngineer | None, light_saved_model.get("engineer_features")
     )
 
     try:
