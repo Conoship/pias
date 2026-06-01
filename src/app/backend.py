@@ -33,6 +33,15 @@ class _ForestPredictor(Protocol):
     estimators_: list[_TreeEstimator]
 
 
+CONDITION_MODEL_PATHS = {
+    "light": Path("models/model_light.pkl"),
+    "partial": Path("models/model_partial.pkl"),
+    "deepest": Path("models/model_deepest.pkl"),
+}
+
+CONDITION_NAMES = ["light", "partial", "deepest"]
+
+
 class _ModelUnpickler(pickle.Unpickler):
     """
     Unpickler that maps legacy model pickles created from script execution.
@@ -397,10 +406,16 @@ def _load_feature_script_namespace(script_path: Path) -> dict[str, Any]:
 def _run_feature_script_query(
     conn: sqlite3.Connection, script_path: Path
 ) -> pd.DataFrame:
+    namespace = _load_feature_script_namespace(script_path)
+    feature_builder = namespace.get("build_training_features")
+    if callable(feature_builder):
+        return cast(Callable[[sqlite3.Connection], pd.DataFrame], feature_builder)(
+            conn
+        )
+
     query = _extract_feature_query(script_path)
     features_df = pd.read_sql_query(query, conn)
 
-    namespace = _load_feature_script_namespace(script_path)
     volume_builder = namespace.get("derive_compartment_volume_by_type")
     if callable(volume_builder):
         volume_features = cast(
@@ -454,6 +469,55 @@ def _prepare_model_features(
         conn.close()
 
 
+def _model_path_for_condition(condition_name: str) -> Path | None:
+    path = CONDITION_MODEL_PATHS[condition_name]
+    return path if path.exists() else None
+
+
+def _load_saved_model(path: Path) -> dict[str, Any]:
+    with path.open("rb") as file:
+        return cast(dict[str, Any], _ModelUnpickler(file).load())
+
+
+def _predict_one_condition(
+    saved_model: dict[str, Any],
+    row: pd.DataFrame,
+) -> tuple[float, tuple[float, float]]:
+    model_type = str(saved_model["model_type"])
+    model = saved_model["model"]
+    feature_cols = cast(list[str], saved_model["feature_cols"])
+    engineer_features = cast(
+        _FeatureEngineer | None, saved_model.get("engineer_features")
+    )
+
+    X = row.copy()
+    for col in feature_cols:
+        X[col] = pd.to_numeric(X[col], errors="coerce")
+
+    if engineer_features is not None:
+        X = engineer_features(X)
+
+    X = X[feature_cols]
+
+    if model_type == "MAPIE XGB Regressor":
+        interval_model = cast(_IntervalPredictor, model)
+        model_predictions, intervals = interval_model.predict_interval(X)
+        prediction = float(model_predictions.ravel()[0])
+        lower, upper = intervals[:, :, 0][0]
+        return prediction, (float(lower), float(upper))
+
+    forest_model = cast(_ForestPredictor, model)
+    X_values = X.to_numpy()
+    all_tree_preds = np.array(
+        [tree.predict(X_values) for tree in forest_model.estimators_]
+    )
+    prediction = float(np.mean(all_tree_preds, axis=0)[0])
+    lower = float(np.percentile(all_tree_preds, 2.5, axis=0)[0])
+    upper = float(np.percentile(all_tree_preds, 97.5, axis=0)[0])
+
+    return prediction, (lower, upper)
+
+
 def run_agent_pipeline(
     window: QWidget, required_index: float, df: pd.DataFrame
 ) -> tuple[list[float], list[tuple[float, float]], list[str]] | None:
@@ -475,16 +539,32 @@ def run_agent_pipeline(
         tuple[list[float], list[tuple[float, float]], list[str]]:
             A tuple containing the lists of predictions, 95% CIs and the A against R comparison result (one element per loading condition)
     """
-    # Load the model.
     try:
-        with open("models/model.pkl", "rb") as file:
-            saved = _ModelUnpickler(file).load()
+        model_paths = {
+            condition_name: _model_path_for_condition(condition_name)
+            for condition_name in CONDITION_NAMES
+        }
+        missing_models = [
+            condition_name
+            for condition_name, path in model_paths.items()
+            if path is None
+        ]
+        if missing_models:
+            raise FileNotFoundError(", ".join(missing_models))
 
-    except FileNotFoundError:
+        saved_models = {
+            condition_name: _load_saved_model(cast(Path, path))
+            for condition_name, path in model_paths.items()
+        }
+
+    except FileNotFoundError as error:
         QMessageBox.warning(
             window,
             "Prediction model missing",
-            "The application could not find the prediction model file. Please make sure models/model.pkl is available before running a prediction.",
+            "The application could not find the prediction model files. "
+            "Expected models/model_light.pkl, models/model_partial.pkl "
+            "and models/model_deepest.pkl.\n"
+            f"Missing: {error}",
         )
         return
 
@@ -492,16 +572,16 @@ def run_agent_pipeline(
         QMessageBox.warning(
             window,
             "Prediction model problem",
-            f"The prediction model file could not be opened correctly. Please check that models/model.pkl is the correct file.\nDetails: {error}",
+            f"A prediction model file could not be opened correctly.\nDetails: {error}",
         )
         return
 
-    saved_model = cast(dict[str, Any], saved)
-    model_type = str(saved_model["model_type"])
-    model = saved_model["model"]
-    feature_cols = cast(list[str], saved_model["feature_cols"])
-    engineer_features = cast(
-        _FeatureEngineer | None, saved_model.get("engineer_features")
+    feature_cols = sorted(
+        {
+            feature
+            for saved_model in saved_models.values()
+            for feature in cast(list[str], saved_model["feature_cols"])
+        }
     )
 
     try:
@@ -515,61 +595,27 @@ def run_agent_pipeline(
         )
         return
 
-    # Keep the exact model feature columns and coerce them to numeric. Some SQL
-    # features can come back as object dtype when their values are NULL.
-    X = features_df.copy()
-    for col in feature_cols:
-        X[col] = pd.to_numeric(X[col], errors="coerce")
-
-    # Split the data into each loading condition so we can get model output for each loading condition.
-    if "condition_code" in X.columns:
-        X = (
-            X[X["condition_code"].isin([0, 1, 2])]
-            .sort_values("condition_code")
-            .drop_duplicates("condition_code", keep="first")
+    condition_rows = features_df.head(3)
+    if len(condition_rows) < 3:
+        QMessageBox.warning(
+            window,
+            "Prediction input problem",
+            "The application could not prepare all three loading rows. "
+            "Expected row 1 light, row 2 partial and row 3 deepest.",
         )
-    else:
-        X = X.head(3)
+        return
 
-    if engineer_features is not None:
-        X = engineer_features(X)
-
-    X = X[feature_cols]
-    print("=========================")
-    print("Original DataFrame Given:")
-    print(df)
-    print("=========================")
-    print("Engineered Features based on the DataFrame:")
-    print(X)
-    print("=========================")
-
-    # Predict based on the model type - once a single performing model is selected, this can be narrowed down.
     predictions: list[float] = []
     confidence_intevals: list[tuple[float, float]] = []
-    if model_type == "MAPIE XGB Regressor":
-        interval_model = cast(_IntervalPredictor, model)
-        model_predictions, intervals = interval_model.predict_interval(X)
-        predictions = [float(prediction) for prediction in model_predictions.ravel()]
-        confidence_intevals = [
-            (float(lower), float(upper)) for lower, upper in intervals[:, :, 0]
-        ]
 
-    else:
-        # Get per-tree predictions and calculate the 95% CI to display confidence.
-        forest_model = cast(_ForestPredictor, model)
-        X_values = X.to_numpy()
-        all_tree_preds = np.array(
-            [tree.predict(X_values) for tree in forest_model.estimators_]
+    for row_index, condition_name in enumerate(CONDITION_NAMES):
+        row = condition_rows.iloc[[row_index]]
+        prediction, confidence_interval = _predict_one_condition(
+            saved_models[condition_name],
+            row,
         )
-        predictions = [
-            float(prediction) for prediction in np.mean(all_tree_preds, axis=0)
-        ]
-        lower_bounds = np.percentile(all_tree_preds, 2.5, axis=0)
-        upper_bounds = np.percentile(all_tree_preds, 97.5, axis=0)
-        confidence_intevals = [
-            (float(lower), float(upper))
-            for lower, upper in zip(lower_bounds, upper_bounds)
-        ]
+        predictions.append(prediction)
+        confidence_intevals.append(confidence_interval)
 
     # Get the pass results for each prediction, for each loading condition.
     # The minimum value for each condition is 0.5 * R.

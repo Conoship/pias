@@ -140,6 +140,7 @@ feature_sets = {
     ),
     "all_features": (
         feature_groups["loading_features"]
+        + feature_groups["v3_geometry_features"]
         + feature_groups["main_dimension_features"]
         + feature_groups["spatial_zone_features"]
         + feature_groups["compartment_features"]
@@ -147,7 +148,13 @@ feature_sets = {
         + feature_groups["opening_features"]
     ),
     "all_without_trim_mg": (
-        ["draft", "displacement", "vcg"]
+        [
+            "condition_code",
+            "vcg",
+            "draft_over_depth",
+            "displacement_per_length",
+        ]
+        + feature_groups["v3_geometry_features"]
         + feature_groups["main_dimension_features"]
         + feature_groups["spatial_zone_features"]
         + feature_groups["compartment_features"]
@@ -169,6 +176,10 @@ def evaluate_leave_one_ship_out(df, features, target, group_col):
         return None
 
     X = df[features].copy()
+    X = X.loc[:, X.nunique(dropna=True) > 1]
+    if X.shape[1] == 0:
+        return None
+
     y = df[target]
     ships = df[group_col].unique()
 
