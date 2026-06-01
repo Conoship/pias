@@ -6,11 +6,13 @@ import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score, mean_absolute_error
 
-datasets = {
-    "light": "data/all_ships_v8_light.csv",
-    "partial": "data/all_ships_v8_partial.csv",
-    "deepest": "data/all_ships_v8_deepest.csv",
-    "all": "data/all_ships_v8.csv",
+DATA_PATH = "data/all_ships_v8.csv"
+
+condition_filters = {
+    "light": 0,
+    "partial": 1,
+    "deepest": 2,
+    "all": None,
 }
 
 
@@ -245,8 +247,17 @@ def evaluate_leave_one_ship_out(df, features, target, group_col):
 
 summary_rows = []
 
-for condition_name, csv_path in datasets.items():
-    df = pd.read_csv(csv_path)
+full_df = pd.read_csv(DATA_PATH)
+
+for condition_name, condition_code in condition_filters.items():
+    if condition_code is None:
+        df = full_df.copy()
+    else:
+        df = full_df[full_df["condition_code"] == condition_code].copy()
+
+    if df.empty:
+        print(f"\nSkipping {condition_name}: no rows found.")
+        continue
 
     for set_name, features in feature_sets.items():
         result = evaluate_leave_one_ship_out(
