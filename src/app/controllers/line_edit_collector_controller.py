@@ -108,13 +108,16 @@ class LineEditCollectorController(object):
 
     def _collect_optional_user_defined_values(
         self,
-    ) -> tuple[float | None, float | None, float | None]:
+    ) -> tuple[float | None, float | None, float | None] | int:
         """
         Collect the optional user defined displacement values from the UI.
 
         Returns:
             tuple[float | None, float | None, float | None]:
                 A tuple containing the collected optional values. Empty fields are returned as None.
+
+            int (-1):
+                If the user does not confirm leaving one or more optional values empty.
         """
         light_displacement = self._line_edit_controller.get_value_from_line_edit(
             "lightDisplacementLineEdit"
@@ -125,6 +128,23 @@ class LineEditCollectorController(object):
         deepest_displacement = self._line_edit_controller.get_value_from_line_edit(
             "deepestDisplacementLineEdit"
         )
+
+        empty_optional_value = (
+            light_displacement is None
+            or partial_displacement is None
+            or deepest_displacement is None
+        )
+
+        if empty_optional_value:
+            reply = QMessageBox.warning(
+                self._window,
+                "Confirm Empty Displacement Values",
+                "Are you sure you want to leave the displacement values empty? This will negatively affect the accuracy of the prediction.",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if reply == QMessageBox.StandardButton.No:
+                return -1
 
         return light_displacement, partial_displacement, deepest_displacement
 
@@ -170,6 +190,8 @@ class LineEditCollectorController(object):
                 return required_values
 
             optional_values = self._collect_optional_user_defined_values()
+            if isinstance(optional_values, int):
+                return optional_values
 
             return required_values + optional_values
 
