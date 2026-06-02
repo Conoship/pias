@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from unittest.mock import patch
 from src.models.random_forest_baseline import RandomForestBaseline
+import os
 
 # Paths
 CONFIG_PATH = "C:/Users/student01/Desktop/rug-project/pias/config.yaml"
@@ -355,5 +356,34 @@ class TestPlots:
     def test_plot_all_runs(self):
         model = make_model()
         model.train()
+        with patch("matplotlib.pyplot.show"):
+            model.plot_all(save=False)
+
+
+class TestFullPipeline:
+    def test_train_evaluate_save_load(self, tmp_path, monkeypatch):
+        # Train
+        model = make_model()
+        model.train()
+        assert len(model.fold_results) > 0, "Training produced no fold results"
+
+        # Evaluate
+        model.evaluate()
+        assert len(model.r2_scores) > 0, "No R2 scores after evaluate"
+        assert len(model.mae_scores) > 0, "No MAE scores after evaluate"
+        mean_r2 = sum(model.r2_scores) / len(model.r2_scores)
+        mean_mae = sum(model.mae_scores) / len(model.mae_scores)
+        assert mean_r2 >= 0.5, f"R2 too low {mean_r2:.4f}"
+        assert mean_mae >= 0, f"MAE is negative: {mean_mae:.4f}"
+
+        # Get eval data
+        rf_model, x_test, y_test, preds = model._get_eval_data()
+        assert len(preds) == len(y_test), "Predictions length mismatch"
+
+        # Save
+        model._save_model(model=rf_model, feature_cols=list(x_test.columns))
+        assert os.path.exists("models/model.pkl"), "Model was not saved"
+
+        # Plot
         with patch("matplotlib.pyplot.show"):
             model.plot_all(save=False)
