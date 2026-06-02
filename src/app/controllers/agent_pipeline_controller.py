@@ -7,6 +7,7 @@ from PySide6.QtCore import QFile, Qt
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import (
     QFrame,
+    QLineEdit,
     QMessageBox,
     QTableWidget,
     QTableWidgetItem,
@@ -43,6 +44,7 @@ class AgentPipelineController(object):
         confidence_intervals: list[tuple],
         pass_results: list[str],
         required_index: float,
+        partial_subdivision: float,
     ) -> None:
         """
         Method to display the results in the table.
@@ -61,6 +63,13 @@ class AgentPipelineController(object):
             required_index (float):
                 The value of the Required Index (R).
         """
+        # Show the Partial Subdivision calculated value.
+        partial_subdivision_line_edit = self._window.findChild(
+            QLineEdit, "partialSubdivisionLineEdit"
+        )
+        if partial_subdivision_line_edit:
+            partial_subdivision_line_edit.setText(str(partial_subdivision))
+
         # Load the Results Widget.
         loader = QUiLoader()
         file = QFile("src/app/ui/resultsWidget.ui")
@@ -303,8 +312,13 @@ class AgentPipelineController(object):
         agent_result = run_agent_pipeline(self._window, required_index, df)
         if agent_result:
             predictions, confidence_intervals, pass_results = agent_result
+            partial_subdivision = cast(float, user_df.at[0, "Partial Subdivision"])
 
             # Display the output.
             self._display_results(
-                predictions, confidence_intervals, pass_results, required_index
+                predictions,
+                confidence_intervals,
+                pass_results,
+                required_index,
+                partial_subdivision,
             )
