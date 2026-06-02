@@ -274,11 +274,11 @@ class TestParseFile:
         self, monkeypatch, capsys
     ):
         def raise_unexpected_error(*args, **kwargs):
-            raise RuntimeError("boom")
+            raise RuntimeError("error")
 
         monkeypatch.setattr(builtins, "open", raise_unexpected_error)
         parser = make_parser()
         with pytest.raises(Exception, match="RTF Value Missing"):
             parser.parse_file("unexpected.rtf")
 
-        assert "An unexpected error occurred: boom" in capsys.readouterr().out
+        assert "An unexpected error occurred: error" in capsys.readouterr().out
