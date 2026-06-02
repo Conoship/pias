@@ -14,7 +14,7 @@ class MainDimensionsParser(object):
 
     # List of all columns that we accept being missing in the RTF file.
     # TODO: Implement this.
-    _ACCEPT_MISSING_COLS = ()
+    _ACCEPT_MISSING_COLS: tuple[str, ...] = ()
 
     def __init__(self) -> None:
         """
