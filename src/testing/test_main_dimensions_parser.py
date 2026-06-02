@@ -44,9 +44,7 @@ def realistic_main_dimensions_rtf_lines() -> list[str]:
     ]
     lines.extend([r"{\pard header metadata that should be ignored\par}" + "\n"] * 24)
     lines.append(r"{\pard Length overall {label}{999.0}{m}\par}" + "\n")
-    lines.append(
-        r"{\pard Length between perpendiculars {text}{150,25}{m}\par}" + "\n"
-    )
+    lines.append(r"{\pard Length between perpendiculars {text}{150,25}{m}\par}" + "\n")
     lines.append(r"{\pard Length overall {text}{154.75}{m}\par}" + "\n")
     lines.append(r"{\pard Moulded breadth {text}{28,40}{m}\par}" + "\n")
     lines.append(r"{\pard Moulded depth {text}{9.60}{m}\par}" + "\n")
@@ -295,7 +293,7 @@ class TestParseFile:
         self, monkeypatch, capsys
     ):
         def raise_unexpected_error(*args, **kwargs):
-            raise RuntimeError("boom")
+            raise RuntimeError("error")
 
         monkeypatch.setattr(builtins, "open", raise_unexpected_error)
         parser = make_parser()
@@ -334,9 +332,7 @@ class TestMainDimensionsParserIntegration:
         result = MainDimensionsParser().parse_file(file_path)
 
         assert list(result.columns) == ["name", "lpp", "loa", "breadth", "depth"]
-        assert set(["name", "lpp", "loa", "breadth", "depth"]).issubset(
-            result.columns
-        )
+        assert set(["name", "lpp", "loa", "breadth", "depth"]).issubset(result.columns)
 
     def test_parse_file_uses_first_complete_main_dimensions_section(self, tmp_path):
         lines = realistic_main_dimensions_rtf_lines()

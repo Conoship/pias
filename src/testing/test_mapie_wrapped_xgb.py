@@ -79,11 +79,6 @@ class TestLoadData:
         df, X, Y = model._load_data()
         assert isinstance(Y, pd.Series)
 
-    # def test_load_data_x_has_correct_columns(self):
-    #     model = make_model()
-    #     df, X, Y = model._load_data()
-    #     assert list(X.columns) == MapieXGBRegressor._X_FEATURES
-
     def test_load_data_y_has_correct_name(self):
         model = make_model()
         df, X, Y = model._load_data()
@@ -335,11 +330,30 @@ class TestSaveModel:
             saved = pickle.load(f)
         assert isinstance(saved["model"], SplitConformalRegressor)
 
-    # def test_saved_feature_cols_match_class_attribute(self, tmp_path, monkeypatch):
-    #     monkeypatch.chdir(tmp_path)
-    #     model = make_model()
-    #     model.train()
-    #     model.evaluate(save_best_model=True)
-    #     with open("model_deepest.pkl", "rb") as f:
-    #         saved = pickle.load(f)
-    #     assert saved["feature_cols"] == MapieXGBRegressor._X_FEATURES
+
+class TestFullPipeline:
+    def test_train_evaluate_save_load(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+
+        # Train
+        model = make_model()
+        model.train()
+
+        # Evaluate and Save
+        model.evaluate(save_best_model=True, print_results=False)
+
+        # Load the saved model
+        with open("model_deepest.pkl", "rb") as f:
+            saved = pickle.load(f)
+
+        # Run inference with the loaded model
+        df, X, _ = model._load_data()
+        sample = X.iloc[:5]
+        predictions, intervals = saved["model"].predict_interval(sample)
+
+        # Assert the predictions
+        assert len(predictions) == 5
+        assert intervals.shape == (5, 2, 1)
+        assert all(
+            intervals[:, 0, 0] < intervals[:, 1, 0]
+        ), "Lower bound exceeds upper bound"
