@@ -168,6 +168,7 @@ class MainDimensionsParser(object):
         try:
             with open(file_path, "r", encoding="utf-8") as file:
                 found_cols: set[str] = set()
+                section_started = False
                 for idx, line in enumerate(file):
                     if "Project Name" not in found_cols:
                         project_name = self._extract_project_name(line)
@@ -175,8 +176,11 @@ class MainDimensionsParser(object):
                             self._df.loc[0, "Project Name"] = project_name
                             found_cols.add("Project Name")
 
-                    if idx < self._GENERAL_PARTICULARS_START:
-                        continue
+                    if not section_started:
+                        if "Length between perpendiculars" not in line:
+                            continue
+                        section_started = True
+
                     if idx > self._FRAME_SPACING_DEFS_START:
                         break
 

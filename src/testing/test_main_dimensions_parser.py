@@ -300,7 +300,7 @@ class TestParseFile:
         with pytest.raises(Exception, match="RTF Value Missing"):
             parser.parse_file("unexpected.rtf")
 
-        assert "An unexpected error occurred: boom" in capsys.readouterr().out
+        assert "An unexpected error occurred: error" in capsys.readouterr().out
 
 
 class TestMainDimensionsParserIntegration:
