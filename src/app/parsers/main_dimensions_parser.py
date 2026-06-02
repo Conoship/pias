@@ -29,6 +29,16 @@ class MainDimensionsParser(object):
         ]
         self._df = pd.DataFrame(columns=self._cols)
 
+    def get_cols(self) -> list[str]:
+        """
+        Getter method for the `_cols` attribute.
+
+        Returns:
+            list[str]:
+                The `_cols` attribute.
+        """
+        return self._cols
+
     def _extract_field_value(self, line: str, feature_name: str) -> str | None:
         """
         Extracts the value associated with a field name in an RTF line.
