@@ -201,6 +201,6 @@ class LineEditCollectorController(object):
             QMessageBox.information(
                 self._window,
                 "Invalid value",
-                "All values must be positive decimal values.\nUse a dot for decimals, for example 12.5 instead of 12,5.\nMake sure you did not enter any letters or negative numbers.",
+                "All values must be positive decimal values.\nUse a dot for decimals instead of a comma.\nMake sure you did not enter any letters or negative numbers.",
             )
             return -1
