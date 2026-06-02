@@ -33,6 +33,27 @@ def valid_main_dimensions_lines() -> list[str]:
     return lines
 
 
+def realistic_main_dimensions_rtf_lines() -> list[str]:
+    lines = [
+        r"{\rtf1\ansi\deff0",
+        "\n",
+        r"{\fonttbl{\f0 Arial;}}",
+        "\n",
+        r"{Project name : IntegrationShip}",
+        "\n",
+    ]
+    lines.extend([r"{\pard header metadata that should be ignored\par}" + "\n"] * 24)
+    lines.append(r"{\pard Length overall {label}{999.0}{m}\par}" + "\n")
+    lines.append(
+        r"{\pard Length between perpendiculars {text}{150,25}{m}\par}" + "\n"
+    )
+    lines.append(r"{\pard Length overall {text}{154.75}{m}\par}" + "\n")
+    lines.append(r"{\pard Moulded breadth {text}{28,40}{m}\par}" + "\n")
+    lines.append(r"{\pard Moulded depth {text}{9.60}{m}\par}" + "\n")
+    lines.append(r"{\pard Frame spacing definitions start here\par}" + "\n")
+    return lines
+
+
 class TestInit:
     def test_parser_starts_with_expected_columns(self):
         parser = make_parser()
@@ -282,3 +303,99 @@ class TestParseFile:
             parser.parse_file("unexpected.rtf")
 
         assert "An unexpected error occurred: boom" in capsys.readouterr().out
+
+
+class TestMainDimensionsParserIntegration:
+    def test_parse_file_extracts_main_dimensions_from_realistic_rtf_file(
+        self, tmp_path
+    ):
+        file_path = write_main_dimensions_file(
+            tmp_path, realistic_main_dimensions_rtf_lines()
+        )
+
+        result = MainDimensionsParser().parse_file(file_path)
+
+        assert isinstance(result, pd.DataFrame)
+        assert result.to_dict(orient="records") == [
+            {
+                "name": "IntegrationShip",
+                "lpp": 150.25,
+                "loa": 154.75,
+                "breadth": 28.4,
+                "depth": 9.6,
+            }
+        ]
+
+    def test_parse_file_keeps_database_column_names_for_pipeline_use(self, tmp_path):
+        file_path = write_main_dimensions_file(
+            tmp_path, realistic_main_dimensions_rtf_lines()
+        )
+
+        result = MainDimensionsParser().parse_file(file_path)
+
+        assert list(result.columns) == ["name", "lpp", "loa", "breadth", "depth"]
+        assert set(["name", "lpp", "loa", "breadth", "depth"]).issubset(
+            result.columns
+        )
+
+    def test_parse_file_uses_first_complete_main_dimensions_section(self, tmp_path):
+        lines = realistic_main_dimensions_rtf_lines()
+        lines.extend(
+            [
+                r"{\pard Length between perpendiculars {text}{1}{m}\par}" + "\n",
+                r"{\pard Length overall {text}{2}{m}\par}" + "\n",
+                r"{\pard Moulded breadth {text}{3}{m}\par}" + "\n",
+                r"{\pard Moulded depth {text}{4}{m}\par}" + "\n",
+            ]
+        )
+        file_path = write_main_dimensions_file(tmp_path, lines)
+
+        result = MainDimensionsParser().parse_file(file_path)
+
+        assert result.loc[0, "lpp"] == 150.25
+        assert result.loc[0, "loa"] == 154.75
+        assert result.loc[0, "breadth"] == 28.4
+        assert result.loc[0, "depth"] == 9.6
+
+    def test_parse_file_reports_all_missing_required_rtf_values(self, tmp_path):
+        lines = realistic_main_dimensions_rtf_lines()
+        lines = [
+            line
+            for line in lines
+            if "Length overall" not in line and "Moulded depth" not in line
+        ]
+        file_path = write_main_dimensions_file(tmp_path, lines)
+
+        with pytest.raises(Exception) as error:
+            MainDimensionsParser().parse_file(file_path)
+
+        message = str(error.value)
+        assert message.startswith("RTF Value Missing:")
+        assert "Length overall" in message
+        assert "Moulded depth" in message
+        assert "Main Dimensions RTF file" in message
+
+    def test_parse_file_instances_do_not_share_parsed_state_between_files(
+        self, tmp_path
+    ):
+        first_file = write_main_dimensions_file(
+            tmp_path, realistic_main_dimensions_rtf_lines()
+        )
+        second_lines = [
+            line.replace("IntegrationShip", "SecondShip")
+            .replace("150,25", "175.5")
+            .replace("154.75", "180.25")
+            .replace("28,40", "30.5")
+            .replace("9.60", "10.25")
+            for line in realistic_main_dimensions_rtf_lines()
+        ]
+        second_file = tmp_path / "second_main_dimensions.rtf"
+        second_file.write_text("".join(second_lines), encoding="utf-8")
+
+        first_result = MainDimensionsParser().parse_file(first_file)
+        second_result = MainDimensionsParser().parse_file(str(second_file))
+
+        assert first_result.loc[0, "name"] == "IntegrationShip"
+        assert first_result.loc[0, "loa"] == 154.75
+        assert second_result.loc[0, "name"] == "SecondShip"
+        assert second_result.loc[0, "loa"] == 180.25
