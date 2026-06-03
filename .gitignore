@@ -12,3 +12,7 @@ localhost.db
 mockdata/
 __pycache__
 .pytest_cache
+coverage.xml
+sonar-project.properties
+.coverage
+.scannerwork
