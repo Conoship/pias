@@ -110,6 +110,23 @@ feature_groups = {
         "low_outboard_opening_ratio",
         "end_low_outboard_opening_ratio",
     ],
+    "opening_risk_features": [
+        "n_openings",
+        "min_opening_h_over_depth",
+        "mean_opening_h_over_depth",
+        "mean_opening_abs_b_over_half_breadth",
+        "max_opening_abs_b_over_half_breadth",
+        "mean_opening_endness",
+        "max_opening_endness",
+        "mean_opening_risk_index",
+        "max_opening_risk_index",
+        "high_risk_opening_ratio",
+        "area_weighted_opening_risk",
+        "max_area_weighted_opening_risk",
+        "n_high_risk_openings",
+        "low_outboard_opening_ratio",
+        "end_low_outboard_opening_ratio",
+    ],
     "spatial_zone_features": [
         "total_layout_length",
         "n_comp_aft",
@@ -138,6 +155,14 @@ feature_sets = {
     "v3_geometry_only": feature_groups["v3_geometry_features"],
     "loading_plus_v3_geometry": (
         feature_groups["loading_features"] + feature_groups["v3_geometry_features"]
+    ),
+    "volume_ratios_no_openings": (
+        feature_groups["loading_features"] + feature_groups["v3_geometry_features"]
+    ),
+    "volume_ratios_with_openings": (
+        feature_groups["loading_features"]
+        + feature_groups["v3_geometry_features"]
+        + feature_groups["opening_risk_features"]
     ),
     "main_dimensions_only": feature_groups["main_dimension_features"],
     "compartments_only": (
@@ -197,11 +222,14 @@ def evaluate_leave_one_ship_out(df, features, target, group_col):
     X = X.loc[:, X.nunique(dropna=True) > 1]
     if X.shape[1] == 0:
         return None
+    X = X.fillna(0.0)
+    features = list(X.columns)
 
     y = df[target]
     ships = df[group_col].unique()
 
     results = []
+    importance_rows = []
 
     all_y_true = []
     all_y_pred = []
@@ -224,6 +252,15 @@ def evaluate_leave_one_ship_out(df, features, target, group_col):
 
         preds = model.predict(X_test)
 
+        for feature, importance in zip(features, model.feature_importances_):
+            importance_rows.append(
+                {
+                    "test_ship": test_ship,
+                    "feature": feature,
+                    "importance": importance,
+                }
+            )
+
         mae = mean_absolute_error(y_test, preds)
 
         if len(y_test) >= 2:
@@ -244,6 +281,18 @@ def evaluate_leave_one_ship_out(df, features, target, group_col):
         all_y_pred.extend(preds.tolist())
 
     results_df = pd.DataFrame(results)
+    importances_df = pd.DataFrame(importance_rows)
+
+    if not importances_df.empty:
+        importances_df = (
+            importances_df
+            .groupby("feature", as_index=False)
+            .agg(
+                mean_importance=("importance", "mean"),
+                std_importance=("importance", "std"),
+            )
+            .sort_values("mean_importance", ascending=False)
+        )
 
     if len(all_y_true) >= 2:
         pooled_r2 = r2_score(all_y_true, all_y_pred)
@@ -257,10 +306,12 @@ def evaluate_leave_one_ship_out(df, features, target, group_col):
         "mean_r2": pooled_r2,
         "mean_mae": pooled_mae,
         "per_ship_results": results_df,
+        "feature_importances": importances_df,
     }
 
 
 summary_rows = []
+importance_summary_rows = []
 
 full_df = pd.read_csv(DATA_PATH)
 
@@ -296,6 +347,12 @@ for condition_name, condition_code in condition_filters.items():
             }
         )
 
+        feature_importances = result["feature_importances"].copy()
+        if not feature_importances.empty:
+            feature_importances["condition"] = condition_name
+            feature_importances["feature_set"] = set_name
+            importance_summary_rows.extend(feature_importances.to_dict("records"))
+
         print("\n==============================")
         print(f"Condition: {condition_name}")
         print(f"Feature set: {set_name}")
@@ -307,6 +364,13 @@ for condition_name, condition_code in condition_filters.items():
 
 
 summary_df = pd.DataFrame(summary_rows)
+
+if summary_df.empty:
+    raise ValueError(
+        "No diagnostics were produced. Check that the CSV has at least two ships "
+        "and enough non-constant feature columns."
+    )
+
 summary_df = summary_df.sort_values(["condition", "mean_r2"], ascending=[True, False])
 
 loading_mae = summary_df[summary_df["feature_set"] == "loading_only"][
@@ -323,6 +387,45 @@ print(summary_df)
 plots_dir = Path("plots/diagnostics")
 plots_dir.mkdir(parents=True, exist_ok=True)
 summary_df.to_csv(plots_dir / "feature_set_summary.csv", index=False)
+
+importance_summary_df = pd.DataFrame(importance_summary_rows)
+if not importance_summary_df.empty:
+    importance_summary_df = importance_summary_df[
+        [
+            "condition",
+            "feature_set",
+            "feature",
+            "mean_importance",
+            "std_importance",
+        ]
+    ]
+    importance_summary_df.to_csv(
+        plots_dir / "feature_importance_summary.csv",
+        index=False,
+    )
+
+    for condition_name in importance_summary_df["condition"].unique():
+        for set_name in importance_summary_df["feature_set"].unique():
+            plot_df = importance_summary_df[
+                (importance_summary_df["condition"] == condition_name)
+                & (importance_summary_df["feature_set"] == set_name)
+            ].head(20)
+
+            if plot_df.empty:
+                continue
+
+            plot_df = plot_df.sort_values("mean_importance", ascending=True)
+
+            plt.figure(figsize=(10, 6))
+            plt.barh(plot_df["feature"], plot_df["mean_importance"])
+            plt.title(f"Top Feature Importances: {set_name} ({condition_name})")
+            plt.xlabel("Mean Random Forest Importance")
+            plt.ylabel("Feature")
+            plt.tight_layout()
+            plt.savefig(
+                plots_dir / f"feature_importance_{condition_name}_{set_name}.png"
+            )
+            plt.close()
 
 
 plt.figure(figsize=(12, 6))
