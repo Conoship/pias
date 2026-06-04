@@ -9,6 +9,7 @@ from xgboost import XGBRegressor
 from sklearn.model_selection import GroupKFold
 from mapie.regression import SplitConformalRegressor
 from sklearn.metrics import r2_score, mean_absolute_error
+import matplotlib.pyplot as plt
 
 from src.features.feature_sets import (
     DEFAULT_FEATURE_SET,
@@ -250,6 +251,92 @@ class MapieXGBRegressor(object):
         if print_results:
             self._print_results()
 
+    def plot_pred_vs_actual(self, save: bool = False) -> None:
+        """
+        Scatter plot of the predicted vs actual values across all folds
+        """
+
+        all_actual, all_predicted = [], []
+        for result in self.fold_results:
+            predictions, _ = result["model"].predicted_interval(result["x_test"])
+            all_actual.extend(result["y_test"].values)
+            all_predicted.extend(predictions)
+
+        fig, ax = plt.subplots(figsize=(6, 6))
+        ax.scatter(all_actual, all_predicted, alpha=0.5, edgecolors="k", linewidths=0.5)
+        min_val = min(min(all_actual), min(all_predicted))
+        max_val = max(max(all_actual), max(all_predicted))
+        ax.plot(
+            [min_val, max_val], [min_val, max_val], "r--", label="Perfect prediction"
+        )
+        ax.set_xlabel("Actual")
+        ax.set_ylabel("Predicted")
+        ax.set_title("Predicted vs Actual")
+        ax.legend()
+        plt.tight_layout()
+        if save:
+            plt.savefig(
+                "C:/Users/student02/rug-project/pias/plots/xgb_pred_vs_actual_final.png",
+                dpi=150,
+            )
+        plt.show()
+
+    def plot_residuals(self, save: bool = False) -> None:
+        """
+        Residual plot across all folds
+        """
+
+        all_predicted, all_residuals = [], []
+        for result in self.fold_results:
+            predictions, _ = result["model"].predicted_interval(result["x_test"])
+            residuals = result["y_test"].values - predictions
+            all_predicted.extend(predictions)
+            all_residuals.extend(residuals)
+
+        fig, ax = plt.subplots(figsize=(8, 4))
+        ax.scatter(
+            all_predicted, all_residuals, alpha=0.5, edgecolors="k", linewidths=0.5
+        )
+        ax.axhline(0, color="red", linestyle="--")
+        ax.set_xlabel("Actual")
+        ax.set_ylabel("Residuals")
+        ax.set_title("Residuals (all folds)")
+        plt.tight_layout()
+        if save:
+            plt.savefig(
+                "C:/Users/student02/rug-project/pias/plots/xgb_residuals_final.png",
+                dpi=150,
+            )
+        plt.show()
+
+    def plot_r2_per_fold(self, save: bool = False) -> None:
+        """
+        Bar chart of R2 score per fold.
+        """
+        folds = [f"Fold {i + 1}" for i in range(len(self.r2_scores))]
+
+        fig, ax = plt.subplots(figsize=(7, 4))
+        ax.bar(folds, self.r2_scores)
+        ax.axhline(0, color="red", linestyle="--", label="R2 = 0")
+        ax.set_ylabel("R2")
+        ax.set_title("R2 per fold")
+        ax.legend()
+        plt.tight_layout()
+        if save:
+            plt.savefig(
+                "C:/Users/student02/rug-project/pias/plots/xgb_r2_per_fold_final.png",
+                dpi=150,
+            )
+        plt.show()
+
+    def plot_all(self, save: bool = False) -> None:
+        """
+        Run all plots
+        """
+        self.plot_pred_vs_actual(save=save)
+        self.plot_residuals(save=save)
+        self.plot_r2_per_fold(save=save)
+
 
 if __name__ == "__main__":
     xgb_model = MapieXGBRegressor(
@@ -258,3 +345,4 @@ if __name__ == "__main__":
     )
     xgb_model.train()
     xgb_model.evaluate(print_results=True, save_best_model=True)
+    xgb_model.plot_all()
