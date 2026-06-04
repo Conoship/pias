@@ -115,7 +115,7 @@ class RandomForestBaseline(object):
             feature_cols (list[str]):
                 A list of all the columns the model is using as features to train on.
         """
-        with open("models/model.pkl", "wb") as file:
+        with open("models/model_partial.pkl", "wb") as file:
             pickle.dump(
                 {
                     "model_type": "Random Forest Regressor",
@@ -440,8 +440,8 @@ class RandomForestBaseline(object):
 
 if __name__ == "__main__":
     random_forest_model = RandomForestBaseline(
-        path_to_config="src/models/config.yaml",
-        path_to_data="data/all_ships_v7.csv",
+        path_to_config="config.yaml",
+        path_to_data="data/all_ships_v8_partial.csv",
     )
     random_forest_model.train()
     random_forest_model.evaluate(print_results=True, save_best_model=True)

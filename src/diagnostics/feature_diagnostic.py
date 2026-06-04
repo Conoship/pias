@@ -27,7 +27,6 @@ group_col = "ship_id"
 
 feature_groups = {
     "loading_features": [
-        "condition_code",
         "trim",
         "mg",
         "vcg",
@@ -192,7 +191,6 @@ feature_sets = {
     ),
     "all_without_trim_mg": (
         [
-            "condition_code",
             "vcg",
             "draft_over_depth",
             "displacement_per_length",
@@ -285,8 +283,7 @@ def evaluate_leave_one_ship_out(df, features, target, group_col):
 
     if not importances_df.empty:
         importances_df = (
-            importances_df
-            .groupby("feature", as_index=False)
+            importances_df.groupby("feature", as_index=False)
             .agg(
                 mean_importance=("importance", "mean"),
                 std_importance=("importance", "std"),
@@ -424,9 +421,7 @@ if not importance_summary_df.empty:
             plt.xlabel("Mean Random Forest Importance")
             plt.ylabel("Feature")
             plt.tight_layout()
-            plt.savefig(
-                condition_dir / f"feature_importance_{set_name}.png"
-            )
+            plt.savefig(condition_dir / f"feature_importance_{set_name}.png")
             plt.close()
 
 
