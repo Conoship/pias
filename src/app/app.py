@@ -11,6 +11,8 @@ from PySide6.QtWidgets import QApplication, QPushButton, QWidget
 from src.app.controllers.agent_pipeline_controller import AgentPipelineController
 from src.app.controllers.button_controller import ButtonController
 
+_RUNTIME_ERROR_WINDOW = "Window has not been initialized..."
+
 
 class App(object):
     # The title of the application that is displayed on the main window.
@@ -69,7 +71,7 @@ class App(object):
                 Error raised if the `self._window` is `None` meaning the UI was not loaded successfully or not loaded at all.
         """
         if self._window is None:
-            raise RuntimeError("Window has not been initialized...")
+            raise RuntimeError(_RUNTIME_ERROR_WINDOW)
 
         self._window.setWindowTitle(self._WINDOW_TITLE)
         self._window.setWindowIcon(QIcon(self._WINDOW_ICON_PATH))
@@ -84,7 +86,7 @@ class App(object):
                 Error raised if the `self._window` is `None` meaning the UI was not loaded successfully or not loaded at all.
         """
         if self._window is None:
-            raise RuntimeError("Window has not been initialized...")
+            raise RuntimeError(_RUNTIME_ERROR_WINDOW)
 
         screen = QGuiApplication.primaryScreen().geometry()
         window_geometry = self._window.frameGeometry()
@@ -101,7 +103,7 @@ class App(object):
                 Error raised if the `self._window` is `None` meaning the UI was not loaded successfully or not loaded at all.
         """
         if self._window is None:
-            raise RuntimeError("Window has not been initialized...")
+            raise RuntimeError(_RUNTIME_ERROR_WINDOW)
 
         # Connect Main Dimensions Button with searching for RTFs.
         self._button_controller.connect_file_browse_button(
@@ -130,7 +132,7 @@ class App(object):
                 Error raised if the `self._window` is `None` meaning the UI was not loaded successfully or not loaded at all.
         """
         if self._window is None:
-            raise RuntimeError("Window has not been initialized...")
+            raise RuntimeError(_RUNTIME_ERROR_WINDOW)
 
         # Connect the Run button to the AI Agent pipeline.
         run_btn = self._window.findChild(QPushButton, "runBtn")
@@ -146,7 +148,7 @@ class App(object):
                 Error raised if the `self._window` is `None` meaning the UI was not loaded successfully or not loaded at all.
         """
         if self._window is None:
-            raise RuntimeError("Window has not been initialized...")
+            raise RuntimeError(_RUNTIME_ERROR_WINDOW)
 
         self._connect_file_browse_buttons()
         self._connect_run_button()
