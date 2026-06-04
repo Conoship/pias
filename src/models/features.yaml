@@ -1,4 +1,20 @@
 feature_sets:
+  volume_ratios_no_openings:
+    - condition_code
+    - mg
+    - vcg
+    - trim
+    - draft_over_depth
+    - displacement_per_length
+    - total_compartment_volume
+    - cargo_volume_ratio
+    - fuel_oil_volume_ratio
+    - gas_oil_volume_ratio
+    - potable_water_volume_ratio
+    - ballast_volume_ratio
+    - void_volume_ratio
+    - cargohold_hatch_volume_ratio
+
   volume_ratios:
     - condition_code
     - mg
@@ -14,6 +30,21 @@ feature_sets:
     - ballast_volume_ratio
     - void_volume_ratio
     - cargohold_hatch_volume_ratio
+    - n_openings
+    - min_opening_h_over_depth
+    - mean_opening_h_over_depth
+    - mean_opening_abs_b_over_half_breadth
+    - max_opening_abs_b_over_half_breadth
+    - mean_opening_endness
+    - max_opening_endness
+    - mean_opening_risk_index
+    - max_opening_risk_index
+    - high_risk_opening_ratio
+    - area_weighted_opening_risk
+    - max_area_weighted_opening_risk
+    - n_high_risk_openings
+    - low_outboard_opening_ratio
+    - end_low_outboard_opening_ratio
 
   volume_totals:
     - condition_code

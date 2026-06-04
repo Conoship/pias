@@ -2,6 +2,7 @@ import sqlite3
 
 import pandas as pd
 
+from src.features.opening_features import derive_opening_risk_features
 from src.features.volume_features import derive_compartment_volume_by_type
 
 TRAINING_FEATURE_QUERY = """
@@ -112,12 +113,21 @@ def build_training_features(
         ship_version_ids=ship_version_ids,
         progress_callback=print_progress if verbose else None,
     )
+    opening_features = derive_opening_risk_features(
+        conn,
+        ship_version_ids=ship_version_ids,
+    )
 
     if verbose:
         print(f"Volume feature rows: {len(volume_features)}", flush=True)
+        print(f"Opening feature rows: {len(opening_features)}", flush=True)
 
     return features_df.merge(
         volume_features,
+        on="ship_version_id",
+        how="left",
+    ).merge(
+        opening_features,
         on="ship_version_id",
         how="left",
     )
