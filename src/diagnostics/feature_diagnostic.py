@@ -415,6 +415,8 @@ if not importance_summary_df.empty:
                 continue
 
             plot_df = plot_df.sort_values("mean_importance", ascending=True)
+            condition_dir = plots_dir / condition_name
+            condition_dir.mkdir(parents=True, exist_ok=True)
 
             plt.figure(figsize=(10, 6))
             plt.barh(plot_df["feature"], plot_df["mean_importance"])
@@ -423,7 +425,7 @@ if not importance_summary_df.empty:
             plt.ylabel("Feature")
             plt.tight_layout()
             plt.savefig(
-                plots_dir / f"feature_importance_{condition_name}_{set_name}.png"
+                condition_dir / f"feature_importance_{set_name}.png"
             )
             plt.close()
 
