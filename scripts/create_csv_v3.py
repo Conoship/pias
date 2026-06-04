@@ -11,7 +11,7 @@ if str(ROOT_DIR) not in sys.path:
 from src.features.training_features import (
     build_training_features,
 )
-
+# .\.venv\Scripts\python.exe -c "from src.models.random_forest_baseline import RandomForestBaseline; model = RandomForestBaseline('src/models/config.yaml', 'data/all_ships_v8.csv'); model.train(); model.evaluate(save_best_model=True, print_results=True)"
 # py -c "import pandas as pd; df=pd.read_csv('data/all_ships_v8.csv'); df[df['condition_code']==0].to_csv('data/all_ships_v8_light.csv', index=False); df[df['condition_code']==1].to_csv('data/all_ships_v8_partial.csv', index=False); df[df['condition_code']==2].to_csv('data/all_ships_v8_deepest.csv', index=False)"
 
 DB_PATH = "localhost.db"
