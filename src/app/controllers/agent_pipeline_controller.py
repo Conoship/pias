@@ -260,7 +260,7 @@ class AgentPipelineController(object):
                     "Subdivision Length": subdivision_length,
                     "Light Service Draft": light_service_draft,
                     "Partial Subdivision": (
-                        (-light_service_draft + subdivision_draft) * 0.6
+                        (subdivision_draft - light_service_draft) * 0.6
                     )
                     + light_service_draft,
                     "Subdivision Draft": subdivision_draft,
