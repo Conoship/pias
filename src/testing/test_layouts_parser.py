@@ -60,7 +60,7 @@ class TestInit:
 class TestParseFilename:
     def test_parse_filename_correct_ship_attributes(self):
         parser = make_parser()
-        result = parser._parse_filename("A11111_1_v2_S_01.fromLayout.xml")
+        result = parser._parse_filename(Path("A11111_1_v2_S_01.fromLayout.xml"))
         assert result == (
             "A11111",
             "1",
@@ -71,7 +71,7 @@ class TestParseFilename:
 
     def test_parse_filename_missing_some_ship_attributes(self):
         parser = make_parser()
-        result = parser._parse_filename("A11111.fromLayout.xml")
+        result = parser._parse_filename(Path("A11111.fromLayout.xml"))
         assert result == (
             "A11111",
             "unknowndesign",
@@ -82,7 +82,7 @@ class TestParseFilename:
     
     def test_parse_filename_multiple_underscores_in_last_attributr(self):
         parser = make_parser()
-        result = parser._parse_filename("A11011_3_v6_PS_Run_1.fromLayout.xml")
+        result = parser._parse_filename(Path("A11011_3_v6_PS_Run_1.fromLayout.xml"))
         assert result == (
             "A11011",
             "3",
@@ -291,7 +291,7 @@ class TestParseCoordinates:
         assert result_row[0]["side"] == "side name"
         assert result_row[0]["subcompartment_shape_type"] == "shapetype_frustum"
         assert result_row[0]["span_b"] == 15.5
-        assert result_row[0]["span_h"] == 68.8
+        assert result_row[0]["span_h"] == pytest.approx(68.8)
 
         assert result_row[1]["record_type"] == "frustum_point"
         assert result_row[1]["shape_guid"] == "shape"
@@ -311,7 +311,7 @@ class TestParseCoordinates:
         assert result_row[2]["B"] == 30.1
         assert result_row[2]["H"] == 10.1
 
-        assert result_shape_guid_spans == {"shape": (15.5, 68.8)}
+        assert result_shape_guid_spans == {"shape": (pytest.approx(15.5), pytest.approx(68.8))}
 
         
     def test_parse_coordinates_no_shape_guid_provided(self):
@@ -331,17 +331,271 @@ class TestParseCoordinates:
         assert result_shape_guid_spans == {}
 
 class TestParseCompartments:
-    # to add
-    parser = make_parser()
+    def test_parse_compartments_valid_compartment_subcompartment_and_opening(self):
+        parser = make_parser()
+        element = ET.fromstring("""
+                                <Layout>
+                                    <Compartments>
+                                        <Compartment>
+                                            <Selected_for_output_and_calculations>true</Selected_for_output_and_calculations>
+                                            <Compartment_ID>101</Compartment_ID>
+                                            <Compartment_GUID>compartment-guid</Compartment_GUID>
+                                            <Name>Pipe compartment</Name>
+                                            <Design_content_IDnumber>11</Design_content_IDnumber>
+                                            <Subcompartments>
+                                                <Subcompartment>
+                                                    <Shape_GUID>shape</Shape_GUID>
+                                                    <Subcompartment_GUID>subcompartment-guid</Subcompartment_GUID>
+                                                    <Sign>-1</Sign>
+                                                    <Permeability_for_damage_stability>0.95</Permeability_for_damage_stability>
+                                                </Subcompartment>
+                                            </Subcompartments>
+                                            <Special_points>
+                                                <Point>
+                                                    <Name>opening name</Name>
+                                                    <Type_of_point>opening type</Type_of_point>
+                                                    <Reference_vector>
+                                                        <L><Reference_value><Distance>12.3</Distance></Reference_value></L>
+                                                        <B><Reference_value><Distance>45.6</Distance></Reference_value></B>
+                                                        <H><Reference_value><Distance>78.9</Distance></Reference_value></H>
+                                                    </Reference_vector>
+                                                </Point>
+                                            </Special_points>
+                                        </Compartment>
+                                    </Compartments>
+                                </Layout>
+                                """)
+        base_rows = {
+            "source_file": "A11111_1_v2_S_01.fromLayout.xml",
+            "ship": "A11111",
+            "design_name": "1",
+            "version": "v2",
+            "subversion": "S",
+            "ship_run": "01",
+        }
+        shape_guid_spans = {"shape": (0.2, 0.4)}
+
+        result = parser._parse_compartments(element, base_rows, shape_guid_spans)
+        assert result[0]["record_type"] == "compartment"
+        assert result[0]["xml_compartment_id"] == 101
+        assert result[0]["xml_compartment_guid"] == "compartment-guid"
+        assert result[0]["compartment_name"] == "Pipe compartment"
+        assert result[0]["selected_for_output"] is True
+        assert result[0]["design_content_id_number"] == 11
+
+        assert result[1]["record_type"] == "subcompartment"
+        assert result[1]["xml_compartment_id"] == 101
+        assert result[1]["shape_guid"] == "shape"
+        assert result[1]["subcompartment_guid"] == "subcompartment-guid"
+        assert result[1]["sign"] == -1
+        assert result[1]["permeability_for_damage_stability"] == 0.95
+        assert result[1]["span_b"] == 0.2
+        assert result[1]["span_h"] == 0.4
+        assert result[1]["is_pipe"] is True
+
+        assert result[2]["record_type"] == "opening"
+        assert result[2]["xml_compartment_id"] == 101
+        assert result[2]["opening_description"] == "opening name"
+        assert result[2]["opening_type"] == "opening type"
+        assert result[2]["L"] == 12.3
+        assert result[2]["B"] == 45.6
+        assert result[2]["H"] == 78.9
+
+
+    def test_parse_compartments_skips_not_selected_compartment(self):
+        parser = make_parser()
+        element = ET.fromstring("""
+                                <Layout>
+                                    <Compartments>
+                                        <Compartment>
+                                            <Selected_for_output_and_calculations>false</Selected_for_output_and_calculations>
+                                            <Compartment_ID>101</Compartment_ID>
+                                            <Compartment_GUID>compartment-guid</Compartment_GUID>
+                                            <Name>Compartment 1</Name>
+                                        </Compartment>
+                                    </Compartments>
+                                </Layout>
+                                """)
+
+        result = parser._parse_compartments(element, {}, {})
+        assert result == []
+
+
+    def test_parse_compartments_does_not_mark_pipeduct_as_pipe(self):
+        parser = make_parser()
+        element = ET.fromstring("""
+                                <Layout>
+                                    <Compartments>
+                                        <Compartment>
+                                            <Selected_for_output_and_calculations>true</Selected_for_output_and_calculations>
+                                            <Compartment_ID>101</Compartment_ID>
+                                            <Compartment_GUID>compartment-guid</Compartment_GUID>
+                                            <Name>Pipeduct compartment</Name>
+                                            <Subcompartments>
+                                                <Subcompartment>
+                                                    <Shape_GUID>shape</Shape_GUID>
+                                                    <Subcompartment_GUID>subcompartment-guid</Subcompartment_GUID>
+                                                </Subcompartment>
+                                            </Subcompartments>
+                                        </Compartment>
+                                    </Compartments>
+                                </Layout>
+                                """)
+        shape_guid_spans = {"shape": (0.2, 0.4)}
+
+        result = parser._parse_compartments(element, {}, shape_guid_spans)
+        assert result[1]["record_type"] == "subcompartment"
+        assert result[1]["is_pipe"] is False
 
 class TestIsMissing:
-    # to add
-    parser = make_parser()
+    def test_is_missing_returns_true_for_none(self):
+        parser = make_parser()
+        result = parser._is_missing(None)
+        assert result is True
+
+    def test_is_missing_returns_true_for_empty_text(self):
+        parser = make_parser()
+        result = parser._is_missing("   ")
+        assert result is True
+
+    def test_is_missing_returns_true_for_nan(self):
+        parser = make_parser()
+        result = parser._is_missing(pd.NA)
+        assert result is True
+
+    def test_is_missing_returns_false_for_valid_text(self):
+        parser = make_parser()
+        result = parser._is_missing("value")
+        assert result is False  
     
 class TestValidateDf:
-    # to add
-    parser = make_parser()
+    def test_validate_df_raises_error_for_empty_dataframe(self):
+        parser = make_parser()
+        with pytest.raises(Exception) as error:
+            parser._validate_df()
+        assert "no usable layout data was found" in str(error.value)
+
+    def test_validate_df_raises_error_for_missing_column(self):
+        parser = make_parser()
+        parser._df = pd.DataFrame([{"source_file": "file.xml"}])
+        with pytest.raises(Exception) as error:
+            parser._validate_df()
+        assert "XML Value Missing" in str(error.value)
+        assert "ship" in str(error.value)
+
+    def test_validate_df_raises_error_for_missing_record_type(self):
+        parser = make_parser()
+        parser._df = pd.DataFrame(
+            [
+                {
+                    "source_file": "A11111_1_v2_S_01.fromLayout.xml",
+                    "ship": "A11111",
+                    "design_name": "1",
+                    "version": "v2",
+                    "subversion": "S",
+                    "ship_run": "01",
+                    "record_type": "",
+                }
+            ],
+            columns=parser._cols,
+        )
+        with pytest.raises(Exception) as error:
+            parser._validate_df()
+        assert "layout item 0: type" in str(error.value)
+
+    def test_validate_df_accepts_valid_dataframe(self):
+        parser = make_parser()
+        parser._df = pd.DataFrame(
+            [
+                {
+                    "source_file": "A11111_1_v2_S_01.fromLayout.xml",
+                    "ship": "A11111",
+                    "design_name": "1",
+                    "version": "v2",
+                    "subversion": "S",
+                    "ship_run": "01",
+                    "record_type": "content_category",
+                }
+            ],
+            columns=parser._cols,
+        )
+        parser._validate_df()
+
 
 class TestParseFile:
-    # to add
-    parser = make_parser()
+    def test_parse_file_returns_dataframe_with_expected_records(self, tmp_path):
+        file_path = write_layouts_file(tmp_path, """
+                                <Layout>
+                                    <Content_categories>
+                                        <Content_category>
+                                            <Design_content_IDnumber>11</Design_content_IDnumber>
+                                            <Name>Category 1</Name>
+                                        </Content_category>
+                                    </Content_categories>
+                                    <Subcompartment_shapes>
+                                        <Subcompartment_shape>
+                                            <Subcompartment_shape_GUID>shape</Subcompartment_shape_GUID>
+                                            <Side>side name</Side>
+                                            <Subcompartment_shape_type>shapetype_frustum</Subcompartment_shape_type>
+                                            <Frustum_points>
+                                                <Frustum_point>
+                                                    <AftFwd_and_number>01</AftFwd_and_number>
+                                                    <Reference_vector>
+                                                        <L><Reference_value><Distance>12.3</Distance></Reference_value></L>
+                                                        <B><Reference_value><Distance>45.6</Distance></Reference_value></B>
+                                                        <H><Reference_value><Distance>78.9</Distance></Reference_value></H>
+                                                    </Reference_vector>
+                                                </Frustum_point>
+                                                <Frustum_point>
+                                                    <AftFwd_and_number>02</AftFwd_and_number>
+                                                    <Reference_vector>
+                                                        <L><Reference_value><Distance>10.1</Distance></Reference_value></L>
+                                                        <B><Reference_value><Distance>30.1</Distance></Reference_value></B>
+                                                        <H><Reference_value><Distance>10.1</Distance></Reference_value></H>
+                                                    </Reference_vector>
+                                                </Frustum_point>
+                                            </Frustum_points>
+                                        </Subcompartment_shape>
+                                    </Subcompartment_shapes>
+                                    <Compartments>
+                                        <Compartment>
+                                            <Selected_for_output_and_calculations>true</Selected_for_output_and_calculations>
+                                            <Compartment_ID>101</Compartment_ID>
+                                            <Compartment_GUID>compartment-guid</Compartment_GUID>
+                                            <Name>Compartment 1</Name>
+                                            <Design_content_IDnumber>11</Design_content_IDnumber>
+                                            <Subcompartments>
+                                                <Subcompartment>
+                                                    <Shape_GUID>shape</Shape_GUID>
+                                                    <Subcompartment_GUID>subcompartment-guid</Subcompartment_GUID>
+                                                    <Sign>1</Sign>
+                                                    <Permeability_for_damage_stability>0.95</Permeability_for_damage_stability>
+                                                </Subcompartment>
+                                            </Subcompartments>
+                                        </Compartment>
+                                    </Compartments>
+                                </Layout>
+                                """)
+        parser = make_parser()
+
+        result = parser.parse_file(file_path)
+        assert list(result["record_type"]) == [
+            "content_category",
+            "subcompartment_shape",
+            "frustum_point",
+            "frustum_point",
+            "compartment",
+            "subcompartment",
+        ]
+        assert result.iloc[0]["content_category_name"] == "Category 1"
+        assert result.iloc[1]["span_b"] == 15.5
+        assert result.iloc[1]["span_h"] == pytest.approx(68.8)
+        assert result.iloc[5]["subcompartment_guid"] == "subcompartment-guid"
+
+    def test_parse_file_raises_error_for_xml_with_no_usable_data(self, tmp_path):
+        file_path = write_layouts_file(tmp_path, "<Layout></Layout>")
+        parser = make_parser()
+
+        with pytest.raises(Exception) as error:
+            parser.parse_file(file_path)
+        assert "no usable layout data was found" in str(error.value)
