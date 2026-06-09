@@ -36,7 +36,9 @@ class AgentPipelineController(object):
         """
         self._window = window
         self._controller = LineEditController(window)
-        self._collector_controller = LineEditCollectorController(window)
+        self._collector_controller = LineEditCollectorController(
+            window, self._controller
+        )
 
     def _display_results(
         self,

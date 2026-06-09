@@ -6,17 +6,22 @@ from src.app.controllers.line_edit_controller import LineEditController
 
 
 class LineEditCollectorController(object):
-    def __init__(self, window: QWidget) -> None:
+    def __init__(
+        self, window: QWidget, line_edit_controller: LineEditController
+    ) -> None:
         """
         Controller class that uses a `LineEditController` to collect the values and files from the specified fields
 
         Args:
             window (QWidget):
-                The window to pass to the `LineEditController` as its constructor argument.
+                The main application window, used to provide all validation warnings.
+
+            line_edit_controller (LineEditController):
+                The LineEditController instance to use for accessing the Line Edits.
         """
         # Attribute Construction.
         self._window = window
-        self._line_edit_controller = LineEditController(window)
+        self._line_edit_controller = line_edit_controller
 
     def collect_file_paths(self) -> tuple[str, str] | None:
         """
