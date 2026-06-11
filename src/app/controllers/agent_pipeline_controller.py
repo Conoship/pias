@@ -70,7 +70,7 @@ class AgentPipelineController(object):
             QLineEdit, "partialSubdivisionLineEdit"
         )
         if partial_subdivision_line_edit:
-            partial_subdivision_line_edit.setText(str(partial_subdivision))
+            partial_subdivision_line_edit.setText(str(round(partial_subdivision, 3)))
 
         # Load the Results Widget.
         loader = QUiLoader()

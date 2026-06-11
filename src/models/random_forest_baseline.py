@@ -532,4 +532,4 @@ if __name__ == "__main__":
     )
     random_forest_model.train()
     random_forest_model.evaluate(print_results=True, save_best_model=True)
-    random_forest_model.plot_all(save=False)
+    random_forest_model.plot_all(save=True)

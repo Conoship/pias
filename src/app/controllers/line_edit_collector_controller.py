@@ -203,7 +203,7 @@ class LineEditCollectorController(object):
             return required_values + optional_values
 
         except ValueError:
-            QMessageBox.information(
+            QMessageBox.warning(
                 self._window,
                 "Invalid value",
                 "All values must be positive decimal values.\nUse a dot for decimals instead of a comma.\nMake sure you did not enter any letters or negative numbers.",
