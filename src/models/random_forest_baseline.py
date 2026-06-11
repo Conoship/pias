@@ -9,7 +9,12 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import r2_score, mean_absolute_error
+from sklearn.metrics import (
+    max_error,
+    mean_absolute_error,
+    mean_squared_error,
+    median_absolute_error,
+)
 from sklearn.model_selection import GroupKFold, learning_curve
 
 from src.features.feature_sets import (
@@ -62,8 +67,11 @@ class RandomForestBaseline(object):
         self.path_to_data = path_to_data
 
         # Lists to hold results.
-        self.r2_scores = []
         self.mae_scores = []
+        self.rmse_scores = []
+        self.median_absolute_error_scores = []
+        self.max_error_scores = []
+        self.bias_scores = []
         self.fold_results = []
 
         # The index of the best performing fold.
@@ -128,11 +136,30 @@ class RandomForestBaseline(object):
 
     def _print_results(self) -> None:
         """
-        Print the final results of the training with the average R^2 and the average MAE.
+        Print the final accuracy results of the training.
         """
         print(f"Model Performance")
-        print(f"Mean R2: {sum(self.r2_scores) / len(self.r2_scores):.4f}")
         print(f"Mean MAE: {sum(self.mae_scores) / len(self.mae_scores):.4f}")
+        print(f"Mean RMSE: {sum(self.rmse_scores) / len(self.rmse_scores):.4f}")
+        print(
+            "Mean median absolute error: "
+            f"{sum(self.median_absolute_error_scores) / len(self.median_absolute_error_scores):.4f}"
+        )
+        print(f"Mean max error: {sum(self.max_error_scores) / len(self.max_error_scores):.4f}")
+        print(f"Mean bias: {sum(self.bias_scores) / len(self.bias_scores):.4f}")
+
+    def _calculate_accuracy_metrics(
+        self, y_true: pd.Series, predictions: np.ndarray
+    ) -> dict[str, float]:
+        errors = predictions - y_true.to_numpy()
+
+        return {
+            "mae": mean_absolute_error(y_true, predictions),
+            "rmse": float(np.sqrt(mean_squared_error(y_true, predictions))),
+            "median_absolute_error": median_absolute_error(y_true, predictions),
+            "max_error": max_error(y_true, predictions),
+            "bias": float(np.mean(errors)),
+        }
 
     def _filter_low_impact_features(
         self, X: pd.DataFrame, Y: pd.Series
@@ -238,41 +265,49 @@ class RandomForestBaseline(object):
 
             print_training_results (bool, optional):
                 Boolean flag to enable logging and print to the console the results of
-                each training fold and the average R^2 and MAE of the model after the training
+                each training fold and the average accuracy metrics of the model after the training
                 is completed. Defaults to `False`.
         """
         if not self.fold_results:
             raise ValueError("No trained models found. Call train() first.")
 
-        self.r2_scores.clear()
         self.mae_scores.clear()
-        best_r2 = float("-inf")
+        self.rmse_scores.clear()
+        self.median_absolute_error_scores.clear()
+        self.max_error_scores.clear()
+        self.bias_scores.clear()
+        best_mae = float("inf")
         for fold, result in enumerate(self.fold_results):
             # Get data from each fold.
             model = result["model"]
             x_test = result["x_test"]
             y_test = result["y_test"]
 
-            # Make predictions and calculate R^2 and MAE.
+            # Make predictions and calculate accuracy metrics.
             predictions = model.predict(x_test)
-            r2 = r2_score(y_test, predictions)
-            mae = mean_absolute_error(y_test, predictions)
+            metrics = self._calculate_accuracy_metrics(y_test, predictions)
 
             # Append to the lists.
-            self.r2_scores.append(r2)
-            self.mae_scores.append(mae)
+            self.mae_scores.append(metrics["mae"])
+            self.rmse_scores.append(metrics["rmse"])
+            self.median_absolute_error_scores.append(metrics["median_absolute_error"])
+            self.max_error_scores.append(metrics["max_error"])
+            self.bias_scores.append(metrics["bias"])
 
-            # If we want to save the model - check against the best accuracy to save the best performing model.
-            if save_best_model and r2 > best_r2:
+            # Save the fold with the lowest typical absolute error.
+            if save_best_model and metrics["mae"] < best_mae:
                 self._save_model(model, list(x_test.columns))
-                best_r2 = r2
+                best_mae = metrics["mae"]
                 self.best_fold = fold
 
             # Print fold results if needed.
             if print_results:
                 print(f"Fold {fold + 1}")
-                print(f"R2: {r2:.4f}")
-                print(f"MAE: {mae:.4f}")
+                print(f"MAE: {metrics['mae']:.4f}")
+                print(f"RMSE: {metrics['rmse']:.4f}")
+                print(f"Median absolute error: {metrics['median_absolute_error']:.4f}")
+                print(f"Max error: {metrics['max_error']:.4f}")
+                print(f"Bias: {metrics['bias']:.4f}")
 
         if print_results:
             self._print_results()
@@ -316,10 +351,9 @@ class RandomForestBaseline(object):
             output_dir (str, optional):
                 Where the generated plots should be saved. Defaults to "plots".
         """
-        # Get the data and calculate R^2 and MAE.
+        # Get the data and calculate accuracy metrics.
         _, _, y_test, preds = self._get_eval_data()
-        r2 = r2_score(y_test, preds)
-        mae = mean_absolute_error(y_test, preds)
+        metrics = self._calculate_accuracy_metrics(y_test, preds)
 
         # Plot the data.
         plt.figure(figsize=(8, 6))
@@ -328,7 +362,11 @@ class RandomForestBaseline(object):
         plt.text(
             0.05,
             0.9,
-            f"$R^2$: {r2:.3f}\nMAE: {mae:.4f}",
+            "MAE: {mae:.4f}\nRMSE: {rmse:.4f}\nMedian AE: {medae:.4f}".format(
+                mae=metrics["mae"],
+                rmse=metrics["rmse"],
+                medae=metrics["median_absolute_error"],
+            ),
             transform=plt.gca().transAxes,
             bbox=dict(facecolor="white", alpha=0.7),
         )
@@ -357,15 +395,18 @@ class RandomForestBaseline(object):
         """
         # Get the data and calculate the residuals.
         _, _, y_test, preds = self._get_eval_data()
-        errors = y_test - preds
+        errors = preds - y_test
+        mean_error = errors.mean()
 
         # Plot the data.
         plt.figure(figsize=(8, 6))
         plt.scatter(preds, errors, alpha=0.6)
         plt.axhline(0, color="black")
+        plt.axhline(mean_error, color="red", linestyle="--", label="Mean error")
         plt.title("Residuals")
         plt.xlabel("Predicted")
-        plt.ylabel("Error")
+        plt.ylabel("Prediction error")
+        plt.legend()
         plt.tight_layout()
 
         # Save the plots if necessary.
@@ -398,17 +439,20 @@ class RandomForestBaseline(object):
             X,
             Y,
             cv=5,
-            scoring="r2",
+            scoring="neg_mean_absolute_error",
             train_sizes=np.linspace(0.1, 1.0, 5),
         )
 
+        train_mae = -train_scores
+        test_mae = -test_scores
+
         # Plot the data.
         plt.figure(figsize=(8, 6))
-        plt.plot(train_sizes, np.mean(train_scores, axis=1), label="Train $R^2$")
-        plt.plot(train_sizes, np.mean(test_scores, axis=1), label="Val $R^2$")
-        plt.title("Learning Curve")
+        plt.plot(train_sizes, np.mean(train_mae, axis=1), label="Train MAE")
+        plt.plot(train_sizes, np.mean(test_mae, axis=1), label="Val MAE")
+        plt.title("Learning Curve (MAE)")
         plt.xlabel("Samples")
-        plt.ylabel("$R^2$")
+        plt.ylabel("MAE")
         plt.legend()
         plt.grid(alpha=0.3)
         plt.tight_layout()
