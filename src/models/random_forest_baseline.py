@@ -340,7 +340,12 @@ class RandomForestBaseline(object):
 
         return model, x_test, y_test, preds
 
-    def plot_pred_vs_actual(self, save: bool = True, output_dir: str = "plots") -> None:
+    def plot_pred_vs_actual(
+        self,
+        save: bool = True,
+        output_dir: str = "plots",
+        tolerance: float = 0.02,
+    ) -> None:
         """
         Plot the actual vs the predicted values of the features.
 
@@ -350,22 +355,56 @@ class RandomForestBaseline(object):
 
             output_dir (str, optional):
                 Where the generated plots should be saved. Defaults to "plots".
+
+            tolerance (float, optional):
+                Acceptable absolute prediction error to highlight. Defaults to 0.02.
         """
         # Get the data and calculate accuracy metrics.
         _, _, y_test, preds = self._get_eval_data()
         metrics = self._calculate_accuracy_metrics(y_test, preds)
+        abs_errors = np.abs(preds - y_test.to_numpy())
+        within_tolerance = float(np.mean(abs_errors <= tolerance) * 100.0)
 
         # Plot the data.
         plt.figure(figsize=(8, 6))
         plt.scatter(y_test, preds, alpha=0.6)
-        plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], "r--")
+
+        axis_min = min(y_test.min(), preds.min())
+        axis_max = max(y_test.max(), preds.max())
+        plt.plot(
+            [axis_min, axis_max],
+            [axis_min, axis_max],
+            "k--",
+            label="Perfect prediction",
+        )
+        plt.fill_between(
+            [axis_min, axis_max],
+            [axis_min - tolerance, axis_max - tolerance],
+            [axis_min + tolerance, axis_max + tolerance],
+            color="green",
+            alpha=0.12,
+            label=f"Within +/- {tolerance:.3f}",
+        )
+
+        if len(y_test) > 1:
+            slope, intercept = np.polyfit(y_test, preds, 1)
+            best_fit = slope * np.array([axis_min, axis_max]) + intercept
+            plt.plot(
+                [axis_min, axis_max],
+                best_fit,
+                "r:",
+                linewidth=2,
+                label="Best fit",
+            )
+
         plt.text(
             0.05,
             0.9,
-            "MAE: {mae:.4f}\nRMSE: {rmse:.4f}\nMedian AE: {medae:.4f}".format(
+            "MAE: {mae:.4f}\nMedian AE: {medae:.4f}\nWithin +/- {tol:.3f}: {within:.1f}%".format(
                 mae=metrics["mae"],
-                rmse=metrics["rmse"],
                 medae=metrics["median_absolute_error"],
+                tol=tolerance,
+                within=within_tolerance,
             ),
             transform=plt.gca().transAxes,
             bbox=dict(facecolor="white", alpha=0.7),
@@ -373,6 +412,10 @@ class RandomForestBaseline(object):
         plt.title("Predicted vs Actual")
         plt.xlabel("Actual")
         plt.ylabel("Predicted")
+        plt.xlim(axis_min, axis_max)
+        plt.ylim(axis_min, axis_max)
+        plt.gca().set_aspect("equal", adjustable="box")
+        plt.legend()
         plt.tight_layout()
 
         # Save the plots if necessary.
