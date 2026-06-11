@@ -287,7 +287,7 @@ class AgentPipelineController(object):
             layouts_df = LayoutsParser().parse_file(layouts_path)
             main_dimensions_ship = str(main_dimensions_df.at[0, "name"]).strip()
             layouts_ship = self._get_layouts_ship_name(layouts_df)
-            if main_dimensions_ship != layouts_ship:
+            if main_dimensions_ship.lower() != layouts_ship.lower():
                 raise Exception(
                     f"The selected files appear to be for different ships. Main Dimensions RTF ship: {main_dimensions_ship}. Layouts XML ship: {layouts_ship}."
                 )

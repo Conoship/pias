@@ -132,14 +132,14 @@ class TestLoadXml:
     def test_load_xml_returns_valid_root_element(self, tmp_path):
         file_path = write_layouts_file(tmp_path, "<Layout></Layout>")
         parser = make_parser()
-        result = parser._load_xml(file_path)
+        result = parser._load_xml(Path(file_path))
         assert result.tag == "Layout"
 
     def test_load_xml_returns_error_for_invalid_file(self, tmp_path):
         file_path = write_layouts_file(tmp_path, "<Layout>")
         parser = make_parser()
         with pytest.raises(ET.ParseError):
-            parser._load_xml(file_path)
+            parser._load_xml(Path(file_path))
 
 class TestBaseRow:
     def test_base_row_returns_valid_row_values(self, tmp_path):

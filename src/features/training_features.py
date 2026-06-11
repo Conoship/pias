@@ -122,15 +122,6 @@ def build_training_features(
         print(f"Volume feature rows: {len(volume_features)}", flush=True)
         print(f"Opening feature rows: {len(opening_features)}", flush=True)
 
-    for extra_features in [volume_features, opening_features]:
-        if "ship_version_id" in extra_features.columns:
-            extra_features["ship_version_id"] = pd.to_numeric(
-                extra_features["ship_version_id"],
-                errors="coerce",
-            ).astype("Int64")
-
-    features_df["ship_version_id"] = features_df["ship_version_id"].astype("Int64")
-
     return features_df.merge(
         volume_features,
         on="ship_version_id",
