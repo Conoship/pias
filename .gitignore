@@ -16,3 +16,6 @@ coverage.xml
 sonar-project.properties
 .coverage
 .scannerwork
+dist/
+build/
+*.spec
