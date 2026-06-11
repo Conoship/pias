@@ -173,7 +173,7 @@ class AgentPipelineController(object):
             required_index = 1 - (128 / (ship_length + 152))
         else:
             r_0 = 1 - (128 / (ship_length + 152))
-            required_index = 1 - (1 / ((ship_length / 100) * (r_0 / (1 - r_0))))
+            required_index = 1 - ((1 / (ship_length / 100)) * (r_0 / (1 - r_0)))
 
         return required_index
 
