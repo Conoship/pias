@@ -23,6 +23,7 @@ from src.app.controllers.line_edit_collector_controller import (
 from src.app.controllers.line_edit_controller import LineEditController
 from src.app.parsers.layouts_parser import LayoutsParser
 from src.app.parsers.main_dimensions_parser import MainDimensionsParser
+from src.resources import resource_path
 
 
 class AgentPipelineController(object):
@@ -74,10 +75,14 @@ class AgentPipelineController(object):
 
         # Load the Results Widget.
         loader = QUiLoader()
-        file = QFile("src/app/ui/resultsWidget.ui")
-        file.open(QFile.OpenModeFlag.ReadOnly)
+        results_ui_path = resource_path("src/app/ui/resultsWidget.ui")
+        file = QFile(str(results_ui_path))
+        if not file.open(QFile.OpenModeFlag.ReadOnly):
+            raise RuntimeError(f"Failed to open the results UI file: {results_ui_path}")
         results_widget = loader.load(file)
         file.close()
+        if results_widget is None:
+            raise RuntimeError(f"Failed to load the results UI file: {results_ui_path}")
 
         # Get the results table.
         results_table = results_widget.findChild(QTableWidget, "resultsTable")

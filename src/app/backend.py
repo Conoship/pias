@@ -14,7 +14,9 @@ from PySide6.QtWidgets import QMessageBox, QWidget
 
 # Import local packages.
 from src.db.db import create_all_tables
+from src.features.training_features import build_training_features
 from src.models.random_forest_baseline import RandomForestBaseline
+from src.resources import resource_path
 
 
 class _FeatureEngineer(Protocol):
@@ -33,10 +35,10 @@ class _ForestPredictor(Protocol):
     estimators_: list[_TreeEstimator]
 
 
-CONDITION_MODEL_PATHS = {
-    "light": Path("models/model_light.pkl"),
-    "partial": Path("models/model_partial.pkl"),
-    "deepest": Path("models/model_deepest.pkl"),
+CONDITION_MODEL_FILES = {
+    "light": "models/model_light.pkl",
+    "partial": "models/model_partial.pkl",
+    "deepest": "models/model_deepest.pkl",
 }
 
 CONDITION_NAMES = ["light", "partial", "deepest"]
@@ -435,14 +437,29 @@ def _prepare_model_features(
     conn = _build_feature_database(df, required_index)
 
     try:
-        scripts_dir = Path("scripts")
+        errors = []
+        try:
+            features_df = build_training_features(conn)
+            missing_cols = [
+                col for col in feature_cols if col not in features_df.columns
+            ]
+            if not missing_cols:
+                return features_df
+
+            errors.append(
+                "packaged feature builder: missing prediction values "
+                f"{', '.join(missing_cols)}"
+            )
+        except Exception as error:
+            errors.append(f"packaged feature builder: {error}")
+
+        scripts_dir = resource_path("scripts")
         script_paths = sorted(
             scripts_dir.glob("create_csv*.py"),
             key=_feature_script_version,
             reverse=True,
         )
 
-        errors = []
         for script_path in script_paths:
             try:
                 features_df = _run_feature_script_query(conn, script_path)
@@ -471,7 +488,7 @@ def _prepare_model_features(
 
 
 def _model_path_for_condition(condition_name: str) -> Path | None:
-    path = CONDITION_MODEL_PATHS[condition_name]
+    path = resource_path(CONDITION_MODEL_FILES[condition_name])
     return path if path.exists() else None
 
 

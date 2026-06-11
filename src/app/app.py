@@ -1,6 +1,5 @@
 # Import standard library packages.
 import sys
-from pathlib import Path
 
 # Import third party packages.
 from PySide6.QtCore import QFile
@@ -11,13 +10,9 @@ from PySide6.QtWidgets import QApplication, QPushButton, QWidget
 # Import local packages.
 from src.app.controllers.agent_pipeline_controller import AgentPipelineController
 from src.app.controllers.button_controller import ButtonController
+from src.resources import resource_path
 
 _RUNTIME_ERROR_WINDOW = "Window has not been initialized..."
-
-
-def _resource_path(relative_path: str) -> str:
-    base_path = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parents[2]))
-    return str(base_path / relative_path)
 
 
 class App(object):
@@ -58,8 +53,8 @@ class App(object):
                 The window containing the layout of the `.ui` file.
         """
         loader = QUiLoader()
-        ui_file_path = _resource_path(self._UI_FILE_PATH)
-        file = QFile(ui_file_path)
+        ui_file_path = resource_path(self._UI_FILE_PATH)
+        file = QFile(str(ui_file_path))
         if not file.open(QFile.OpenModeFlag.ReadOnly):
             raise RuntimeError(f"Failed to open the UI file: {ui_file_path}")
         window = loader.load(file)
@@ -82,7 +77,7 @@ class App(object):
             raise RuntimeError(_RUNTIME_ERROR_WINDOW)
 
         self._window.setWindowTitle(self._WINDOW_TITLE)
-        self._window.setWindowIcon(QIcon(_resource_path(self._WINDOW_ICON_PATH)))
+        self._window.setWindowIcon(QIcon(str(resource_path(self._WINDOW_ICON_PATH))))
         self._window.setFixedSize(self._window.size())
 
     def _center_window(self) -> None:

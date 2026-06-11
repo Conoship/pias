@@ -1,10 +1,9 @@
-from pathlib import Path
-
 import pandas as pd
 import yaml
 
+from src.resources import resource_path
 
-FEATURES_PATH = Path("src/models/features.yaml")
+FEATURES_PATH = resource_path("src/models/features.yaml")
 DEFAULT_FEATURE_SET = "volume_ratios"
 
 
